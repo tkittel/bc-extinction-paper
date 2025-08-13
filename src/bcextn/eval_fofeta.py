@@ -14,7 +14,6 @@ class F_of_Eta:
     # 1e-100 precision):
     #
     # sage: f=(x^2-x*sin(2*x)+(sin(x))^2)/x^4
-    # sage: (f.taylor(x,0,50)-f)(x=1/10).n(digits=500)
     # sage: float((f.taylor(x,0,50)-f)(x=1/10).n(digits=500))
     #       -2.787008332893139e-109
     # So we print up to order 50 coefficients via:
