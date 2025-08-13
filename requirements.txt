@@ -1,0 +1,7 @@
+ruff
+matplotlib
+numpy
+scipy
+mpmath
+# Gives problems (use from conda instead): sagemath
+tqdm
