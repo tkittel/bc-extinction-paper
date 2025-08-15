@@ -23,6 +23,8 @@
 from .mpmath import mp, mpf
 import numpy as np
 
+eq36_result_tolerance = 1e-7
+
 class BCYPCalc:
 
     def __init__( self, theta_deg ):
@@ -140,7 +142,7 @@ class BCYPCalc:
             return val, 1e99
         return val, max_err
 
-    def _calc_yp_taylorx( self, x, eps ):
+    def _calc_yp_taylorx( self, x ):
         # If x is small, we can do a taylor expansion in x and then evaluate the
         # resulting integral analytically, yielding the following formula:
         if x > 1.0:
@@ -149,11 +151,11 @@ class BCYPCalc:
         if mpf(x)==0:
             return mpf(1), mpf(0)
         _, max_err = self._taylor_lowx_fct( x, only_error = True )
-        if max_err > eps*0.1:
+        if max_err > eq36_result_tolerance*0.1:
             return None
         return self._taylor_lowx_fct( x )
 
-    def calc_yp( self, x, eps=1e-8 ):
+    def calc_yp( self, x ):
         #WARNING: This gets very slow if x>1e9!!
         assert x<1e11, "gets very slow at such high x"
 
@@ -167,7 +169,8 @@ class BCYPCalc:
 
         #Handle very small x values:
         x = mpf(x)
-        taylorx = self._calc_yp_taylorx(x,eps)
+        eps = eq36_result_tolerance
+        taylorx = self._calc_yp_taylorx(x)
         if taylorx is not None:
             print(f"  Using taylorx at theta={float(self._theta):g} x={float(x):g}")
             return taylorx
@@ -289,7 +292,7 @@ def benchmark():
     import time
     res = []
     for theta_deg in 0, 30, 60, 90:
-        for x in [ 0, 1e-20, 1e-3, 0.2, 0.5, 1.0, 1.01, 2.0, 3, 30, 100, 1e5, 1e9 ]: #FIXME: 1e20 makes everything stall due to insane number of intervals in mp.quad!!
+        for x in [ 0, 1e-20, 1e-3, 0.2, 0.5, 1.0, 1.01, 2.0, 3, 30, 100, 1e5, 1e9 ]:
             print()
             print('-'*70)
             print(f' theta={theta_deg:g},  x={x:g}')
@@ -302,31 +305,3 @@ def benchmark():
             print('           +- %e'%err)
             print(f'   TIME: {t0:.2g}s')
             res.append( (t0, theta_deg, x, v, err ) )
-
-def test():
-    #Reference values via sagemath. Note sagemath does not do this with super
-    #high precision, so we mainly get a few reference points for sanity
-    #checking:
-    benchmark()
-    raise SystemExit
-
-#    calc = BCYPCalc( theta_deg=30 )
-#    v, err = calc.calc_yp( x=3.0, eps=1e-6 )
-#    print('FINAL RESULT: %g'%v)
-#    print('FINAL RESULT: +- %e'%err)
-#    raise SystemExit(0)
-#
-    refvals = [
-        #tuples of (theta_degree, x, yp_refval)
-        ( mpf('0'), mpf('0'), mpf('1') ),
-        ( mpf('45'), mpf('0'), mpf('1') ),
-        ( mpf('90'), mpf('0'), mpf('1') ),
-    ]
-    maxerr = mpf('1e-102')
-    for theta, x, ref in refvals:
-        calc = BCYPCalc( theta )
-        v = calc.calc_yp( x )
-        d = abs(v-ref)/ref
-        print( theta, x, ref, v, d )
-        #print(s, d)
-        assert 0.0 <= d < maxerr
