@@ -1,0 +1,18 @@
+name: bcextn
+channels:
+  - nodefaults
+  - conda-forge
+dependencies:
+  - python
+  - compilers
+  - cmake
+  - make
+  - numpy
+  - matplotlib
+  - pip
+  - ruff
+  - gmpy2
+  - scipy
+  - mpmath
+  - sage
+  - tqdm
