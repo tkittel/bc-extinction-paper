@@ -1,5 +1,5 @@
 from .eval_eq36 import BCYPCalc
-import numpy
+import numpy as np
 import pathlib
 import sys
 import time
@@ -18,15 +18,21 @@ def worker( args ):
              float(max_err),
              float(t) )
 
-def find_output_fn( quick ):
+def find_output_fn( quick, table1_points ):
+    bn = 'bcdata'
+    if table1_points:
+        bn += '_table1pts'
+    if quick:
+        bn += '_quick'
+
     for i in range(1,10000000):
         p = pathlib.Path('.').joinpath(
-            '%s%s.json'%('bcdata_quick' if quick else 'bcdata',
-                         '' if i==1 else '_%i'%i)
+            '%s%s.json'%(bn,'' if i==1 else '_%i'%i)
         )
         if not p.exists():
             assert p.parent.is_dir()
             return p
+    assert False
 
 def multiproc_run_worklist( worklist ):
     import multiprocessing
@@ -41,6 +47,7 @@ def multiproc_run_worklist( worklist ):
 
 def main():
     quick = '--quick' in sys.argv[1:]
+    table1_points = '--table1' in sys.argv[1:]
 
     x_range = ( 1e-3, 1e3 )
     nx = 10 if quick else 100
@@ -50,10 +57,27 @@ def main():
     nx += 1
     nth += 1
 
-    theta_vals = numpy.linspace(0.0, 90.0, nth)
-    xvals = numpy.geomspace( *x_range, nx )
+    theta_vals = np.linspace(0.0, 90.0, nth)
+    xvals = np.geomspace( *x_range, nx )
 
-    outfile = find_output_fn( quick )
+    if table1_points:
+        from .bc1974_tables import table1
+        t = table1()
+        xvals = t['xvals']
+        theta_vals = np.asin( t['sinthvals'] ) * ( 180 / np.pi )
+        theta_vals.sort()
+        if quick:
+            xmax = xvals[-1]
+            xvals = xvals[::7]
+            xvals[-1] = xmax
+            theta_max = theta_vals[-1]
+            theta_vals = theta_vals[::7]
+            theta_vals[-1] = theta_max
+
+    def find_outname():
+        return find_output_fn( quick, table1_points )
+
+    outfile = find_outname()
     print(f"Target file: {outfile}")
 
 
@@ -84,7 +108,7 @@ def main():
 
     if outfile.exists():
         print("WARNING: {outfile} found to exist now!")
-        outfile = find_output_fn( quick )
+        outfile = find_outname()
         print("WARNING: Writing to {outfile} instead!")
 
     from .json import save_json
