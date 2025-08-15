@@ -10,3 +10,7 @@ def data_file( name, must_exist = True ):
     if must_exist and not f.is_file():
         raise RuntimeError(f'File not found: {f}')
     return f
+
+def load_json_data( name ):
+    from .json import load_json
+    return load_json(data_file(name))
