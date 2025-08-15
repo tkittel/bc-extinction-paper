@@ -63,8 +63,7 @@ class F_of_Eta:
         return  ( etasq - eta*s2 + s**2 ) / (etasq**2)
 
 def test_f_of_eta():
-    #Reference values via sagemath (fixme: add to unit test, but also add more
-    #digits!):
+    #Reference values via sagemath
     f_of_eta_refvals = [
 
         ( mpf('0'), mpf('1') ),

@@ -96,8 +96,7 @@ class Phi0:
         return (mpf('3/64')/s3) * ( mpf(8)*s2 + fours*(mpf(1)+e)+e)
 
 def test_phi0():
-    #Reference values via sagemath (fixme: add to unit test, but also add more
-    #digits!):
+    #Reference values via sagemath:
     phi0_refvals = [
 
         ( mpf('0'), mpf('1') ),
