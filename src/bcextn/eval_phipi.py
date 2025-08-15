@@ -97,8 +97,7 @@ class PhiPi:
         return (mpf('3/4')/s3) * ( s2 -s + mpf('1/2')*mp.log1p( mpf(2)*s ) )
 
 def test_phipi():
-    #Reference values via sagemath (fixme: add to unit test, but also add more
-    #digits!):
+    #Reference values via sagemath:
     phipi_refvals = [
         ( mpf('0'), mpf('1') ),
         #two vals on each side of taylor cutoff:
