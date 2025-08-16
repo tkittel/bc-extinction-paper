@@ -18,10 +18,13 @@ def worker( args ):
              float(max_err),
              float(t) )
 
-def find_output_fn( quick, table1_points ):
+def find_output_fn( quick, table1_points, thetascan ):
+    assert not (table1_points and thetascan)
     bn = 'bcdata'
     if table1_points:
         bn += '_table1pts'
+    if thetascan:
+        bn += '_thetascan'
     if quick:
         bn += '_quick'
 
@@ -48,6 +51,8 @@ def multiproc_run_worklist( worklist ):
 def main():
     quick = '--quick' in sys.argv[1:]
     table1_points = '--table1' in sys.argv[1:]
+    thetascan = '--thetascan' in sys.argv[1:]
+    assert not (table1_points and thetascan)
 
     x_range = ( 1e-3, 1e3 )
     nx = 10 if quick else 100
@@ -73,9 +78,19 @@ def main():
             theta_max = theta_vals[-1]
             theta_vals = theta_vals[::7]
             theta_vals[-1] = theta_max
+    if thetascan:
+        #Remember tiny xvals are cheap
+        xvals = np.asarray( [1e-10, 1e-5, 0.001, 0.01, 0.1, 0.5, 1.0, 1.5,
+                             2.0, 3.0, 5.0, 10.0, 30.0, 100 ], dtype='float' )
+        if quick:
+            xmax = xvals[-1]
+            xvals = xvals[::4]
+            xvals[-1] = xmax
+        theta_vals = np.linspace( 0.0, 90.0,
+                                  (9 if quick else 180) +1 )
 
     def find_outname():
-        return find_output_fn( quick, table1_points )
+        return find_output_fn( quick, table1_points, thetascan )
 
     outfile = find_outname()
     print(f"Target file: {outfile}")
