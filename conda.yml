@@ -16,3 +16,5 @@ dependencies:
   - mpmath
   - sage
   - tqdm
+  - pandas
+  - tabulate
