@@ -186,11 +186,19 @@ def main_fit( args ):
         plt.plot( xvals, orig_fctA(thvals,*orig_res_fctA),
                   label = 'proposed A(theta)',
                   color='blue',linestyle='--',lw=3 )
+
+        plt.plot( xvals, orig_fctA(thvals,0.20,0.45),
+                  label = 'original 1974 A(theta)',
+                  color='blue',linestyle=':',lw=3, alpha=0.5 )
         plt.plot( xvals, orig_optimalB, label = 'B (optimal at each theta)',
                   color='green')
         plt.plot( xvals, orig_fctB(thvals,*orig_res_fctB),
                   label = 'proposed B(theta)',
                   color='green',linestyle='--',lw=3 )
+        plt.plot( xvals, orig_fctB(thvals,0.22,-0.12),
+                  label = 'original 1974 B(theta)',
+                  color='green',linestyle=':',lw=3, alpha=0.5 )
+
         plt.grid()
         plt.xlabel(xlabel)
         plt.legend()
@@ -209,3 +217,40 @@ def main_fit( args ):
         results,
         force = True
     )
+
+def main_cmprecipes( args ):
+    from .curves import ClassicCurve, UpdatedClassicCurve, ProposedCurve
+    from .load import load_xscan as dataload
+    assert len(args)==0
+    data = dataload()
+    print( data.keys() )
+    xvals = data['xvals']
+    th2yp = dict( (th,ypvals)
+                  for th,ypvals in data['theta_2_ypvals'].items()
+                  if ( int(float(th)) == float(th) and int(float(th))==80 ) #int(float(th))%30==0
+                  )
+    for th,ypvals in th2yp.items():
+        th = float(th)
+        #if th > 50:
+        #    continue
+        color = th2color(th)
+        yp_classic = ClassicCurve()(xvals,th)
+        yp_updatedclassic = UpdatedClassicCurve()(xvals,th)
+        yp_proposed = ProposedCurve()(xvals,th)
+        color='black'
+        plt.plot( xvals, ypvals, color=color,
+                  label = f'$\\theta={th:g}\\degree$' )
+        color='red'
+        plt.plot( xvals, yp_classic, color=color, marker='o',ls = ':',
+                  label = f'$\\theta={th:g}\\degree$ (BC1974)' )
+        color='green'
+        plt.plot( xvals, yp_updatedclassic, color=color, marker='o',ls = '-.',
+                  label = f'$\\theta={th:g}\\degree$ (updated BC1974)' )
+        color='blue'
+        plt.plot( xvals, yp_proposed, color=color, marker='o',ls = '--',
+                  label = f'$\\theta={th:g}\\degree$ (proposed)' )
+    plt.ylim(0.0,1.0)
+    plt.grid()
+    plt.semilogx()
+    plt.legend()
+    plt.show()
