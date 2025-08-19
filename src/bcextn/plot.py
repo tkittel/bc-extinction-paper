@@ -218,39 +218,202 @@ def main_fit( args ):
         force = True
     )
 
+def lookup_float_key( adict, key, eps=1e-12 ):
+    vals = [ v for k,v in adict.items()
+             if abs(float(key)-float(k))<eps ]
+    assert len(vals)==1
+    return vals[0]
+
 def main_cmprecipes( args ):
+    assert len(args) in ( 0,1 )
+    do_reldiff = True
+    if 'abs' in args:
+        do_reldiff=False
+        args.remove('abs')
+    do_vs_old = False
+    if 'vsold' in args:
+        do_vs_old = True
+        args.remove('vsold')
+    assert not args
+
+    do_cmprecipes( do_reldiff = do_reldiff,
+                   do_vs_old = do_vs_old )
+
+def do_cmprecipes( do_reldiff, do_vs_old ):
     from .curves import ClassicCurve, UpdatedClassicCurve, ProposedCurve
     from .load import load_xscan as dataload
-    assert len(args)==0
+
+    if do_vs_old:
+        assert do_reldiff, "vsold only for reldiff"
     data = dataload()
     print( data.keys() )
     xvals = data['xvals']
+
+    def fleq( a, b, eps=1e-12 ):
+        return abs(float(a)-float(b))<eps
+
     th2yp = dict( (th,ypvals)
                   for th,ypvals in data['theta_2_ypvals'].items()
-                  if ( int(float(th)) == float(th) and int(float(th))==80 ) #int(float(th))%30==0
+                  #if ( int(float(th)) == float(th) and int(float(th))==80 ) #int(float(th))%30==0
+                  #if ( int(float(th)) == float(th) and int(float(th))%5==0 )
                   )
-    for th,ypvals in th2yp.items():
+    if do_reldiff:
+        def ytrf( yp, ypref ):
+            return np.clip(abs(yp/ypref-1.0),0.0,1.0)
+    else:
+        def ytrf( yp, ypref ):
+            return np.clip(yp,0.0,1.0)
+
+    seen_lbls = set()
+    for th,yref in th2yp.items():
         th = float(th)
-        #if th > 50:
+        #if th > 61:
         #    continue
         color = th2color(th)
         yp_classic = ClassicCurve()(xvals,th)
         yp_updatedclassic = UpdatedClassicCurve()(xvals,th)
         yp_proposed = ProposedCurve()(xvals,th)
-        color='black'
-        plt.plot( xvals, ypvals, color=color,
-                  label = f'$\\theta={th:g}\\degree$' )
-        color='red'
-        plt.plot( xvals, yp_classic, color=color, marker='o',ls = ':',
-                  label = f'$\\theta={th:g}\\degree$ (BC1974)' )
-        color='green'
-        plt.plot( xvals, yp_updatedclassic, color=color, marker='o',ls = '-.',
-                  label = f'$\\theta={th:g}\\degree$ (updated BC1974)' )
-        color='blue'
-        plt.plot( xvals, yp_proposed, color=color, marker='o',ls = '--',
-                  label = f'$\\theta={th:g}\\degree$ (proposed)' )
-    plt.ylim(0.0,1.0)
+        if do_vs_old:
+            yref = yp_classic
+
+        common = dict( alpha = 0.5,
+                       lw = 2 )
+
+        def lbltrf(curve_type, split_theta = None):
+            lbl = curve_type
+            if split_theta is not None:
+                if th<split_theta:
+                    lbl += f' ($\\theta<{split_theta:g}\\degree$)'
+                else:
+                    lbl += f' ($\\theta\\geq{split_theta:g}\\degree$)'
+            if lbl in seen_lbls:
+                return
+            seen_lbls.add(lbl)
+            return lbl
+            if not any( fleq(e,th) for e in [90] ):
+                return None
+            thstr = f'$\\theta={th:g}\\degree$'
+            return f'{thstr} ({curve_type or "reference"})'
+        if not do_reldiff:
+            #color='black'
+            plt.plot( xvals, yref,
+                      **common,
+                      color=color,
+                      label = lbltrf('') )
+        #color='red'
+        color = 'blue'#th2color(th*0.3,'Reds')
+        split_th = 60
+        if th > split_th:
+            color='green'
+        if not do_vs_old:
+            plt.plot( xvals, ytrf(yp_classic,yref),
+                      **common,
+                      color=color,
+                      ls = '-.',
+                      label = lbltrf('BC1974',split_th) )
+        #color='green'
+        color = 'red'#th2color(th*0.3,'Greens')
+        if do_vs_old and th > split_th:
+            color='green'
+        plt.plot( xvals, ytrf(yp_updatedclassic,yref),
+                  **common,
+                  color=color,
+                  ls = '--',
+                  label = lbltrf('updated BC1974',
+                                 split_theta = split_th if do_vs_old else None) )
+        #color='blue'
+        color = 'black'#th2color(th*0.2,'Blues')
+        if do_vs_old and th > split_th:
+            color='gray'
+        #color = th2color(th)
+        plt.plot( xvals, ytrf(yp_proposed,yref),
+                  **common,
+                  color=color,
+                  ls = '-',
+                  label = lbltrf('new form',
+                                 split_theta = split_th if do_vs_old else None) )
+    if do_reldiff:
+        plt.semilogy()
+        plt.ylim(1e-6,1.0)
+        plt.ylabel('yp/ypref-1')
+    else:
+        plt.ylim(0.0,1.0)
+        plt.ylabel('yp')
+    plt.xlim(xvals[0],xvals[-1])
     plt.grid()
     plt.semilogx()
     plt.legend()
+    plt.xlabel('x')
+    plt.show()
+
+def main_fittest( args ):
+    #Try to fit new candidates.
+    from .load import load_xscan as dataload
+    from .curves import safediv, safesqrt
+    from .fit import fitfunction
+    assert len(args)==0
+
+    fcts = []
+    @fitfunction
+    def f0( x, A, B ):
+        k = 1 + B*x
+        k2 = 1.0+2.0*x+safediv(A*x*x,k)
+        return safediv( 1.0, safesqrt( k2 ) )
+
+    fcts = []#fixme
+    @fitfunction
+    def f1( x, A, B, C ):
+        k = 1 + B*x
+        k2 = 1.0+2.0*x+safediv(A*x*x+C*x,k)
+        return safediv( 1.0, safesqrt( k2 ) )
+
+    @fitfunction
+    def f2( x, A, B, C, D ):
+        b = D*(x/(1.0+x))
+        k = 1.0 + B*x +b
+        k2 = 1.0+2.0*x+safediv(A*x*x+C*x,k)
+        return safediv( 1.0, safesqrt( k2 ) )
+
+    @fitfunction
+    def f3( x, A, B, C ):
+        k = 1.0 + B*x + C*x/(1.0+x)
+        k2 = 1.0+2.0*x+safediv( A*x*x-0.1*x, k )
+        return safediv( 1.0, safesqrt( k2 ) )
+    fcts.append((f0,'orig','green'))
+    fcts.append( (f1,f1.name,'blue') )
+    fcts.append( (f2,f2.name,'red') )
+    fcts.append( (f3,f3.name,'orange') )
+
+    data = dataload()
+    print( data.keys() )
+    x = data['xvals']
+    ycurves = [ ( f'$\\theta={th:g}\\degree$',
+                  ls,
+                  lookup_float_key(data['theta_2_ypvals'],th) )
+                for th,ls in [
+                        (0,':'),
+                        (20,'-'),
+                        (45,'-'),
+                        (70,'--'),
+                        (90,'--'),
+                ]]
+
+    fig, axs = plt.subplots(2, 1, sharex=True)
+    fig.subplots_adjust(hspace=0)
+    ax, axdiff = axs
+
+    for theta_lbl, ls, y  in ycurves:
+        print(theta_lbl)
+        ax.plot(x,y,ls=ls,color='black',label=f'reference ({theta_lbl})')
+        for f,fname,col in fcts:
+            fit = f.fit(x,y)
+            print(fname,fit.parameters)
+            ax.plot(x,fit(x),ls=ls,color=col,label=f'fit ({fname}, {theta_lbl})')
+            axdiff.plot(x,abs((fit(x)-y)/y),ls=ls,color=col,alpha=0.5,lw=3)
+    ax.grid()
+    ax.semilogx()
+    axdiff.semilogy()
+    ax.legend()
+    ax.set_xlabel('x')
+    axdiff.grid()
     plt.show()
