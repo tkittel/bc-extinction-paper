@@ -16,8 +16,8 @@ def yp_bc1974_curve( x, A, B ):
 
 @np.vectorize
 def yp_proposed_curve( x, A, B, C ):
-    k = 1 + B*x
-    k2 = 1.0+2.0*x+safediv(A*x*x+C*x,k)
+    k = 1.0 + B*x + C*x/(1.0+x)
+    k2 = 1.0+2.0*x+safediv( A*x*x-0.1*x, k )
     return safediv( 1.0, safesqrt( k2 ) )
 
 class ProposedCurve:
