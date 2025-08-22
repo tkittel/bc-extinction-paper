@@ -1,5 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 NAME=bcextnupdate
+#Step into paper directory:
+cd "$( dirname "${BASH_SOURCE[0]}" )"
 PREFIX="===> COMPILE: "
 #always run once + bibtex + one more time. After that, only run as long as it says "Rerun" in the output.
 BAD=0
