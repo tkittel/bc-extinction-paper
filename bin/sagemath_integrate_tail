@@ -1,0 +1,106 @@
+#!/usr/bin/env -S sage -python
+# -*- mode: python; -*-
+
+from sage.all import ( var, assume, #unicode_art,
+                       sin, exp, log, sqrt, infinity )
+
+eta,s,x,y,u,sinth,a,k,t = var('eta,s,x,y,u,sinth,a,k,t')
+assume(eta>0,s>=0,x>0,u>0,sinth>=-1,sinth<=1,a>1,k>0,k<=1,t>0)
+
+fmax=(eta**2+eta+1)/eta**4
+fmin=(eta**2-eta)/eta**4
+f=(eta**2-eta*sin(2*eta)+(sin(eta))**2)/eta**4
+
+phi0=(3/(64*s**3))*(8*(s**2)+4*s*exp(-4*s)-(1-exp(-4*s)))
+phipi=(3/(4*s**3))*(s**2-s+log(1+2*s)/2)
+phi=phi0(s=s)+sinth**(3/2)*(phipi(s=s*sqrt(sinth))-phi0(s=s*sqrt(sinth)))
+
+#g is the integrand
+gmax = fmax(eta=eta)*phi(s=x*fmin(eta=eta))
+gmin = fmin(eta=eta)*phi(s=x*fmax(eta=eta))
+
+#Now we actually evaluate integrals from a to infinty. We do so via a taylor
+#expansion in t=1/a:
+ntaylor = 20
+#We need at least twice as many intermediate orders of terms in the taylor
+#expansions before the coefficients at each order in the final results reach
+#their final value (this can be seen from simply playing around with the number
+#of terms and inspecting the results. For safety we actually use more than
+#double the terms in the intermediate calculations.
+ntaylor_intermediate = int(ntaylor * 2.1 + 3)
+#It turns out that we need around twice as many in termediate terms as (can be seen by setting trustworth_terms_result = ntaylor_intermediate and playing around with the value of
+amax=(gmax(eta=1/u).taylor(u,0,ntaylor_intermediate)(u=1/eta)).integrate(eta,a,infinity)
+amin=(gmin(eta=1/u).taylor(u,0,ntaylor_intermediate)(u=1/eta)).integrate(eta,a,infinity)
+
+print('------------------')
+print('--- variables ---')
+print('------------------')
+print(' sinth : sin(theta) as in paper')
+print(' x : x as in paper')
+print(' a : lower range of integration. Assume a>1 and a>x')
+print(' k = x/a (so 0<k<=1)')
+print()
+print('---------------------------------------------')
+print('--- integral from a to infinity: estimate ---')
+print('---------------------------------------------')
+
+for c,i in ((amax+amin)/2)(x=a*k)(a=1/t).collect(t).coefficients(t):
+    print(' + ( %s ) / a**%i '%( c, i ))
+    if i==ntaylor:
+        break
+print()
+print('----------------------------------------------------------')
+print('--- integral from a to infinity: max error of estimate ---')
+print('----------------------------------------------------------')
+
+for c,i in ((amax-amin)/2)(x=a*k)(a=1/t).collect(t).coefficients(t):
+    print(' + ( %s ) / a^%i '%( c, i ))
+    if i==ntaylor:
+        break
+
+print('------------------------------------------------')
+print('--- integral from a to infinity: upper bound ---')
+print('------------------------------------------------')
+
+for c,i in (amax)(x=a*k)(a=1/t).collect(t).coefficients(t):
+    print(' + ( %s ) / a**%i '%( c, i ))
+    if i==ntaylor:
+        break
+
+print('------------------------------------------------')
+print('--- integral from a to infinity: lower bound ---')
+print('------------------------------------------------')
+
+for c,i in (amin)(x=a*k)(a=1/t).collect(t).coefficients(t):
+    print(' + ( %s ) / a**%i '%( c, i ))
+    if i==ntaylor:
+        break
+
+print('------------------------------------------------')
+print('--- integral from a to infinity: upper bound max order factors ---')
+print('------------------------------------------------')
+
+def estimate_maxabs( c ):
+    from itertools import product
+    from numpy import linspace
+    return float(max(abs(c(k=k,sinth=sinth))
+                     for k, sinth in product(linspace(0.0,1.0,30),
+                                             linspace(0.0,1.0,30))))
+
+def show_maxcoefficients( expr ):
+    clast = None
+    for c,i in (expr)(x=a*k)(a=1/t).collect(t).coefficients(t):
+        c = estimate_maxabs(c)
+        tolast = '   (%.4g times previous)'%(c/clast) if clast else ''
+        clast = c
+        print(' +  %.4g / a**%i%s'%( c, i, tolast ))
+        if i==ntaylor:
+            break
+
+show_maxcoefficients(amax)
+
+print('------------------------------------------------')
+print('--- integral from a to infinity: lower bound max order factors ---')
+print('------------------------------------------------')
+
+show_maxcoefficients(amin)
