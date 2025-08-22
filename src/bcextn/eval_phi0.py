@@ -6,20 +6,12 @@ class Phi0:
     #
     # phi^0(s) = (3/64(s^3)) * ( 8*s^2 + 4*s*exp(-4s)-(1-exp(-4s)) )
     #
-    # For s ~= 0 we evaluate via a taylor expression for maximum precision.
-    #
-    # Choosing Taylor expansions to be used for s<0.1 = 1/10, we find the
-    # order and coefficients of the Taylor expansion via (aiming for better than
-    # 1e-100 precision):
-    #
-    # sage: p0=(3/(64*x**3))*(8*(x^2)+4*x*exp(-4*x)-(1-exp(-4*x)))
-    # sage: float((p0.taylor(x,0,60)-p0)(x=1/10).n(digits=500))
-    #       7.870413816767342e-112
-    # So we print up to order 60 coefficients via:
-    # sage:  print( '\n'.join(('    c%i = mpf("%s")'%(c[1],str(c[0]))) for c in (p0.taylor(x,0,60)).coefficients()))
+    # For small arguments, the function is evaluated via a Taylor expansion
+    # to ensure numerical precision and stability.
 
     def __init__( self ):
-        #Taylor coefficients (printed via command above):
+        # Taylor expansion to be used for s<0.01. Code validated and
+        # produced by the script bin/sagemath_taylor_phi0_of_s:
         c0 = mpf("1")
         c1 = mpf("-3/2")
         c2 = mpf("8/5")

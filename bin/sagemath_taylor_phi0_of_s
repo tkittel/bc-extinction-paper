@@ -1,0 +1,38 @@
+#!/usr/bin/env -S sage -python
+# -*- mode: python; -*-
+
+from sage.all import ( var, assume, unicode_art, Integer as sage_int,
+                       exp )
+
+s = var('s')
+assume(s>=0)
+
+
+# phi^0(s) (s=sigma*r) given by eq. 31.
+
+phi0 = (3/(64*s**3))*(8*(s**2)+4*s*exp(-4*s)-(1-exp(-4*s)))
+
+print("Considering the function phi^0(s) given as:")
+print()
+print(unicode_art(phi0))
+# Choosing Taylor expansions to be used for s<0.1 = 1/10, we find the
+# order and coefficients of the Taylor expansion via (aiming for better than
+# 1e-100 precision):
+
+s_cutoff = sage_int(1)/sage_int(10)
+order = sage_int(60)
+print()
+print("Performing taylor expansion of phi^0(s)...")
+phi0_taylor60 = phi0.taylor(s,0,order)
+print("...done")
+print()
+print(f"Precision at order {order} at s={s_cutoff}:")
+print('   absolute: %.4g' % ( (phi0_taylor60-phi0)(s=s_cutoff).n(digits=500) ) )
+print('   relative: %.4g' % ( ((phi0_taylor60-phi0)/phi0)(s=s_cutoff).n(digits=500) ) )
+print()
+print("The coefficients in a form suitable for mpmath code:")
+for c in phi0_taylor60.coefficients(s):
+    print( '    c%i = mpf("%s")'%(c[1],str(c[0])) )
+
+print('    def taylor( s ):')
+print('        return c0+s*'+''.join('(c%i+s*'%i for i in range(1,order))+'c%i'%order+')'*(order-1))
