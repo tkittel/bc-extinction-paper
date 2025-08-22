@@ -2,7 +2,7 @@ from .mpmath import mp, mpf
 
 class PhiPi:
 
-    # Evaluate phi^0(s) (s=sigma*r) given by eq. 31.
+    # Evaluate phi^pi(s) (s=sigma*r) given by eq. 32.
     #
     # phi^pi(s) = ( 3/(4*s**3) )*( s**2 - s + log(1+2*s) / 2 )
     #
@@ -11,18 +11,12 @@ class PhiPi:
     # in the nominator to the third (logarithmic) term.
     # For s ~= 0 we evaluate via a taylor expression for maximum precision.
     #
-    # Choosing Taylor expansions to be used for s<0.01 = 1/100, we find the
-    # order and coefficients of the Taylor expansion via (aiming for better than
-    # 1e-100 precision):
-    #
-    # sage: ppi=(3/(4*x**3))*(x^2-x+log(1+2*x)/2)
-    # sage: float((ppi.taylor(x,0,60)-ppi)(x=1/100).n(digits=500))
-    #       1.0599903499351085e-105
-    # So we print up to order 60 coefficients via:
-    # sage: print( '\n'.join(('    c%i = mpf("%s")'%(c[1],str(c[0]))) for c in (ppi.taylor(x,0,60)).coefficients()))
+    # For small arguments, the function is evaluated via a Taylor expansion
+    # to ensure numerical precision and stability.
 
     def __init__( self ):
-        #Taylor coefficients (printed via command above):
+        # Taylor expansion to be used for s<0.01. Code validated and
+        # produced by the script bin/sagemath_taylor_phipi_of_s:
         c0 = mpf("1")
         c1 = mpf("-3/2")
         c2 = mpf("12/5")
@@ -101,8 +95,10 @@ def test_phipi():
     phipi_refvals = [
         ( mpf('0'), mpf('1') ),
         #two vals on each side of taylor cutoff:
-        ( mpf('999999999999999999999999999999999999999999999999/100000000000000000000000000000000000000000000000000'), mpf('0.985236067392384760900081912647415871522816701327921765336243182215445547430213560530179415644317424829262') ),
-        ( mpf('1000000000000000000000000000000000000000000000001/100000000000000000000000000000000000000000000000000'), mpf('0.985236067392384760900081912647415871522816701327892701873065344238280350071976124124571927201055863780575') ),
+        ( mpf('999999999999999999999999999999999999999999999999/100000000000000000000000000000000000000000000000000'),
+          mpf('0.985236067392384760900081912647415871522816701327921765336243182215445547430213560530179415644317424829262') ),
+        ( mpf('1000000000000000000000000000000000000000000000001/100000000000000000000000000000000000000000000000000'),
+          mpf('0.985236067392384760900081912647415871522816701327892701873065344238280350071976124124571927201055863780575') ),
         #A whole bunch of values:
         ( mpf('1/70000000000'), mpf('0.999999999978571428571918367346927113702624192300827029214017968884846733357570076284338612061630031253614') ),
         ( mpf('1/40000000000'), mpf('0.999999999962500000001499999999937500000002678571428454241071433779761904527529761915415313852325571563875') ),
