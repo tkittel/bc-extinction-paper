@@ -7,20 +7,12 @@ class F_of_Eta:
     #
     # f=(eta^2-eta*sin(2*eta)+(sin(eta))^2)/eta^4
     #
-    # For eta ~= 0 we evaluate via a taylor expression for maximum precision.
-    #
-    # Choosing Taylor expansions to be used for eta<0.1 = 1/10, we find the
-    # order and coefficients of the Taylor expansion via (aiming for better than
-    # 1e-100 precision):
-    #
-    # sage: f=(x^2-x*sin(2*x)+(sin(x))^2)/x^4
-    # sage: float((f.taylor(x,0,50)-f)(x=1/10).n(digits=500))
-    #       -2.787008332893139e-109
-    # So we print up to order 50 coefficients via:
-    # sage:  print( '\n'.join(('    c%i = mpf("%s")'%(c[1],str(c[0]))) for c in (f.taylor(x,0,50)).coefficients()))
+    # For small arguments, the function is evaluated via a Taylor expansion
+    # to ensure numerical precision and stability.
 
     def __init__( self ):
-        #Taylor coefficients (printed via command above):
+        # Taylor expansion to be used for s<0.1. Code validated and
+        # produced by the script bin/sagemath_taylor_f_of_eta:
         c0 = mpf("1")
         c2 = mpf("-2/9")
         c4 = mpf("1/45")
