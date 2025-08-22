@@ -417,3 +417,49 @@ def main_fittest( args ):
     ax.set_xlabel('x')
     axdiff.grid()
     plt.show()
+
+def main_par2latex( args ):
+    assert len(args)==0
+    from .curves import load_fitted_curve_parameters
+    data = load_fitted_curve_parameters()
+
+    print(r'\begin{align}')
+    pA0, pA1 = data['origA']
+    pB0, pB1 = data['origB']
+    sA0 = '%g'%pA0
+    sB0 = '%g'%pB0
+    sA1 = '%g'%pA1
+    sB1 = '%g'%pB1
+    if not sA1.startswith('-'):
+        sA1 = '+' + sA1
+    if not sB1.startswith('-'):
+        sB1 = '+' + sB1
+    print(r'  A(\theta) &= %s%s\cos(2\theta)\nonumber\\'%(sA0,sA1))
+    print(r'  B(\theta) &= %s%s(0.5-\cos(2\theta))^2'%(sB0,sB1))
+    print(r'\labeqn{ypfitfctparsupdated}')
+    print(r'\end{align}')
+    print()
+    print(r'\begin{align}')
+    for pn in 'ABC':
+        pars = data[pn]
+        s = r'  %s(\theta) &= '%pn
+        for i,p in enumerate(pars):
+            f = '%.5g'%p
+            if i==0:
+                s += f
+                continue
+            if i==4:
+                print(s+r'\nonumber\\')
+                s='             &\hspace*{1em} '
+            if not f.startswith('-'):
+                f = f'+{f}'
+            if i==1:
+                s += r'%s\sin(\theta)'%f
+            else:
+                s += r'%s\sin^%i(\theta)'%(f,i)
+        if pn!='C':
+            s += r'\nonumber\\'
+        print(s)
+    print(r'\labeqn{ypfitfctluxpars}')
+    print(r'\end{align}')
+

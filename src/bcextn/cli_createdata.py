@@ -1,4 +1,4 @@
-from .eval_eq36 import BCYPCalc
+from .eval_eq36 import eval_eq36
 import numpy as np
 import pathlib
 import sys
@@ -8,10 +8,8 @@ def worker( args ):
     t = time.time()
     theta_deg, xval = args
     print(f"Starting worker at theta={theta_deg:g} x={xval:g}")
-    calc = BCYPCalc( theta_deg )
-    val, max_err = calc.calc_yp(xval)
+    val, max_err = eval_eq36( theta_deg, xval )
     t = time.time() - t
-
     return ( float(theta_deg),
              float(xval),
              float(val),
@@ -37,15 +35,15 @@ def find_output_fn( quick, table1_points, thetascan ):
             return p
     assert False
 
-def multiproc_run_worklist( worklist ):
+def multiproc_run_worklist( worklist, workfct = worker ):
     import multiprocessing
     import tqdm
     import random
     random.shuffle(worklist)#more reliable progress bar
 
     with multiprocessing.Pool() as pool:
-        results = list(tqdm.tqdm( pool.imap(worker, worklist),
-                                 total=len(worklist)))
+        results = list(tqdm.tqdm( pool.imap(workfct, worklist),
+                                  total=len(worklist)))
     return sorted(results)
 
 def main():
