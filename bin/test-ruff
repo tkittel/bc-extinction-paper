@@ -11,8 +11,11 @@ def main():
 
     reporoot = pathlib.Path(__file__).parent.parent
     pyfiles = []
-    pyfiles += list( reporoot.joinpath('bin').rglob('*.py') )
+    pyfiles += list( reporoot.joinpath('bin').rglob('*') )
     pyfiles += list( reporoot.joinpath('src').rglob('*.py') )
+    pyfiles += list( reporoot.joinpath('sagemath_scripts').rglob('*') )
+    pyfiles = [ f for f in pyfiles
+                if ( '#' not in f.name and '~' not in f.name ) ]
     rv = subprocess.run(['ruff','check']
                         + sorted( f.absolute() for f in pyfiles ) )
     if rv.returncode!=0:

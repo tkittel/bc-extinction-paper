@@ -7,6 +7,11 @@ def main():
         update_ref()
         return
 
+    if '--updateref2' in sys.argv[1:]:
+        from .test_eq36 import gen_test2_data
+        gen_test2_data()
+        return
+
     if '--benchmark' in sys.argv[1:]:
         from .eval_eq36 import benchmark
         benchmark()
@@ -18,6 +23,7 @@ def main():
     test_phi0()
     from .eval_phipi import test_phipi
     test_phipi()
-    from .test_eq36 import test
+    from .test_eq36 import test, test2
     test()
+    test2()
     print("All ok")

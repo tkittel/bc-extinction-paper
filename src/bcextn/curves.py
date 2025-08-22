@@ -20,11 +20,28 @@ def yp_proposed_curve( x, A, B, C ):
     k2 = 1.0+2.0*x+safediv( A*x*x-0.1*x, k )
     return safediv( 1.0, safesqrt( k2 ) )
 
+_cache = [None]
+def load_fitted_curve_parameters():
+    if _cache[0] is not None:
+        return _cache[0]
+    #Clip values for appearing nicer in the paper. But also make sure that we
+    #actually use the clipped values in performance plots!
+    def fmt( key, x ):
+        if 'orig' in key:
+            return float('%.3g'%x)
+        else:
+            return float('%.4g'%x)
+    from .data import load_json_data
+    data = load_json_data('fitted_curves_ABC.json')
+    for k in data.keys():
+        data[k] = [ fmt(k,e) for e in data[k] ]
+    _cache[0] = data
+    return data
+
 class ProposedCurve:
 
     def __init__(self):
-        from .data import load_json_data
-        data = load_json_data('fitted_curves_ABC.json')
+        data = load_fitted_curve_parameters()
         def sinth(theta):
             return math.sin( float(theta)*kDeg2Rad )
         pA0, pA1, pA2, pA3, pA4, pA5, pA6 = data['A']
@@ -59,8 +76,7 @@ class ProposedCurve:
 class UpdatedClassicCurve:
 
     def __init__(self):
-        from .data import load_json_data
-        data = load_json_data('fitted_curves_ABC.json')
+        data = load_fitted_curve_parameters()
         def cos2th(theta):
             return math.cos( 2*float(theta)*kDeg2Rad )
         pA0, pA1 = data['origA']
