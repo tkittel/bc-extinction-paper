@@ -6,9 +6,9 @@
 % https://creativecommons.org/publicdomain/zero/1.0/
 %------------------------------------------------------------------------------
 % This template file and associated class and style files produce documents in
-% a preprint style suitable for submission and review purposes. 
+% a preprint style suitable for submission and review purposes.
 % The iucrjournals.cls requires a small selection of packages from standard TeXLive
-% distributions and contains a minimal set of macros to define content and apply 
+% distributions and contains a minimal set of macros to define content and apply
 % formatting. BibTeX and iucr.bst should be used for references (using harvard.sty).
 % If you wish to use additional packages, please reference them in this document and
 % please only use packages included in standard TeXLive distributions in order to
@@ -19,6 +19,23 @@
 
 % Add extra packages here, e.g.
 % \usepackage{myfavouritepackage}
+\usepackage{amssymb}
+\usepackage[fleqn]{amsmath}
+\newcommand{\labtab}[1]{\label{tab:#1}}
+\newcommand{\reftabnumonly}[1]{\ref{tab:#1}}
+\newcommand{\reftab}[1]{Table~\reftabnumonly{#1}}
+\newcommand{\Reftab}[1]{Table~\reftabnumonly{#1}}%same as \reftab, but always capitalised!
+%%%%\newcommand{\lablisting}[1]{\label{lst:#1}}
+%%%%\newcommand{\reflistingnumonly}[1]{\ref{lst:#1}}
+%%%%\newcommand{\reflisting}[1]{Listing~\reflistingnumonly{#1}}
+%%%%\newcommand{\Reflisting}[1]{Listing~\reflistingnumonly{#1}}%same as \reflisting, but always capitalised!
+\newcommand{\labeqn}[1]{\label{eqn:#1}}
+\newcommand{\refeqnnumonly}[1]{\ref{eqn:#1}}
+\newcommand{\refeqn}[1]{Eq.~\refeqnnumonly{#1}}
+\newcommand{\Refeqn}[1]{Eq.~\refeqnnumonly{#1}}%same as \refeqn, but always capitalised!
+\newcommand{\reftwoeqns}[2]{Eqs.~\refeqnnumonly{#1} and \refeqnnumonly{#2}}
+\def\LRA{\Leftrightarrow}
+\def\RA{\Rightarrow}
 
 \title{Article title}
 
@@ -34,29 +51,30 @@
 % Author footnotes can be included using:
 % \IUCrAufn{Text...}
 % and to apply the same footnote to another author use:
-% \IUCrAufn[1]{} 
-% where the number in square brackets refers to the numerical order of the 
+% \IUCrAufn[1]{}
+% where the number in square brackets refers to the numerical order of the
 % previously defined footnote.
 % For example:
 % \author[a]{Anne Author\IUCrCemaillink{corrauthor@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}}
- 
-\author[a]{Anne Author\IUCrCemaillink{corrauthor@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}}%
+
+
+\author[a]{Thomas Kittelmann\IUCrCemaillink{thomas.kittelmann@ess.eu}\IUCrOrcidlink{0000-0002-7396-4922}}%
 \author[b]{Secundus Segunda\IUCrEmaillink{coauthor@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}\IUCrAufn{Unique note.}}%
 \author[a,b]{Trinity Terzi\IUCrCemaillink{anothercorrauthor@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}\IUCrAufn{Shared note.}}%
 \author[a,b]{Clover Dufour\IUCrEmaillink{anothercoauthor@org.org}\IUCrAufn[2]{}}
 
-\affil[a]{Department, Organization, ..., Country }
+\affil[a]{ESS DMSC, European Spallation Source ERIC, Denmark}
 \affil[b]{Different Department, Different Organization, ..., Country }
 
-\begin{document} 
-\maketitle 
+\begin{document}
+\maketitle
 
 \begin{synopsis}
 One or two sentences suitable for the Journal contents listing and use in promoting your article via social media, highlighting the findings and significance of your work.
 \end{synopsis}
 
 \begin{abstract}
-Single paragraph stating as specifically and as quantitatively as possible the principal results obtained, and providing an indication of the broader significance of the work. The abstract should be capable of being understood on its own without access to the text or figures. 
+Single paragraph stating as specifically and as quantitatively as possible the principal results obtained, and providing an indication of the broader significance of the work. The abstract should be capable of being understood on its own without access to the text or figures.
 \end{abstract}
 
 \keywords{ Three or four key words/phrases separated by semi-colons. }
@@ -102,7 +120,7 @@ text text text text text text text.
 Text text text text text text text text text text text text text text
 text text text text text text text.
 
-% Basic table 
+% Basic table
 
 \begin{table}[ht]
 \caption{Caption to table \protect\cite{lamport86}} % NB \protect\cite{...} is required in floating tables
@@ -118,8 +136,290 @@ text text text text text text text.
 \end{tabular}
 \end{center}
 \end{table}
-     
-     
+
+\section{Dumping equations}
+
+NB: $\theta$ is the Bragg angle, defined by:
+\begin{align}
+  \sin\theta = \frac{\lambda}{2d_{hkl}}
+  \labeqn{braggequation}
+\end{align}
+
+And $x$ is defined by (fixme: is $l$ the sphere radius?):
+
+\begin{align}
+  x = \frac{ 2l^2\lambda^2F^2}{3V^2}
+  \labeqn{xdef}
+\end{align}
+
+\begin{align}
+  f(\eta) = \frac{\eta^2-\eta\sin(2\eta)+sin^2(\eta)}{\eta^4}
+  \labeqn{fofeta}
+\end{align}
+
+\begin{align}
+  \varphi^0(s) = \frac{3}{64s^3}\left\{8s^2+4s\exp(-4s)-(1-\exp(-4s))\right\}
+  \labeqn{phizero}
+\end{align}
+
+\begin{align}
+  \varphi^\pi(s) = \frac{3}{4s^3}\left\{s^2-s+\frac{1}{2}\log(1+2s)\right\}
+  \labeqn{phipi}
+\end{align}
+(NOTE the mistake of factor of 1/2 in original equations)
+
+\begin{align}
+  \varphi(\theta,s) = \varphi^0(s) + \sin^{3/2}\theta\left\{\varphi^\pi\left(s\sqrt{\sin\theta}\right)-\varphi^0\left(s\sqrt{\sin\theta}\right)\right\}
+  \labeqn{phi}
+\end{align}
+
+\begin{align}
+  y_{p}(\theta,x) = \frac{3}{2\pi}\int_{0}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta
+  \labeqn{ypintegral}
+\end{align}
+
+(note we have used that $f(\eta)$ is an even function to change the integration
+domain to $[0,\infty)$).
+
+
+\subsection{Old recipes}
+
+\begin{align}
+  y_{p}(\theta,x)=\left\{1+2x+\frac{A(\theta)x^2}{1+B(\theta)x}\right\}
+  \labeqn{ypfitfctorig}
+\end{align}
+
+\begin{align}
+  A(\theta) &= 0.20 + 0.45\cos(2\theta) \\
+  B(\theta) &= 0.22 - 0.12(0.5-\cos(2\theta))^2
+  \labeqn{ypfitfctparsorig}
+\end{align}
+
+\subsection{New recipes}
+
+\begin{align}
+  A(\theta) &= 0.559+0.537\cos(2\theta)\nonumber\\
+  B(\theta) &= 0.604-0.222(0.5-\cos(2\theta))^2
+\labeqn{ypfitfctparsupdated}
+\end{align}
+
+\begin{align}
+  y_{p}(\theta,x)=\left\{1+2x+\frac{A(\theta)x^2-0.1x}{1+B(\theta)x+C(\theta)x(1+x)^{-1} }\right\}^{-1/2}
+  \labeqn{ypfitfctlux}
+\end{align}
+
+%\begin{align}
+%  A(\theta) &=& \sum_{i=0}^6p^A_i(\sin\theta)^i \\
+%  B(\theta) &=& \sum_{i=0}^6p^B_i(\sin\theta)^i \\
+%  C(\theta) &=& \sum_{i=0}^6p^C_i(\sin\theta)^i \\
+%  \labeqn{ypfitfctluxparsFIXME}
+%\end{align}
+
+%\begin{align}
+%A(\theta) =& 0.8968-0.2928\sin(\theta)+2.528\sin^2(\theta)-11.21\sin^3(\theta)\nonumber\\
+%           & +21.07\sin^4(\theta)-20.17\sin^5(\theta)+7.32\sin^6(\theta)\nonumber\\
+%B(\theta) =& 0.4697-0.1688\sin(\theta)+5.37\sin^2(\theta)-20.68\sin^3(\theta)\nonumber\\
+%           & +40.52\sin^4(\theta)-38.09\sin^5(\theta)+12.89\sin^6(\theta)\nonumber\\
+%C(\theta) =& -0.7486-0.5671\sin(\theta)-1.248\sin^2(\theta)+17.56\sin^3(\theta)\nonumber\\
+%           & -47.8\sin^4(\theta)+59.14\sin^5(\theta)-26.61\sin^6(\theta)
+%  \labeqn{ypfitfctluxpars}
+%\end{align}
+%
+%
+%\begin{align}
+%A(\theta) =&
+%0.89677-0.2928\sin(\theta)+2.5285\sin^2(\theta)-11.207\sin^3(\theta)\nonumber\\
+%           &+21.068\sin^4(\theta)-20.166\sin^5(\theta)+7.32\sin^6(\theta)\nonumber \\
+%B(\theta) =&
+%0.46968-0.16882\sin(\theta)+5.3704\sin^2(\theta)-20.675\sin^3(\theta)\nonumber\\
+%           &+40.518\sin^4(\theta)-38.086\sin^5(\theta)+12.887\sin^6(\theta)\nonumber \\
+%C(\theta) =&
+%-0.7486-0.5671\sin(\theta)-1.2484\sin^2(\theta)+17.56\sin^3(\theta)\nonumber\\
+%           &-47.804\sin^4(\theta)+59.144\sin^5(\theta)-26.606\sin^6(\theta)
+%  \labeqn{ypfitfctluxpars}
+%\end{align}
+%
+\begin{align}
+  A(\theta) &= 0.8968-0.2928\sin(\theta)+2.528\sin^2(\theta)-11.21\sin^3(\theta)\nonumber\\
+            &\hspace*{1em} +21.07\sin^4(\theta)-20.17\sin^5(\theta)+7.32\sin^6(\theta)\nonumber\\
+  B(\theta) &= 0.4697-0.1688\sin(\theta)+5.37\sin^2(\theta)-20.68\sin^3(\theta)\nonumber\\
+            &\hspace*{1em} +40.52\sin^4(\theta)-38.09\sin^5(\theta)+12.89\sin^6(\theta)\nonumber\\
+  C(\theta) &= -0.7486-0.5671\sin(\theta)-1.248\sin^2(\theta)+17.56\sin^3(\theta)\nonumber\\
+            &\hspace*{1em} -47.8\sin^4(\theta)+59.14\sin^5(\theta)-26.61\sin^6(\theta)
+\labeqn{ypfitfctluxpars}
+\end{align}
+
+\subsection{Tail integration}
+
+For positive $\eta$ values we have:
+
+\begin{align}
+  f(\eta) \le f^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}
+  \labeqn{fplus}
+\end{align}
+\begin{align}
+  f(\eta) \ge f^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}
+  \labeqn{fminus}
+\end{align}
+
+Where $f^-(\eta)$ is only strictly positive when $\eta>1$, so we will restrict
+ourselves to $\eta>2$ (??)
+
+Since $\varphi(\theta,s)$ and $f(\eta)$ decreases monotonically for increasing
+$s$ and $\eta$ respectively for all positive arguments, we can conclude that:
+
+\begin{align}
+\int_{a}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta \le
+\int_{a}^{\infty} f^+(\eta)\varphi\left(\theta,xf^-(\eta)\right)d\eta \equiv T^+(\theta,x,a) \nonumber\\
+\int_{a}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta \ge
+\int_{a}^{\infty} f^-(\eta)\varphi\left(\theta,xf^+(\eta)\right)d\eta \equiv T^-(\theta,x,a)
+\end{align}
+
+Using $k=x/a$ and ensuring $a>\max(x,2)$ we have $k<1$.
+
+With the help of the SageMath (REF) Computer Algebra System, $T^\pm(\theta,x,a)$
+can be evaluated analytically and expressed as a Taylor expansion in inverse
+powers of $a$:
+
+\begin{align}
+  T^+(\theta,x,a) = \frac{1}{a}  + \frac{1-k}{2a^2 }
+  +\left[\frac{1}{3} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
+  +\mathcal{O}\left(\frac{1}{a^4}\right)
+\end{align}
+
+\begin{align}
+  T^-(\theta,x,a) = \frac{1}{a}  - \frac{1+k}{2a^2 }
+  +\frac{8+4\sin^{5/2}\theta}{25}k^2\frac{1}{a^3}
+  +\mathcal{O}\left(\frac{1}{a^4}\right)
+\end{align}
+
+Varying both $k$ and $\sin\theta$ over values the unit interval and evaluating
+Taylor coefficients for terms up to $1/a^{20}$ numerically, it is seen that the
+maximal absolute numerical value of coefficients is always within a factor of
+$2.50$ when compared to the previous order. Thus, if we restrict ourselves to
+$a>10$, we can conservatively limit the maximal contributions of the terms of
+order $1/a^4$ or higher in REFEQNABOVE to be at most $10/a^4$. With that, we can
+use $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral
+value, while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper
+bound of the error on the estimate. In other words, for $a>\max(10,x)$ we get:
+
+\begin{align}
+\int_{a}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta \approx
+\frac{1}{a}  - \frac{k}{2a^2 }
+  +\left[\frac{1}{6} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
+  \pm
+\left(\frac{1}{2a^2 }+\frac{1}{6a^3}+\frac{10}{a^4}\right)
+\labeqn{tailintegralpenultimate}
+\end{align}
+Where the term in the final parenthesis represents an upper bound on the
+error. Due to the leading factor of $1/a^2$ in the error term, there is not much
+value in keeping the higher order terms of \refeqn{tailintegralpenultimate}. Thus, by
+using $k=x/a$ and $a>10$ and a slight additional pessimisation of the error bound, we
+can arrive at the following simple formula for the estimation of the tail of the
+integral:
+\begin{align}
+\int_{a}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta \approx
+\frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
+\labeqn{tailintegral}
+\end{align}
+
+\subsection{Central integration}
+
+With the integrand implemented via mpmath (REF), and a
+Gauss-Legendre numerical integration, we integrate a particular integral
+$[0,a]$. However, for reliable performance it is crucial that the it is 
+
+as the integrand contains trigonometic functions in REFFOFETA,
+it is important that each
+
+\subsection{Direct evaluation at low $x$ via Taylor expansions}
+
+
+\subsection{Integration strategy}
+
+
+
+At a particular $(\theta,x)$ point, the strategy to evaluate $y_p(\theta,x)$
+within a target precision of $\epsilon=10^{-7}$ is described in the following.
+
+First, for $x<1$, it is investigated if the direct Taylor expansion method
+described in REFSECTION is suitable to achieve the required precision. If it is
+not, the integral is solved by a combination of high-precision Gauss-Legendre
+numerical integration over the interval $[0,a]$ while the contribution over the
+interval $[a,\infty]$ is estimated by \refeqn{tailintegral}. The only problem
+that remains is which value of $a$ to choose in this scenario.
+
+
+strategy: $\delta{}a$ is $\max(100,x)$, rounded up to 
+For increasing values of i, set a=step*i and evaluate via a Gauss-Legendre
+integration the integral over $[0,a]$. Check if combining this result with a
+tail integration over $[a,\infty]$ would provide a final result with suitable
+low error. If not, increase $a$ by $\Delta{}a$
+
+
+
+%
+%(amax+amin)/2 is:
+%
+%\begin{align}
+%  \frac{1}{a}
+%  -\frac{k}{2a^2}
+%  +\frac{1}{6a^3}
+%  +\frac{8+4\sin^{5/2}\theta}{25a^3}k^2
+%  -\frac{4+8\sin^{3}\theta}{21a^4}k^3
+%  +\mathcal{O}\left(\frac{1}{a^5}\right)
+%\end{align}
+%
+%(amax-amin)/2 is:
+%
+%\begin{align}
+%  \frac{1}{2a^2}
+%  +\frac{1}{6a^3}
+%  -2k^2\frac{2+\sin^{5/2}\theta}{15a^4}
+%  +2k^3\frac{1+\sin^{3}\theta}{3a^5}
+%  -2k^2\frac{2+\sin^{5/2}\theta}{35a^5}
+%  +\mathcal{O}\left(\frac{1}{a^6}\right)
+%\end{align}
+
+
+% amax:
+% power of t - power of x | power of t | coefficient
+% 1    | 1  | 1
+% 2    | 2  | 1/2
+% 2    | 3  | -1/2*xx + 1/3
+% 3    | 5  | 4/25*(sinth^(5/2) + 2)*xx^2
+% 4    | 6  | -2/15*(sinth^(5/2) + 2)*xx^2 + 1/4*xx
+% 4    | 7  | -4/21*(2*sinth^3 + 1)*xx^3
+% 5    | 8  | 1/3*(2*sinth^3 + 1)*xx^3 - 1/10*(sinth^(5/2) + 2)*xx^2
+% 5    | 9  | 16/315*(13*sinth^(7/2) + 2)*xx^4 - 4/27*(2*sinth^3 + 1)*xx^3 + 4/45*(sinth^(5/2) + 2)*xx^2
+% 6    | 10 | -24/175*(13*sinth^(7/2) + 2)*xx^4 + 2/15*(2*sinth^3 + 1)*xx^3
+% 6    | 11 | -4/165*(43*sinth^4 + 2)*xx^5 + 48/385*(13*sinth^(7/2) + 2)*xx^4 - 8/33*(2*sinth^3 + 1)*xx^3
+% 7    | 12 | 4/45*(43*sinth^4 + 2)*xx^5 - 8/105*(13*sinth^(7/2) + 2)*xx^4 + 1/9*(2*sinth^3 + 1)*xx^3
+% 7    | 13 | 64/12285*(311*sinth^(9/2) + 4)*xx^6 - 8/65*(43*sinth^4 + 2)*xx^5 + 48/455*(13*sinth^(7/2) + 2)*xx^4
+% 8    | 14 | -32/1323*(311*sinth^(9/2) + 4)*xx^6 + 2/21*(43*sinth^4 + 2)*xx^5 - 24/245*(13*sinth^(7/2) + 2)*xx^4
+% ...
+%
+% amin:
+% power of t - power of x | power of t | coefficient
+% 1     | 1  | 1
+% 2     | 2  | -1/2
+% 2     | 3  | -1/2*xx
+% 3     | 5  | 4/25*(sinth^(5/2) + 2)*xx^2
+% 4     | 6  | 2/15*(sinth^(5/2) + 2)*xx^2 + 1/4*xx
+% 4     | 7  | -4/21*(2*sinth^3 + 1)*xx^3 + 4/35*(sinth^(5/2) + 2)*xx^2
+% 5     | 8  | -1/3*(2*sinth^3 + 1)*xx^3 - 1/10*(sinth^(5/2) + 2)*xx^2
+% 5     | 9  | 16/315*(13*sinth^(7/2) + 2)*xx^4 - 4/9*(2*sinth^3 + 1)*xx^3 - 4/45*(sinth^(5/2) + 2)*xx^2
+% 6     | 10 | 24/175*(13*sinth^(7/2) + 2)*xx^4 - 2/15*(2*sinth^3 + 1)*xx^3 - 2/25*(sinth^(5/2) + 2)*xx^2
+% 6     | 11 | -4/165*(43*sinth^4 + 2)*xx^5 + 96/385*(13*sinth^(7/2) + 2)*xx^4 + 4/33*(2*sinth^3 + 1)*xx^3
+% 7     | 12 | -4/45*(43*sinth^4 + 2)*xx^5 + 8/35*(13*sinth^(7/2) + 2)*xx^4 + 1/3*(2*sinth^3 + 1)*xx^3
+% 7     | 13 | 64/12285*(311*sinth^(9/2) + 4)*xx^6 - 8/39*(43*sinth^4 + 2)*xx^5 + 48/455*(13*sinth^(7/2) + 2)*xx^4 + 8/39*(2*sinth^3 + 1)*xx^3
+% 8     | 14 | 32/1323*(311*sinth^(9/2) + 4)*xx^6 - 2/7*(43*sinth^4 + 2)*xx^5 - 24/245*(13*sinth^(7/2) + 2)*xx^4 + 2/21*(2*sinth^3 + 1)*xx^3
+% ...
+
+
+
+
+
 \appendix % if required
 \section{Appendix title}
 
@@ -155,5 +455,5 @@ List funding organizations, recipients, grant numbers, etc.
 \bibliography{iucr} % basename of .bib file
 
 
-\end{document}                    
+\end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
