@@ -21,7 +21,6 @@ def std_plots( data, mode ):
     for thstr in data['th_keys']:
         thval = float(thstr)
         color = th2color(thstr)
-        #print(data[data_key])
         plt.plot( data['xvals'],
                   data[data_key][thstr],
                   label = f'$\\theta={thval:g}\\degree$',
@@ -450,7 +449,7 @@ def main_par2latex( args ):
                 continue
             if i==4:
                 print(s+r'\nonumber\\')
-                s='             &\hspace*{1em} '
+                s=r'             &\hspace*{1em} '
             if not f.startswith('-'):
                 f = f'+{f}'
             if i==1:
@@ -463,3 +462,40 @@ def main_par2latex( args ):
     print(r'\labeqn{ypfitfctluxpars}')
     print(r'\end{align}')
 
+
+@np.vectorize
+def find_taylor_maxx( theta, eps ):
+    from .eq36_lowx_taylor import taylor_lowx_eq36
+    def is_ok( x ):
+        return taylor_lowx_eq36( theta, x, eps ) is not None
+
+    xmin, xmax = 1e-20, 100.0
+    assert is_ok(xmin) and not is_ok(xmax)
+
+    target_precision = 1e-7
+    while True:
+        xmid = (xmax+xmin)*0.5
+        if is_ok(xmid):
+            xmin = xmid
+        else:
+            xmax = xmid
+        if (xmax-xmin) < target_precision:
+            return 0.5*(xmax+xmin)
+
+def main_taylorreach( args ):
+
+    n = 1000
+    split_x = 5
+    theta_vals = np.concat( ( np.linspace(0,split_x,n//2,endpoint=False),
+                              np.linspace(split_x,90,n//2+1) ) )
+    for eps in [1e-3, 1e-8, 1e-16]:
+        print("Producing data for eps=%g"%eps)
+        plt.plot( theta_vals,
+                  find_taylor_maxx( theta_vals, eps ),
+                  label = 'eps=%g'%eps)
+    plt.grid()
+    plt.xlabel(r'$\theta$ ($\degree$)')
+    plt.ylabel('x')
+    plt.title('Maximal x value where eq. 36 can be evaluated via Taylor expansion')
+    plt.legend()
+    plt.show()

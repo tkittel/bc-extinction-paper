@@ -1,0 +1,71 @@
+#!/usr/bin/env -S sage -python
+# -*- mode: python; -*-
+
+from sage.all import ( var, assume, unicode_art,
+                       Integer as sage_int,
+                       sin, exp, log, sqrt,
+                       infinity as sage_infinity,
+                       pi as sage_pi )
+
+eta,s,x,sinth = var('eta,s,x,sinth')
+assume(eta>=0,s>=0,x>0,sinth>=0,sinth<=1)
+
+f=(eta**2-eta*sin(2*eta)+(sin(eta))**2)/eta**4
+phipi=(3/(4*s**3))*(s**2-s+log(1+2*s)/2)
+phi0 = (3/(64*s**3))*(8*(s**2)+4*s*exp(-4*s)-(1-exp(-4*s)))
+phi=phi0(s=s)+sinth**(3/2)*(phipi(s=s*sqrt(sinth))-phi0(s=s*sqrt(sinth)))
+
+#We denote the integrand of eq. 36 as g:
+g=f(eta=eta)*phi(s=x*f(eta=eta))
+
+
+print("Considering the integrand g(eta) given as:")
+print()
+print(unicode_art(g))
+
+order = sage_int(30)
+
+print("We Taylor expand the integrand in x before integrating over eta")
+print("from 0 to infinity, and subsequently collect the results by orders of x")
+print()
+print("This will take some time (should be less than a few hours)...")
+g_taylor = g.taylor(x,0,order)
+print("... expansion done, now integrating")
+g_taylor = g_taylor.integrate(eta,0,sage_infinity).collect(x)
+print("... done")
+
+print("The coefficients are (multiplied by (3/2pi)):")
+k = sage_int(3)/( sage_int(2) * sage_pi )
+print()
+print("Code suitable for Python mpmath code. Note that we use the last three")
+print("terms of the Taylor expansion as an upper bound on the error")
+def fmt_mpf( v, arg_only = False ):
+    s = str(v)
+    s = '"%s"'%s if not s.isdigit() else '%s'%s
+    return s if arg_only else 'm(%s)'%s
+
+print('    m = mpf')
+print('    sinth = m(sinth)')
+print('    def s( power ):')
+print('        return sinth**m(power)')
+for e in g_taylor.coefficients(x):
+    x_order = e[1]
+    ci = (e[0]*k).simplify().factor()
+    terms_ci = []
+    for es in ci.coefficients(sinth):
+        sinth_order = es[1]
+        sinth_coeff = es[0]
+        terms_ci.append(fmt_mpf(sinth_coeff))
+        if sinth_order != 0:
+            terms_ci[-1] += '*s(%s)'%fmt_mpf(sinth_order,arg_only=True)
+    terms_ci = '%s'%('+'.join(terms_ci))
+    print('    c%i = %s'%(x_order,terms_ci))
+print('    def calc_taylor( x ):')
+print('        return c0+x*'+''.join('(c%i+x*'%i for i in range(1,order))+'c%i'%order+')'*(order-1))
+print('    def calc_taylor_errorbound( x ):')
+print('        # very conservative error bound, based on absolute size of')
+print('        # contributions of last three orders')
+print('        return (x**%i)*(abs(c%i)+x*(abs(c%i)+x*abs(c%i)))'%( int(order)-2,
+                                                                   int(order)-2,
+                                                                   int(order)-1,
+                                                                   int(order) ) )
