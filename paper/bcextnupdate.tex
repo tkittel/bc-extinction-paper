@@ -21,6 +21,11 @@
 % \usepackage{myfavouritepackage}
 \usepackage{amssymb}
 \usepackage[fleqn]{amsmath}
+
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+%\usepackage[table]{xcolor}
+
 \newcommand{\labtab}[1]{\label{tab:#1}}
 \newcommand{\reftabnumonly}[1]{\ref{tab:#1}}
 \newcommand{\reftab}[1]{Table~\reftabnumonly{#1}}
@@ -115,6 +120,7 @@ text text text text text text text.
 Text text text text text text text text text text text text text text
 text text text text text text text.
 
+
 \subsubsection{Subsubsection title}
 
 Text text text text text text text text text text text text text text
@@ -136,6 +142,20 @@ text text text text text text text.
 \end{tabular}
 \end{center}
 \end{table}
+
+\begin{table}[ht]
+\caption{Bla bla.} % NB \protect\cite{...} is required in floating tables
+\smallskip
+\tiny
+\begin{center}
+%%%% Begin code exported from pandas .to_latex() (NOTE: color statements needed
+%%%% manual modification)
+\input{../data/table1_diff.tex}
+%%%% End of code exported from pandas .to_latex()
+\end{center}
+\end{table}
+
+
 
 \section{Dumping equations}
 
@@ -327,7 +347,7 @@ integral:
 
 With the integrand implemented via mpmath (REF), and a
 Gauss-Legendre numerical integration, we integrate a particular integral
-$[0,a]$. However, for reliable performance it is crucial that the it is 
+$[0,a]$. However, for reliable performance it is crucial that ...
 
 as the integrand contains trigonometic functions in REFFOFETA,
 it is important that each
@@ -350,7 +370,7 @@ interval $[a,\infty]$ is estimated by \refeqn{tailintegral}. The only problem
 that remains is which value of $a$ to choose in this scenario.
 
 
-strategy: $\delta{}a$ is $\max(100,x)$, rounded up to 
+strategy: $\delta{}a$ is $\max(100,x)$, rounded up to
 For increasing values of i, set a=step*i and evaluate via a Gauss-Legendre
 integration the integral over $[0,a]$. Check if combining this result with a
 tail integration over $[a,\infty]$ would provide a final result with suitable
