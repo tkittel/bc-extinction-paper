@@ -457,3 +457,39 @@ List funding organizations, recipients, grant numbers, etc.
 
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Sagemath timings: Unclear, but lowx_taylor was very long, perhaps >10 hours.
+
+% createdata Timings: (total 15 hours with ~14 processes):
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Wrote bcdata.json ("1919/1919 [6:58:50<00:00, 13.10s/it]")
+%
+% real  418m51.385s
+% user  5734m52.315s
+% sys  0m58.339s
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Wrote bcdata_table1pts.json  ("240/240 [55:48<00:00, 13.95s/it]")
+%
+% real  55m49.143s
+% user  761m31.834s
+% sys  0m9.245s
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Wrote bcdata_thetascan.json ("2534/2534 [6:42:33<00:00,  9.53s/it]")
+%
+% real  402m34.514s
+% user  5603m21.985s
+% sys  0m22.534s
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Combination of three previous:
+% real  877m15.043s
+% user  12099m46.135s
+% sys  1m30.118s
+%
+%  ==> Average of 155 seconds per point!
