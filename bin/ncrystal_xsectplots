@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+
+import NCrystalDev as NC
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("""NOTE: As of Aug26 this script must be run from an environment with a
+development version of NCrystal. Once a version of NCrystal is released with
+extinction support (likely during Fall 2025), this will be possible with the
+standard NCrystal.  """)
+
+mode = 'be'
+if mode == 'be':
+    base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'
+    wlmax = 6
+    domainsize_mu_list = [ 3, 5, 10, 20 ]
+elif mode == 'bi':
+    base_cfgstr = 'stdlib::Bi_sg166.ncmat;comp=bragg'
+    wlmax = 9
+    domainsize_mu_list = [ 2, 8, 12 ]
+elif mode == 'pb':
+    base_cfgstr = 'stdlib::Pb_sg225.ncmat;comp=bragg'
+    wlmax = 9
+    domainsize_mu_list = [ 2, 6, 8 ]
+elif mode == 'beo':
+    base_cfgstr = 'stdlib::BeO_sg186.ncmat;comp=bragg'
+    wlmax = 6
+    domainsize_mu_list = [ 2, 6, 8 ]
+else:
+    assert False
+
+wls = np.linspace(0.0,wlmax,2000)
+
+def calc_xs( domainsize_mu, mdl, wls ):
+    if '/' not in mdl:
+        mdlpars = None
+    else:
+        mdl,mdlpars = mdl.split('/',1)
+        assert mdl!='none'
+    assert mdl in ('sabine','bc','none')
+    cfgstr = f'{base_cfgstr}'
+    #if mdl=='sabine':
+    #    domainsize_mu *= 1.2
+    if mdl!='none':
+        cfgstr += f';extn={domainsize_mu}mu/mdl:{mdl}'
+        if mdlpars:
+            cfgstr += f'/{mdlpars}'
+    print(cfgstr)
+    sc = NC.createScatter(cfgstr)
+    return sc.xsect(wl=wls)
+
+#colors inspired by http://www.mulinblog.com/a-color-palette-optimized-for-data-visualization/
+cols = dict(
+    red="#F15854",
+    blue="#5DA5DA",
+    orange="#FAA43A",
+    green="#60BD68",
+    brown = "#B2912F",
+    purple = "#B276B2",
+    yellow = "#DECF3F",
+    pink = "#F17CB0",
+    gray = "#4D4D4D"
+)
+
+
+common = dict( lw=2 )
+
+def plot_noextn():
+    plt.plot( wls,
+              calc_xs(domainsize_mu=None,wls=wls,mdl='none'),
+              label='No extinction',
+              ls=':',color=cols['gray'],**common
+             )
+def plot_wrapup():
+    plt.xlabel('Neutron Wavelength ($\\AA$)')
+    plt.ylabel('Bragg diffraction cross section per atom (barn)')
+    plt.ylim(0)
+    plt.xlim(0,wlmax)
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+plot_noextn()
+for domainsize_mu, linecol in [ (2,cols['green']),
+                                (10,cols['blue']),
+                                (20,cols['orange']) ]:
+    plt.plot( wls,
+              calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/yp:cls'),
+              label=f'Becker-Coppens 1974 (l=${domainsize_mu}\\mu$m)',
+              **common, color=linecol )
+plot_wrapup()
+
+mdl2pars = { 'sabine' : dict(color=cols['orange'],ls='-.'),
+             'bc/yp:cls' : dict(color=cols['blue'],ls='-'),
+             'bc/yp:lux' : dict(color=cols['green'],ls='-'),
+             'bc/yp:ucls' : dict(color=cols['purple'],ls='-'),
+            }
+plot_noextn()
+for domainsize_mu in domainsize_mu_list:
+    for mdl, mdlname in [ ('sabine','Sabine 2006'),
+                          ('bc/yp:cls','Becker-Coppens 1974'),
+                          ('bc/yp:lux','Becker-Coppens 1974 (2025 luxury update)'),
+                          ('bc/yp:ucls','Becker-Coppens 1974 (2025 minimal update)'),
+                         ]:
+        plt.plot( wls,
+                  calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl=mdl),
+                  label=f'{mdlname} (l=${domainsize_mu}\\mu$m)',
+                  **common, **mdl2pars[mdl] )
+plot_wrapup()
