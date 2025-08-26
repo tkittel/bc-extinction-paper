@@ -42,7 +42,7 @@
 \def\LRA{\Leftrightarrow}
 \def\RA{\Rightarrow}
 
-\title{Article title}
+\title{Revisiting Becker-Coppens (1974): Updated Recipes for Estimating Primary Extinction Factors in Spherical Crystallites}
 
 % Authors and affiliations (uses the standard authblk package):
 % Author affiliations are indicated by lowercase letters in square brackets in the \author macro.
@@ -75,17 +75,53 @@
 \maketitle
 
 \begin{synopsis}
-One or two sentences suitable for the Journal contents listing and use in promoting your article via social media, highlighting the findings and significance of your work.
+A technical correction and enhancement of the Becker-Coppens (1974) recipe for
+estimating primary extinction factors in spherical crystallites is provided,
+addressing limitations in scenarios with higher Bragg angles. The work utilises
+modern computing capabilities and updated recipes are provided for easy
+community adoption.
 \end{synopsis}
 
 \begin{abstract}
-Single paragraph stating as specifically and as quantitatively as possible the principal results obtained, and providing an indication of the broader significance of the work. The abstract should be capable of being understood on its own without access to the text or figures.
+We present a technical correction and update of the widely used recipe by
+Becker-Coppens (1974), for the estimation of primary extinction factors in a
+perfect spherical crystallite. In the original publication, these extinction
+factors were evaluated numerically from a complicated integral, and simplified
+analytical approximations to these numerical evaluations constituted the
+provided recipes. However, in case of significant level of extinction, the
+original recipes suffers from numerical break-down in back-scattering scenarios
+($\theta_\texttt{Bragg}\gtrsim50^\circ$). Using modern computing capabilities,
+the numerical evaluation of the original integral is revisited, and updated
+recipes are provided which can be used also for back-scattering and strong
+extinction scenarios. In order to facilitate easy adoption by the community, the
+new recipes are compared to the old, and two new recipes are provided: a
+minimalistic update of the 4 free parameters in the old recipes, and a more
+complicated and precise analytical form with 21 free parameters. Both new
+recipes solve the issues of numerical break-down.
 \end{abstract}
 
-\keywords{ Three or four key words/phrases separated by semi-colons. }
+\keywords{primary extinction; bragg diffraction; neutron scattering; X-ray diffraction}
 
 
 \section{Section title}
+
+Introduction, mention how bragg diffraction and how $y_p(\theta,d_{hkl},F^2)$
+will depend on the geometrical layout of the crystallites. Mention Bragg angle,
+and x-value, and show the original recipe, and how it is used with $l$, $x$,
+$F^2$, $\theta$, $d_{hkl}$.
+
+Also show the break-down!
+
+Define yp integral, x, theta, f, phi0, phipi.
+
+
+
+
+
+
+
+
+
 
 Text text text text text text text text text text text text text text
 text text text text text text text \cite{knuth84,lamport86}.
@@ -150,10 +186,23 @@ text text text text text text text.
 \begin{center}
 %%%% Begin code exported from pandas .to_latex() (NOTE: color statements needed
 %%%% manual modification)
+\input{../data/table1_updated.tex}
+%%%% End of code exported from pandas .to_latex()
+\end{center}
+\end{table}
+
+\begin{table}[ht]
+\caption{Bla bla.} % NB \protect\cite{...} is required in floating tables
+\smallskip
+\tiny
+\begin{center}
+%%%% Begin code exported from pandas .to_latex() (NOTE: color statements needed
+%%%% manual modification)
 \input{../data/table1_diff.tex}
 %%%% End of code exported from pandas .to_latex()
 \end{center}
 \end{table}
+
 
 
 
@@ -202,7 +251,9 @@ And $x$ is defined by (fixme: is $l$ the sphere radius?):
 domain to $[0,\infty)$).
 
 
-\subsection{Old recipes}
+  \newpage
+  
+\subsection{Old recipe}
 
 \begin{align}
   y_{p}(\theta,x)=\left\{1+2x+\frac{A(\theta)x^2}{1+B(\theta)x}\right\}
@@ -217,48 +268,21 @@ domain to $[0,\infty)$).
 
 \subsection{New recipes}
 
+Minimal update, simply updating the four parameters from the old model:
+
 \begin{align}
   A(\theta) &= 0.559+0.537\cos(2\theta)\nonumber\\
   B(\theta) &= 0.604-0.222(0.5-\cos(2\theta))^2
 \labeqn{ypfitfctparsupdated}
 \end{align}
 
+Improved and slightly more complicated recipe for more precise adherence to eq. 36:
+
 \begin{align}
   y_{p}(\theta,x)=\left\{1+2x+\frac{A(\theta)x^2-0.1x}{1+B(\theta)x+C(\theta)x(1+x)^{-1} }\right\}^{-1/2}
   \labeqn{ypfitfctlux}
 \end{align}
 
-%\begin{align}
-%  A(\theta) &=& \sum_{i=0}^6p^A_i(\sin\theta)^i \\
-%  B(\theta) &=& \sum_{i=0}^6p^B_i(\sin\theta)^i \\
-%  C(\theta) &=& \sum_{i=0}^6p^C_i(\sin\theta)^i \\
-%  \labeqn{ypfitfctluxparsFIXME}
-%\end{align}
-
-%\begin{align}
-%A(\theta) =& 0.8968-0.2928\sin(\theta)+2.528\sin^2(\theta)-11.21\sin^3(\theta)\nonumber\\
-%           & +21.07\sin^4(\theta)-20.17\sin^5(\theta)+7.32\sin^6(\theta)\nonumber\\
-%B(\theta) =& 0.4697-0.1688\sin(\theta)+5.37\sin^2(\theta)-20.68\sin^3(\theta)\nonumber\\
-%           & +40.52\sin^4(\theta)-38.09\sin^5(\theta)+12.89\sin^6(\theta)\nonumber\\
-%C(\theta) =& -0.7486-0.5671\sin(\theta)-1.248\sin^2(\theta)+17.56\sin^3(\theta)\nonumber\\
-%           & -47.8\sin^4(\theta)+59.14\sin^5(\theta)-26.61\sin^6(\theta)
-%  \labeqn{ypfitfctluxpars}
-%\end{align}
-%
-%
-%\begin{align}
-%A(\theta) =&
-%0.89677-0.2928\sin(\theta)+2.5285\sin^2(\theta)-11.207\sin^3(\theta)\nonumber\\
-%           &+21.068\sin^4(\theta)-20.166\sin^5(\theta)+7.32\sin^6(\theta)\nonumber \\
-%B(\theta) =&
-%0.46968-0.16882\sin(\theta)+5.3704\sin^2(\theta)-20.675\sin^3(\theta)\nonumber\\
-%           &+40.518\sin^4(\theta)-38.086\sin^5(\theta)+12.887\sin^6(\theta)\nonumber \\
-%C(\theta) =&
-%-0.7486-0.5671\sin(\theta)-1.2484\sin^2(\theta)+17.56\sin^3(\theta)\nonumber\\
-%           &-47.804\sin^4(\theta)+59.144\sin^5(\theta)-26.606\sin^6(\theta)
-%  \labeqn{ypfitfctluxpars}
-%\end{align}
-%
 \begin{align}
   A(\theta) &= 0.8968-0.2928\sin(\theta)+2.528\sin^2(\theta)-11.21\sin^3(\theta)\nonumber\\
             &\hspace*{1em} +21.07\sin^4(\theta)-20.17\sin^5(\theta)+7.32\sin^6(\theta)\nonumber\\
@@ -481,7 +505,7 @@ List funding organizations, recipients, grant numbers, etc.
 
 % Sagemath timings: Unclear, but lowx_taylor was very long, perhaps >10 hours.
 
-% createdata Timings: (total 15 hours with ~14 processes):
+% createdata Timings: (total 15.5 hours with ~14 processes):
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Wrote bcdata.json ("1919/1919 [6:58:50<00:00, 13.10s/it]")
@@ -491,12 +515,11 @@ List funding organizations, recipients, grant numbers, etc.
 % sys  0m58.339s
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Wrote bcdata_table1pts.json  ("240/240 [55:48<00:00, 13.95s/it]")
+% Wrote bcdata_table1pts.json ("364/364 [1:27:30<00:00, 14.42s/it]")
 %
-% real  55m49.143s
-% user  761m31.834s
-% sys  0m9.245s
-%
+% real  87m30.635s
+% user  1168m6.251s
+% sys  0m28.893s
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Wrote bcdata_thetascan.json ("2534/2534 [6:42:33<00:00,  9.53s/it]")
@@ -505,11 +528,7 @@ List funding organizations, recipients, grant numbers, etc.
 % user  5603m21.985s
 % sys  0m22.534s
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Combination of three previous:
-% real  877m15.043s
-% user  12099m46.135s
-% sys  1m30.118s
-%
-%  ==> Average of 155 seconds per point!
+
+
+
+
