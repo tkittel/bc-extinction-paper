@@ -1,19 +1,56 @@
+
+#FIXME rename file
+
 import pathlib
 import numpy as np
 
-def format_table1_heatmap( table_orig, table_new, out_filename, mode='html',do_print = False ):
+def is_html( out_filename ):
     is_html = out_filename.endswith('.html')
     is_tex = out_filename.endswith('.tex')
     assert int(is_html) + int(is_tex) == 1
+    return is_html
+
+def fix_table_fmt( table, out_filename ):
+    table.columns = ['%g'%e for e in table.columns]
+    table.index = ['%g'%e for e in table.index]
+    if is_html(out_filename):
+        table.columns.name = 'sin(\u03B8)'
+        table.index.name = 'x'
+    else:
+        table.columns.name = r'$\sin(\theta)$'
+        table.index.name = '$x$'
+
+def table_output( styled_table, out_filename ):
+    if is_html(out_filename):
+        output = styled_table.to_html()
+    else:
+        output = styled_table.to_latex(convert_css=True)
+    with pathlib.Path(out_filename).open('wt') as fh:
+        fh.write(output)
+        print(f"Wrote: {out_filename}")
+
+def write_updated_table1( table1_updated,
+                          out_filename,
+                          do_print = False,
+                          ndigits = 4 ):
+    t = table1_updated
+    fix_table_fmt(t,out_filename)
+    #Follow style of BC1974 Table 1, multiply by 1e4 and show now decimals:
+    t *= 10**ndigits
+    t = table1_updated.style.format("{:0%i.0f}"%ndigits)
+    if do_print:
+        print(t)#fixme does not work
+    table_output(t,out_filename)
+
+def write_table1_diff_heatmap( table_orig,
+                               table_new,
+                               out_filename ,
+                               do_print = False ):
     table_diff = (table_orig/table_new - 1.0)*100.0
+    vmin, vmax = table_diff.min().min(), table_diff.max().max()
+    fix_table_fmt(table_diff,out_filename)
     if do_print:
         print(table_diff)
-    vmin, vmax = table_diff.min().min(), table_diff.max().max()
-    table_diff.columns = ['%g'%e for e in table_diff.columns]
-    table_diff.index = ['%g'%e for e in table_diff.index]
-
-    print( table_diff )
-
     def my_scale( val ):
         ##Any value diverging less than 1% we clip to neutral. Otherwise we use a colourbar with extreme values
         #if abs(val)<1.0:
@@ -26,15 +63,7 @@ def format_table1_heatmap( table_orig, table_new, out_filename, mode='html',do_p
                                orig_name = 'custom' )
     td = table_diff.style.background_gradient(cmap=cmap,vmin = vmin,vmax = vmax)
     td = td.format("{:.2f}")
-
-    if is_html:
-        output = td.to_html()
-    else:
-        output = td.to_latex(convert_css=True)
-
-    with pathlib.Path(out_filename).open('wt') as fh:
-        fh.write(output)
-        print(f"Wrote: {out_filename}")
+    table_output(td,out_filename)
 
 def create_custom_cmap( table,
                         scale_fct,

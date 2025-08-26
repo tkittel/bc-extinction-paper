@@ -36,46 +36,50 @@ def main_xscan( args ):
     assert len(args)==1 and (args[0]=='all' or args[0] in std_modemap.keys())
     std_plots( load_xscan(), args[0] )
 
-
 def main_table1( args ):
-    from .load import load_table1scan
+    from .load import ( load_table1scan_origpts,
+                        load_table1scan_allpts )
     from .bc1974_tables import table1 as orig_table
-    assert len(args)==0 or (len(args)==1 and args[0]=='all')
-    do_all = ( args and args[0] == 'all' )
+    modes = ['all','plot','diff','updated']
+    mode = args[0] if (len(args)==1 and args[0] in modes) else None
+    if not mode:
+        raise SystemExit('Please provide table1 sub-mode, one of: %s'%(' '.join(modes)))
 
-    data = load_table1scan()
+    data = load_table1scan_origpts()
+    data_all = load_table1scan_allpts()
 
-    if do_all:
-        std_plots(data,'all')
-
-    def as_table( df ):
-        return df.pivot(index='x', columns='sinth', values='value')
-
-    def print_table( df ):
-        print( as_table(df) )
-
+    if mode in ('all','plot'):
+        std_plots(data_all,'all')
+        if mode=='plot':
+            return
 
     orig_table = orig_table()
     df_orig = pd.DataFrame(orig_table['x_sinth_yp_list'],
                            columns=['x', 'sinth', 'value'])
-    def new_as_dataframe():
+    def as_dataframe( thedata ):
         flat = []
-        xvals = data['xvals']
-        for th, ypvals in data['theta_2_ypvals'].items():
+        xvals = thedata['xvals']
+        for th, ypvals in thedata['theta_2_ypvals'].items():
             sinth = float('%g'%(np.sin(kDeg2Rad*float(th))))
             for x, yp in zip( xvals, ypvals ):
                 flat.append( ( x, sinth, yp ) )
         return pd.DataFrame(flat, columns=['x', 'sinth', 'value'])
 
-    new_df = new_as_dataframe()
+    def as_table( df ):
+        return df.pivot(index='x', columns='sinth', values='value')
 
-    print_table( df_orig )
-    print_table( new_df )
+    if mode in ('all','diff'):
+        df = as_dataframe(data)
+        from .print_table1_diff import write_table1_diff_heatmap as ft
+        ft( as_table(df_orig), as_table(df), 'table1_diff.html',
+            do_print = True )
+        ft( as_table(df_orig), as_table(df), 'table1_diff.tex' )
 
-    from .print_table1_diff import format_table1_heatmap as ft
-    ft( as_table(df_orig), as_table(new_df), 'table1_diff.html',
-        do_print = True )
-    ft( as_table(df_orig), as_table(new_df), 'table1_diff.tex' )
+    if mode in ('all','updated'):
+        df = as_dataframe(data_all)
+        from .print_table1_diff import write_updated_table1 as ft
+        ft( as_table(df), 'table1_updated.html',do_print = True )
+        ft( as_table(df), 'table1_updated.tex' )
 
 def main_fit( args ):
     from .load import load_thetascan
@@ -499,3 +503,184 @@ def main_taylorreach( args ):
     plt.title('Maximal x value where eq. 36 can be evaluated via Taylor expansion')
     plt.legend()
     plt.show()
+
+def main_spread( args ):
+    assert not args
+    from .curves import ProposedCurve
+    from .load import load_xscan as dataload
+    data = dataload()
+    xvals = data['xvals']
+    def key_theta( theta ):
+        keys = [ k for k in data['th_keys']
+                 if abs(float(k)-float(theta))<1e-12 ]
+        assert len(keys)==1
+        return keys[0]
+    yp0 = data['theta_2_ypvals'][key_theta(0)]
+    #yp45 = data['theta_2_ypvals'][key_theta(0)]
+    yp90 = data['theta_2_ypvals'][key_theta(90)]
+    def reldiff(yp90,yp0):
+        return (yp90-yp0)/(0.5*(yp90+yp0))
+    plt.plot( xvals, reldiff(yp90,yp0), label='numerical integration' )
+    plt.plot( xvals,
+              reldiff(ProposedCurve()(xvals,90),ProposedCurve()(xvals,0)),
+              label='Via new parameterisation' )
+    #plt.semilogx()
+    plt.loglog()
+    plt.grid()
+    plt.legend()
+    plt.xlabel('x')
+    plt.ylabel('Max relative spread in yp values for different theta')
+    plt.show()
+
+def find_nearest_idx( arr, val):
+    assert isinstance(arr, np.ndarray)
+    idx = (np.abs(arr - val)).argmin()
+    assert idx < len(arr)
+    return idx
+
+def plot_breakdown( curve, ref ):
+    from .curves import ProposedCurve, ClassicCurve, UpdatedClassicCurve
+    from .load import load_xscan as dataload
+
+    assert curve in ('classic','updatedclassic','proposed')
+    assert ref in ('numint','proposed')
+    assert curve != ref
+
+    if ref=='numint':
+        refdata = dataload()
+        x = refdata['xvals']
+        th = array(sorted(float(e) for e in refdata['th_keys']))
+        _last_lookup = [None,None]
+        def lookup_ref(xval,thval):
+            if _last_lookup[0] != thval:
+                for _th,_yp in refdata['theta_2_ypvals'].items():
+                    if abs(float(_th)-thval)<1e-12:
+                        _last_lookup[0] = thval
+                        _last_lookup[1] = _yp
+            assert _last_lookup[0] == thval
+            return _last_lookup[1][find_nearest_idx(x,xval)]
+    else:
+        x = np.geomspace(0.1, 100.0, 400)  # Adjust the range and resolution as needed
+        th = np.linspace(0.1, 100.0, 400)
+        ref_curve = ProposedCurve()
+        def lookup_ref(xval, thval):
+            return ref_curve(xval,thval)
+
+    X, TH = np.meshgrid(x, th)
+    if curve=='classic':
+        curvefct = ClassicCurve()
+    elif curve=='updatedclassic':
+        curvefct = UpdatedClassicCurve()
+    else:
+        assert curve=='proposed'
+        curvefct = ProposedCurve()
+
+    @np.vectorize
+    def z_calc( xval, thval ):
+        if hasattr(curve,'breakdown') and curvefct.breakdown(xval, thval):
+            return 1.0
+        y = curvefct(xval, thval)
+        yref = lookup_ref(xval,thval)
+        return max(0.0,min(1.0,abs((y-yref)/yref)))
+
+    map_top = ( 25, 30 )
+    @np.vectorize
+    def val_fix( val ):
+        val = 100.0*val#percentage
+        a,newb = map_top
+        b = 100
+        if val > a:
+            rel = (val-a)/(b-a)
+            val = a + rel*(newb-a)
+        return max(0.0,min(float(newb),val))
+
+    #Custom colour map:
+    import matplotlib.colors as mcol
+
+    colors = [(0,0,0.1), (0,0,0.3), (0,0,0.35),   (0,0,0.7),    (0,0.7,0), (0,0.3,0),     "yellow",  "orange", "red"]
+    positions = [0,      2.0,       2.1,      5-0.5,       5 + 0.5,         10-0.5,       10+0.5,     25, 100]
+
+    if True:
+        colors = ["darkblue", "blue", "green", "darkgreen", "yellow", "red", "black"]
+        _eps = 1.0
+        positions = [0,        5-_eps,       5 + _eps,         10-_eps,       10+_eps,     25, 100]
+
+
+
+    positions = [ val_fix(e/100.0)/val_fix(100/100.0) for e in positions ]
+    positions[-1] = 1.0
+    cmap = mcol.LinearSegmentedColormap.from_list("custombreakdowncmap",
+                                                  list(zip(positions,
+                                                           colors)))
+
+
+    Z = z_calc(X, TH)
+    Z = val_fix(Z)
+    #Z = np.clip(Z,0.0,20.0)
+
+    plt.pcolormesh(x, th, Z,
+                   cmap=cmap, vmin=0.0, vmax=map_top[-1],
+                   edgecolors='none', rasterized=True,
+
+                   )#, shading='auto')#, cmap='binary')
+    plt.semilogx()
+    cbar = plt.colorbar(label='Precision (%)')
+
+    assert map_top[-1]==30
+    yticks = [0,2,5,10,15, 20, 25, map_top[-1]]
+    cbar.ax.set_yticks(yticks)
+    yticklbls = [ str(e) for e in yticks ]
+    yticklbls[-1] = str(100)+'+'
+    cbar.ax.set_yticklabels(yticklbls)
+
+    #plt.title('Relative model error')
+    plt.grid()
+    plt.ylim(0.0,90.0)
+    plt.xlim(x[0],x[-1])
+    plt.xlabel(r'$x$')
+    plt.ylabel(r'$\theta$')
+    plt.savefig('%s_vs_%s.pdf'%(curve,ref),format='pdf',dpi=300)
+    plt.show()
+
+
+
+def main_breakdown( args ):
+    assert not args
+    plot_breakdown( 'classic', ref='proposed')
+    plot_breakdown( 'classic', ref='numint')
+    plot_breakdown( 'updatedclassic', ref='numint')
+    plot_breakdown( 'updatedclassic', ref='proposed')
+    plot_breakdown( 'proposed', ref='numint')
+
+
+def main_printcpp( args ):
+    assert not args
+    from .curves import load_fitted_curve_parameters
+    d = load_fitted_curve_parameters()
+    print(d)
+    npars = 7
+    for v in 'ABC':
+        assert len(d[v]) == npars
+        for i,pi in enumerate(d[v]):
+            print(f'constexpr double c{v}{i} = %g;'%pi)
+    print('const double s = sintheta;')
+    for v in 'ABC':
+        c = f'c{v}'
+        s = f'{c}0'
+        for i in range(1,npars):
+            s+=f'+s*({c}{i}'
+        s+=')'*(npars-1)
+        print(f'const double {v} = {s};')
+    print()
+    for v in 'ABC':
+        pars = d[v]
+        assert npars == len(pars)
+        s = '%g'%pars[0]
+        for pv in pars[1:-1]:
+            s+='+s*(%g'%pv
+        pv ='%g'%pars[-1]
+        if not pv.startswith('-'):
+            pv=f'+{pv}'
+        s+='%s*s'%pv
+        s+=')'*(npars-2)
+        print(f'const double {v} = {s};')
