@@ -66,8 +66,14 @@ def main():
     if table1_points:
         from .bc1974_tables import table1
         t = table1()
-        xvals = t['xvals']
-        theta_vals = np.asin( t['sinthvals'] ) * ( 180 / np.pi )
+        xvals = [e for e in t['xvals']]
+        xvals += [ 0.001, 0.01, 100., 1000. ] #Extra values for new table
+        xvals = np.asarray(xvals,dtype=float)
+        xvals.sort()
+        sinth_vals = [ e for e in t['sinthvals'] ]
+        sinth_vals += [ 0.0, 0.99, 1.0 ] #Extra values for new table
+        sinth_vals = np.asarray(sinth_vals, dtype=float)
+        theta_vals = np.asin( sinth_vals ) * ( 180 / np.pi )
         theta_vals.sort()
         if quick:
             xmax = xvals[-1]
