@@ -15,9 +15,24 @@ def yp_bc1974_curve( x, A, B ):
     return safediv( 1.0, safesqrt( k2 ) )
 
 @np.vectorize
+def yp_bc1974_curve_breakdown( x, A, B ):
+    #Same, but only testing for strict numerical breakdown (zero division, sqrt
+    #of negative, yp outside [0,1]):
+    k = 1 + B*x
+    if abs(k) <= 1e-99:
+        return True
+    k2 = 1.0+2.0*x+safediv(A*x*x,k)
+    if k2 <= 1e-99:
+        return True
+    res = safediv( 1.0, safesqrt( k2 ) )
+    return not ( 0.0 <= res <= 1.0 )
+
+@np.vectorize
 def yp_proposed_curve( x, A, B, C ):
     k = 1.0 + B*x + C*x/(1.0+x)
+    #assert abs(k) > 1e-99
     k2 = 1.0+2.0*x+safediv( A*x*x-0.1*x, k )
+    #assert k2 >= 0.0
     return safediv( 1.0, safesqrt( k2 ) )
 
 _cache = [None]
@@ -122,3 +137,7 @@ class ClassicCurve:
     def __call__( self, x, theta ):
         A, B = self._A(theta), self._B(theta)
         return yp_bc1974_curve( x, A, B )
+
+    def breakdown( self, x, theta ):
+        A, B = self._A(theta), self._B(theta)
+        return yp_bc1974_curve_breakdown( x, A, B )
