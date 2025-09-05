@@ -36,7 +36,7 @@ else:
     eq36_normfactor = sage_int(3)/(sage_int(4)*sage_pi)
     phi_arg_extra_factor = sage_int(1)
     f= (sin(sage_int(3)*eta/sage_int(4))/(sage_int(3)*eta/sage_int(4)))**2
-    order = sage_int(30)
+    order = sage_int(20)
 
 k_norm = sage_int(2)*eq36_normfactor #double, since only integrating over [0,inf[
 phipi=(3/(4*s**3))*(s**2-s+log(1+2*s)/2)
@@ -61,6 +61,7 @@ result = sage_int(0)
 for e in g_taylor.coefficients(x):
     x_order = e[1]
     assert int(x_order) == x_order
+    print(f"... dealing with order {int(x_order)}")
     c = (e[0]*k_norm).simplify().factor().integrate(eta,sage_int(0),sage_infinity)
     result += c * x**int(x_order)
 
