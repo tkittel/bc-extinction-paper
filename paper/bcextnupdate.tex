@@ -26,6 +26,28 @@
 \usepackage[table]{xcolor}
 %\usepackage[table]{xcolor}
 
+%internal refs with macros, for consistency:
+\newcommand{\labsec}[1]{\label{sec:#1}}
+\newcommand{\refsecnumonly}[1]{\ref{sec:#1}}
+\newcommand{\refsec}[1]{Section~\refsecnumonly{#1}}
+\newcommand{\Refsec}[1]{Section~\refsecnumonly{#1}}%same as \refsec, but always capitalised!
+\newcommand{\reftwosections}[2]{Sections~\refsecnumonly{#1} and \refsecnumonly{#2}}
+\newcommand{\refthreesections}[3]{Sections~\refsecnumonly{#1}, \refsecnumonly{#2}, and \refsecnumonly{#3}}
+\newcommand{\refsectionrange}[2]{Sections~\refsecnumonly{#1}--\refsecnumonly{#2}}
+\newcommand{\refappendix}[1]{\refsecnumonly{#1}}
+
+\newcommand{\labfig}[1]{\label{fig:#1}}
+\newcommand{\reffignumonly}[1]{\ref{fig:#1}}
+\newcommand{\reffig}[1]{Figure~\reffignumonly{#1}}
+\newcommand{\Reffig}[1]{Figure~\reffignumonly{#1}}%same as \reffig, but always capitalised!
+\newcommand{\refthreefigs}[3]{Figures~\reffignumonly{#1}, \reffignumonly{#2}, and \reffignumonly{#3}}
+\newcommand{\reftwofigures}[2]{Figures~\reffignumonly{#1} and \reffignumonly{#2}}
+\newcommand{\reffigrange}[2]{Figures~\reffignumonly{#1}--\reffignumonly{#2}}
+\newcommand{\refsubfigfrommaincaption}[1]{Figure~\protect\subref{fig:#1}}
+\newcommand{\Refsubfigfrommaincaption}[1]{Figure~\protect\subref{fig:#1}}%same, but always capitalized!
+\newcommand{\reftwosubfigsfrommaincaption}[2]{Figures~\protect\subref{fig:#1} and ~\protect\subref{fig:#2}}
+% \protect\subref{fig:lcbragg_singlenormal_thetan60_decomposed_noanti}
+
 \newcommand{\labtab}[1]{\label{tab:#1}}
 \newcommand{\reftabnumonly}[1]{\ref{tab:#1}}
 \newcommand{\reftab}[1]{Table~\reftabnumonly{#1}}
@@ -42,7 +64,7 @@
 \def\LRA{\Leftrightarrow}
 \def\RA{\Rightarrow}
 
-\title{Revisiting Becker-Coppens (1974): Updated Recipes for Estimating Primary Extinction Factors in Spherical Crystallites}
+\title{Revisiting Becker-Coppens (1974): Updated Recipes for Estimating Extinction Factors in Spherical Crystallites}
 
 % Authors and affiliations (uses the standard authblk package):
 % Author affiliations are indicated by lowercase letters in square brackets in the \author macro.
@@ -76,7 +98,7 @@
 
 \begin{synopsis}
 A technical correction and enhancement of the Becker-Coppens (1974) recipe for
-estimating primary extinction factors in spherical crystallites is provided,
+estimating extinction factors in spherical crystallites is provided,
 addressing limitations in scenarios with higher Bragg angles. The work utilises
 modern computing capabilities and updated recipes are provided for easy
 community adoption.
@@ -84,26 +106,61 @@ community adoption.
 
 \begin{abstract}
 We present a technical correction and update of the widely used recipe by
-Becker-Coppens (1974), for the estimation of primary extinction factors in a
-perfect spherical crystallite. In the original publication, these extinction
-factors were evaluated numerically from a complicated integral, and simplified
+Becker-Coppens (1974), for the estimation of extinction factors in a perfect
+spherical crystallite. In the original publication, these extinction factors
+were evaluated numerically from a complicated integral, and simplified
 analytical approximations to these numerical evaluations constituted the
 provided recipes. However, in case of significant level of extinction, the
-original recipes suffers from numerical break-down in back-scattering scenarios
-($\theta_\texttt{Bragg}\gtrsim50^\circ$). Using modern computing capabilities,
-the numerical evaluation of the original integral is revisited, and updated
-recipes are provided which can be used also for back-scattering and strong
-extinction scenarios. In order to facilitate easy adoption by the community, the
-new recipes are compared to the old, and two new recipes are provided: a
-minimalistic update of the 4 free parameters in the old recipes, and a more
-complicated and precise analytical form with 21 free parameters. Both new
-recipes solve the issues of numerical break-down.
+original recipes for primary extinction suffers from numerical break-down in
+back-scattering scenarios ($\theta_\texttt{Bragg}\gtrsim50^\circ$). Using modern
+computing capabilities, the numerical evaluations of the integrals are
+revisited, and updated recipes are provided which can be used also for
+back-scattering and strong extinction scenarios. In order to facilitate easy
+adoption by the community, the new recipes are compared to the old, and two new
+recipes are provided: a minimalistic update of the 4 free parameters in the old
+recipes, and a more complicated and precise analytical form with 21 free
+parameters. Both new recipes solve the issues of numerical break-down. For
+consistency, secondary extinction recipes are updated as well.
 \end{abstract}
 
-\keywords{primary extinction; bragg diffraction; neutron scattering; X-ray diffraction}
+\keywords{extinction; bragg diffraction; neutron scattering; X-ray diffraction}
+
+\section{The Becker-Coppens recipe for primary extinction}
+
+Iobs = y*Ikin
+
+Extinction in the context of diffraction refers to the phenomenon where the
+intensity of a diffracted wave is reduced or diminished due to interference
+effects.
+
+important point, BC in their paper explicitly mentions and deals with 2theta=pi,
+so they are NOT working on the assumption of small theta only. However, pg 21
+bottom of first column, they discuss that they do assume small extinction only
+at 2theta=pi, so perhaps we should not be surprised in case of issues.
 
 
-\section{Section title}
+but we should:
+
+%1/sin2th = 1/(2*sinth*costh) = (d/wl) / sqrt(1-(wl/2d)^2) = 1/(2*s*sqrt(1-s^2))
+
+sinth = wl/2d
+
+multiple scattering
+
+Extinction  is the phenomen... Primary extinction is...
+
+NB: $\theta$ is the Bragg angle, defined by:
+\begin{align}
+  \sin\theta = \frac{\lambda}{2d_{hkl}}
+  \labeqn{braggequation}
+\end{align}
+
+And $x$ is defined by (fixme: here $l$ is actually tbar which is 3/2 times
+sphere radius):
+\begin{align}
+  x = \frac{ 2l^2\lambda^2F^2}{3V^2}
+  \labeqn{xdef}
+\end{align}
 
 Introduction, mention how bragg diffraction and how $y_p(\theta,d_{hkl},F^2)$
 will depend on the geometrical layout of the crystallites. Mention Bragg angle,
@@ -112,27 +169,28 @@ $F^2$, $\theta$, $d_{hkl}$.
 
 Also show the break-down!
 
-Define yp integral, x, theta, f, phi0, phipi.
-
-
-
-
-
-
-
-
-
-
-Text text text text text text text text text text text text text text
-text text text text text text text \cite{knuth84,lamport86}.
+\reffig{ypbreakdownorigrecipe} shows the original motivation (bla. NCrystal\cite{ncrystalmain,ncrystalelastic}.):
 
 \begin{figure}[ht] %
-\label{fig:figure1}
+\labfig{ypbreakdownorigrecipe}%fixme
 \begin{center}
-\includegraphics[width=0.5\textwidth]{fig1.png} % NB use pdflatex for non-postscript
+\includegraphics[width=0.5\textwidth]{../data/ncrystal_bc_yp_breakdown_be.pdf} % NB use pdflatex for non-postscript
 \end{center}
-\caption{Caption \protect\cite{knuth84}} % NB \protect\cite{...} is required in floating figures
+\caption{Bla. Beryllium.} % NB \protect\cite{...} is required in floating figures
 \end{figure}
+
+Define yp integral, x, theta, f, phi0, phipi.
+
+%Text text text text text text text text text text text text text text
+%text text text text text text text \cite{knuth84,lamport86}.
+
+%\begin{figure}[ht] %
+%\label{fig:figure1}
+%\begin{center}
+%\includegraphics[width=0.5\textwidth]{fig1.png} % NB use pdflatex for non-postscript
+%\end{center}
+%\caption{Caption \protect\cite{knuth84}} % NB \protect\cite{...} is required in floating figures
+%\end{figure}
 
 \subsection{Subsection title}
 
@@ -211,14 +269,14 @@ text text text text text text text.
 NB: $\theta$ is the Bragg angle, defined by:
 \begin{align}
   \sin\theta = \frac{\lambda}{2d_{hkl}}
-  \labeqn{braggequation}
+  \labeqn{braggequationREPEATEDFIXME}
 \end{align}
 
 And $x$ is defined by (fixme: is $l$ the sphere radius?):
 
 \begin{align}
   x = \frac{ 2l^2\lambda^2F^2}{3V^2}
-  \labeqn{xdef}
+  \labeqn{xdefREPEATEDFIXME}
 \end{align}
 
 \begin{align}
@@ -243,16 +301,13 @@ And $x$ is defined by (fixme: is $l$ the sphere radius?):
 \end{align}
 
 \begin{align}
-  y_{p}(\theta,x) = \frac{3}{2\pi}\int_{0}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta
+  y_p(\theta,x) = \frac{3}{4\pi}\int_{0}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta
   \labeqn{ypintegral}
 \end{align}
 
 (note we have used that $f(\eta)$ is an even function to change the integration
 domain to $[0,\infty)$).
 
-
-  \newpage
-  
 \subsection{Old recipe}
 
 \begin{align}
@@ -462,6 +517,223 @@ low error. If not, increase $a$ by $\Delta{}a$
 
 
 
+\subsection{Secondary extinction}
+
+The BC model for secondary extinction ends up being mathematically similar to
+the one for primary extinction, with the main difference being that the
+distortion of cross sections captured in $f(\eta)$ now comes from the
+description of a mosaic crystal grain rather than from an effective spread
+inherent to the diffraction happening inside each coherent domain. Additionally,
+the variable $x$ is replaced by a variable $X$ depending on both the mosaic
+spreads and the average path length $\bar{T}$ (FIXME: Repeat here in more
+detail? Also maybe the language used in the first paragraph in BC1974 II.3 is
+better than the one used here??).
+
+\begin{align}
+  X = \frac{2}{3}...fixme.
+  %FIXME Q or F/V?? Perhaps just define Q in the beginning.
+  \labeqn{capitalXdef}
+\end{align}
+
+To produce equivalent of \refeqn{ypintegral} (BC.36), one must go back to BC.14,
+and replace $\sigma(\epsilon_1)$ with the convoluted $\bar\sigma(\epsilon_1)$
+values for the three variants given in BC.40a, BC.41a, and BC.44
+respectively. This results in
+
+\begin{align}
+  f_G(\eta) = \exp\left\{-\frac{9}{16\pi}\eta^2\right\}
+  \labeqn{fofetaG}
+\end{align}
+\begin{align}
+  f_L(\eta) = \frac{1}{1+\eta^2}
+  \labeqn{fofetaL}
+\end{align}
+\begin{align}
+  % sinc(x) = sin(x)/x
+  % eq. 44, sigma(0) = Q*alpha
+  %
+  % eta = pi * eps1 * beta = (4/3)*pi*eps1*alpha, so pi*eps1*alpha = 3eta/4
+  %
+  % f(eta) = sigma(eps1(eta))/sigma(0)
+  %        = sinc^2( pi*eps1*alpha )
+  %        = sinc^2( 3eta/4 )
+  f_F(\eta) = \frac{ \sin^2(3\eta/4) } { (3\eta/4)^2 }
+  \labeqn{fofetaF}
+\end{align}
+
+\begin{align}
+  %Note integration limit from 0..inf, so have multiplied factor in front by 2!!
+  y_s^G(\theta,x) = \frac{3}{2\pi}\int_{0}^{\infty} f_G(\eta)\varphi\left(\theta,X_Gf_G(\eta)\right)d\eta
+  \labeqn{ysintegralG}
+\end{align}
+\begin{align}
+  %Note integration limit from 0..inf, so have multiplied factor in front by 2!!
+  y_s^L(\theta,x) = \frac{2}{\pi}\int_{0}^{\infty} f_L(\eta)\varphi\left(\theta,\frac{4}{3}X_Lf_L(\eta)\right)d\eta
+  \labeqn{ysintegralL}
+\end{align}
+\begin{align}
+  %Note integration limit from 0..inf, so have multiplied factor in front by 2!!
+  y_s^F(\theta,x) = \frac{3}{2\pi}\int_{0}^{\infty} f_F(\eta)\varphi\left(\theta,X_Ff_F(\eta)\right)d\eta
+  \labeqn{ysintegralF}
+\end{align}
+
+
+% Factor in front of integral, based on eq. 14, should be:
+%
+% sigma(0)/Q * (deta/deps1)^(-1) = sigma(0)/ ( Q * pi * ( (4/3)*alphaGL) = ( sigma(0)/(alphaGL*Q) ) * 3/(4pi)
+%
+% Gauss: ( sigma(0)/(alphaG*Q) ) * 3/(4pi)
+%      = ( (alphaG*Q)/(alphaG*Q) ) *  3/(4pi) = 3/(4pi)
+% Lorentz: ( sigma(0)/(alphaL*Q) ) * 3/(4pi)
+%           = ( ( (4/3) * Q * alphaL) / (alphaL*Q) ) * 3/(4pi)
+%           = (4/3) * 3/(4pi) = 1/pi
+% Fresnel: ( sigma(0)/(alphaG*Q) ) * 3/(4pi)
+%      = ( (alphaG*Q)/(alphaG*Q) ) *  3/(4pi) = 3/(4pi)
+%
+% As a sanity check, one can let x->0 and we see that the factor should also be
+% the normalisation constant of f (since phi(0)=1 and yp(x=0)=1):
+% Gauss. This normalisation constant is easily calculated to be:
+%
+% Gauss: 3/(4pi) (CONSISTENT!!)
+% Lorentz: 1/pi (CONSISTENT!!)
+% FRESNEL: 3/(4pi) (CONSISTENT!!)
+
+% Factor in front of X inside phi-function should be whatever comes out of
+% transforming sigma(eps1)*r to factor*x*f(eta).
+%
+% x = (2/3)*Q*alpha*tbar
+% r = (2/3) * tbar
+% eta = pi * eps1 * ( (4/3)*alphaGL)
+%
+% sigma(eps1)*r = sigma(0)*f(eta)*(2/3)*tbar
+%               = f(eta)*(2/3)*sigma(0)*tbar*(x/((2/3)*Q*alpha*tbar))
+%               = ( sigma(0)/(Q*alpha) ) * x * f(eta)
+% So the factor before x inside the call to phi should be sigma(0)/(Q*alpha):
+%
+% Gauss and Fresnel have sigma(0)=Q*alpha, so the factor is unity.
+% Lorentzian have sigma(0)=(4/3)(Q*alpha so the factor is 4/3.
+%
+
+ACTUALLY $X_F$ is $X_G$....
+
+
+% Now let us also double-check the argument of the phi function (which is
+% sigma(eps1) in eq. 14). in the integrand, and how/if it depends on the
+% normalisation of f. In particular it could show up as we go from eq. 14 to 36
+% (or the equivalent for the secondary models):
+%
+% Primary:
+%    Argument of phi function should actually be sigma(eps1)*r, which
+%    can be written as sigma(0)*f(eta)*r, and sigma(0)*r is given by
+%    Q*alphabar*r = Q*alphabar*(tbar/(3/2)) which happens to be exactly the
+%    definition of x.
+%
+% Scnd Lorentz:
+%
+%    If argument of phi function should also be sigmaL(eps1)*R, written as
+%    sigmaL(0)*fL(eta)*R, then we can again look at sigmaL(0)*R:
+%
+%    sigmaL(0)*R = (4/3)*Q*alphaL*R = (4/3)*Q*alphaL*((2/3)*TBar)
+%                = (4/3)* [ (2/3)*Q*alphaL*TBar ] = (4/3)*X
+%
+% Scnd Gauss:
+%
+%    If argument of phi function should also be sigmaG(eps1)*R, written as
+%    sigmaG(0)*fG(eta)*R, then we can again look at sigmaG(0)*R:
+%
+%    sigmaG(0)*R = Q*alphaG*R = Q*alphaG*((2/3)*TBar)
+%                = (2/3)*Q*alphaG*TBar = X
+%
+% Scnd Fresnel form: sigmaF(0)=Q*alphaG (note not alphaF!), so argument of phi
+% is like the Gaussian case? However integral of (sin(x)/x)^2 from -inf to +inf is pi, not 4pi/3
+
+BC provides
+three models for the shape of the mosaic distributions: Gaussian (G), Lorentzian
+(L), and a Fresnel distribution (F).
+
+the spread in cross-sections in principle a mosaic spread distribution
+
+with the exception a more standard mosaic spread function
+plays the role  that the intrinsic spread  the BC Bla. Gauss/Lorentz/Fresnel, differs by
+
+Mention OCR(tesseract)+human checking.
+
+
+
+
+%%%%%
+
+% Eq. 14 -> 36?
+%
+% yp = (1/Q)*integral( sigma(eps1)*phi(sigma(eps1)) d(eps1)
+%
+% with f=sigma(eps1)/sigma(0) we get:
+%
+% yp = (sigma(0)/Q)*integral( f(eps1)*phi(sigma(eps1)) d(eps1)
+%
+% For primary in sphere, we have sigma(0)=(3/4)QBeta (eq. 29), so
+%
+% yp = 3/4Beta*integral( f(eps1)*phi(sigma(eps1)) d(eps1)
+%
+% Also eta = pi*eps1*beta, so deta = pi*deps1*beta
+%
+% yp = (3/(4pi))*integral( f(eta)*phi(sigma(eta)) d(eps1*pi*beta)
+%
+% For secondary extinction, Gaussian, we get:
+%
+% sigma(0) = Q*alphaG and eta=pi*eps1*(4/3)*alphaG
+%
+% and d(eta) = d(eps1 * pi*(4/3)*alphaG)
+
+% SO:
+% yG = (sigma(0)/Q)*integral( f(eps1)*phi(sigma(eps1)) d(eps1)
+%    = 3/(4pi) * integral( f(eps1)*phi(sigma(eps1)) d(eta)
+%
+% And for Lorentzian we get:
+%
+% sigma(0) = (4/3)*Q*alphaL, eta=pi*eps1*(4/3)*alphaL
+%
+% SO:
+
+% yL = (sigma(0)/Q)*integral( f(eps1)*phi(sigma(eps1)) d(eps1)
+%    = (4/3)/(pi*(4/3))*integral( f(eps1)*phi(sigma(eps1)) d(eta)
+%    = 1/pi * integral( f(eps1)*phi(sigma(eps1)) d(eta)
+%
+%
+
+% Now let us also double-check the argument of the phi function (which is
+% sigma(eps1) in eq. 14). in the integrand, and how/if it depends on the
+% normalisation of f. In particular it could show up as we go from eq. 14 to 36
+% (or the equivalent for the secondary models):
+%
+% Primary:
+%    Argument of phi function should actually be sigma(eps1)*r, which
+%    can be written as sigma(0)*f(eta)*r, and sigma(0)*r is given by
+%    Q*alphabar*r = Q*alphabar*(tbar/(3/2)) which happens to be exactly the
+%    definition of x.
+%
+% Scnd Lorentz:
+%
+%    If argument of phi function should also be sigmaL(eps1)*R, written as
+%    sigmaL(0)*fL(eta)*R, then we can again look at sigmaL(0)*R:
+%
+%    sigmaL(0)*R = (4/3)*Q*alphaL*R = (4/3)*Q*alphaL*((2/3)*TBar)
+%                = (4/3)* [ (2/3)*Q*alphaL*TBar ] = (4/3)*X
+%
+% Scnd Gauss:
+%
+%    If argument of phi function should also be sigmaG(eps1)*R, written as
+%    sigmaG(0)*fG(eta)*R, then we can again look at sigmaG(0)*R:
+%
+%    sigmaG(0)*R = Q*alphaG*R = Q*alphaG*((2/3)*TBar)
+%                = (2/3)*Q*alphaG*TBar = X
+%
+% Scnd Fresnel form: sigmaF(0)=Q*alphaG (note not alphaF!), so like the Gaussian
+% case? However integral of (sin(x)/x)^2 from -inf to +inf is pi, not 4pi/3
+
+
+
+
 
 
 \appendix % if required
@@ -530,5 +802,102 @@ List funding organizations, recipients, grant numbers, etc.
 %
 
 
+%BC x:
+%
+%r = radius of ideal spherical crystal
+%
+%x = sigma(0)*r = 3/4 Q*beta*r = 2/3 Q alphabar tbar
+%    alphabar = (3/2)r sin2theta/lambda
+%    beta = 2r sin2theta / lambda
+%   so x = 3/4 Q* 2r sin2theta / lambda  *r = 3/2 Q * r^2 * Q * sin2theta
+%   /lambda =
+%    Q = ?
+
+%  (3/2)*sphere_r^2 = (3/2)*(AVPATHLENGTH*3/4)^2
+
+%
+%    NCrystal code:
+%%    bc_x =         wl^2*F^2/V^2 * ( 2 / 3 ) * blksz^2
+%%    sabine_x =     wl^2*F^2/V^2 * blksz^2
+%
+%
+
+%sabine_x =
+
+%block_size =
+
+% Average path length through a sphere of radius is (4/3)*radius = (2/3)*diameter.
+% so radius = 3/4 * <average_pathlength>
+
+%If we use blksz_Aa to mean the Average path length through the crystallite, we
+%have to use r = 4/3 * ....
+
+% BC x: factor of (2/3) is when using l to mean the average path length through
+% the crystallite.
+
+%Sabine x:
 
 
+% shuqi BC xp:
+% double Q_theta = NC::ncsquare(Nc * wl * F_hkl) * wl; //division by sin_2theta to be done later
+
+% double xp = 2. / 3. * NC::ncsquare(Nc * wl * F_hkl) * l * l;
+
+
+
+%BC x:
+%
+%35a:
+%
+%x = (2/3)*Q*alphabar*tbar
+%alphabar = tbar * sin2theta/wl (eq. 35b with 3r/2 = tbar)
+%tbar: average path length through the crystallite (tbar=3/2*radius for a sphere).
+%     Q = |F/V|^2*wl^3/sin2theta
+%
+%so x = (2/3)*(|F/V|^2*wl^3/sin2theta)*(tbar * sin2theta/wl)*tbar
+%     = (2/3)* |F/V|^2*wl^2 * tbar^2
+%
+%
+% Sabine x (2006 paper):
+%
+%x = Qk T C D (6.4.5.7)  (C=1 for no absorption)
+%T: average path length through crystallite (so (3/2)*radius for a sphere)
+%
+%
+%Sabine x Shuqi:
+%  double xp = NC::ncsquare(Nc * wl * F_hkl * l);
+%
+%Sabine x for spheres (1988 paper):
+%
+%x = Qk T D (middle of left column, p371)
+%Qk = |F/V|^2*wl^2 / sintheta (top right column, p370)
+%BUT NOTE: Qtheta = |F/V|^2*wl^3 / sin2theta ``on the glancing-angle scale''(top right column, p370) (FOR SECONDARY EXTINCTION????)
+%
+%371 notes for spheres T=D=(3/2)*radius
+%
+% So x = |F/V|^2*wl^2 / sintheta * (3radius/2)^2
+
+
+%Nice formulation: "... the coherently scattering domain size, referred to here as the crystallite size for readability."
+
+%Could we somehow use "Multiple Bragg reflection by a thick mosaic
+%crystal. II. Simplified transport equation solved on a grid, Wuttke 2020" ?
+
+%wilson pgs 41+42: 0.93, 0.94, 1.0 => O(1-6%) mistake if modelling a cubic
+%domain as spherical. ??
+
+%wilson eq 9-12, is how we can see that T = (3/4) * diameter = (3/2) * radius
+%for a sphere. The "apparent particle size" is the volume average of the path
+%length. Check also eq. 19 for how this could be used to take hkl anisotropy
+%into account.
+
+%Discuss also why we focus on Sabine + BC (because it is discussed in e.g. the
+%BC paper that CR, Zach, etc. are incorrect).
+
+%ARGH: Trying to "spherify" Sabine's El and Eb makes the result go FURTHER from
+%BC, not closer. One solution is to look at low-x, and apply a correction to x
+%in the sabine model, which makes the constant in the first order term of yp(x)
+%~= 1-const*x match up. This turns out to be a factor of 19/15 ~= 1.26666,
+%meaning that the block sizes of Sabine are essentially modified by
+%sqrt(19/15)~=1.125 (very close to 9/8). The nice thing in practice here is how
+%we would know that the two models have similar behaviour at low x.
