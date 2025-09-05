@@ -1,7 +1,6 @@
 import sys
 
 def main():
-
     if '--updateref' in sys.argv[1:]:
         from .test_eq36 import update_ref
         update_ref()
@@ -19,6 +18,8 @@ def main():
 
     from .eval_fofeta import test_f_of_eta
     test_f_of_eta()
+    from .eval_fofeta_scnd_fresnel import test_f_of_eta_fresnel
+    test_f_of_eta_fresnel()
     from .eval_phi0 import test_phi0
     test_phi0()
     from .eval_phipi import test_phipi
