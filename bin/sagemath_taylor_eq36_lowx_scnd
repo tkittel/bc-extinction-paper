@@ -1,0 +1,136 @@
+#!/usr/bin/env -S sage -python
+# -*- mode: python; -*-
+import sys
+from sage.all import ( var, assume, unicode_art,
+                       Integer as sage_int,
+                       exp, log, sqrt, sin,
+                       infinity as sage_infinity,
+                       pi as sage_pi )
+
+args=sys.argv[1:]
+if not len(args)==1 or args[0] not in ('gauss','lorentz','fresnel'):
+    raise SystemExit('Error: Please run with argument "gauss", "lorentz", or "fresnel"')
+is_gauss = ( args[0] == 'gauss' )
+is_lorentz = ( args[0] == 'lorentz' )
+is_fresnel = ( args[0] == 'fresnel' )
+assert 1 == sum( int(bool(b)) for b in [is_gauss,is_lorentz,is_fresnel])
+
+eta,s,x,sinth = var('eta,s,x,sinth')
+assume(eta>=0,s>=0,x>0,sinth>=0,sinth<=1)
+
+if is_gauss:
+    #Gaussian:
+    eq36_normfactor = sage_int(3)/(sage_int(4)*sage_pi)
+    phi_arg_extra_factor = sage_int(1)
+    f = exp( - (sage_int(9)/(sage_int(16)*sage_pi)) * eta**2 )
+    order = sage_int(60)
+elif is_lorentz:
+    #Lorentzian:
+    eq36_normfactor = sage_int(1)/sage_pi
+    phi_arg_extra_factor = sage_int(4)/sage_int(3)
+    f= sage_int(1)/(sage_int(1)+eta**2)
+    order = sage_int(60)
+else:
+    assert is_fresnel
+    #Fresnel:
+    eq36_normfactor = sage_int(3)/(sage_int(4)*sage_pi)
+    phi_arg_extra_factor = sage_int(1)
+    f= (sin(sage_int(3)*eta/sage_int(4))/(sage_int(3)*eta/sage_int(4)))**2
+    order = sage_int(30)
+
+k_norm = sage_int(2)*eq36_normfactor #double, since only integrating over [0,inf[
+phipi=(3/(4*s**3))*(s**2-s+log(1+2*s)/2)
+phi0 = (3/(64*s**3))*(8*(s**2)+4*s*exp(-4*s)-(1-exp(-4*s)))
+phi=phi0(s=s)+sinth**(sage_int(3)/sage_int(2))*(phipi(s=s*sqrt(sinth))-phi0(s=s*sqrt(sinth)))
+
+#We denote the integrand of eq. 36 as g:
+g=f(eta=eta)*phi(s=phi_arg_extra_factor*x*f(eta=eta))
+
+print("Considering the integrand g(eta) given as:")
+print()
+print(unicode_art(g))
+
+print("We Taylor expand the integrand in x before integrating over eta")
+print("from 0 to infinity, and subsequently collect the results by orders of x")
+print()
+print("This will take some time (should be less than a few minutes)...")
+g_taylor = g.taylor(x,sage_int(0),sage_int(order))
+#print(g_taylor.collect(x))
+print("... expansion done, now integrating")
+result = sage_int(0)
+for e in g_taylor.coefficients(x):
+    x_order = e[1]
+    assert int(x_order) == x_order
+    c = (e[0]*k_norm).simplify().factor().integrate(eta,sage_int(0),sage_infinity)
+    result += c * x**int(x_order)
+
+#result = g_taylor.integrate(eta,sage_int(0),sage_infinity).collect(x)
+#g_taylor = g_taylor(sinth=sage_int(9)/sage_int(10))#FIXME FIXME
+print("... done")
+print(unicode_art(result.collect(x)))
+
+print("TEST:",result(sinth=sage_int(1)/20,x=sage_int(1)/10).n(digits=100))
+print()
+print("Code suitable for Python mpmath code. Note that we use the last three")
+print("terms of the Taylor expansion as an upper bound on the error")
+def fmt_mpf( v, arg_only = False ):
+    def wrapm_always( v ):
+        return 'm(%s)'%v
+    def wrapm_if_needed( v ):
+        v=str(v)
+        if 'm(' in v or 'mp.' in v:
+            return v
+        return v if v.isdigit() else wrapm_always('"%s"'%v)
+    def wrapm_if_not_int( v ):
+        v=str(v)
+        return v if v.isdigit() else wrapm_if_needed(v)
+    half = sage_int(1)/sage_int(2)
+    factor_list = ( v.factor_list()
+                    if hasattr(v,'factor_list')
+                    else [(v,1)] )
+    assert all( pow==1 or pow==half
+                for base,pow in factor_list )
+    def fmt_factor( b,p ):
+        if p == 1:
+            return wrapm_if_needed(b)
+        assert p == half
+        return 'mp.sqrt(%s)'%wrapm_if_not_int(b)
+    return '*'.join(fmt_factor(*e) for e in factor_list)
+
+print('    m = mpf')
+print('    sinth = m(sinth)')
+print('    def s( power ):')
+print('        return sinth**m(power)')
+u=var('u')
+assume(u>=0)
+result = result(x=u/2).simplify().collect(u)
+#print("TEST:",result(sinth=sage_int(1)/20,u=2 * sage_int(1)/10).n(digits=100))
+
+
+for e in result.coefficients(u):
+    u_order = e[1]
+    ci = e[0].simplify().factor()
+    terms_ci = []
+    for es in ci.coefficients(sinth):
+        sinth_order = es[1]
+        sinth_coeff = es[0]
+        terms_ci.append(fmt_mpf(sinth_coeff,arg_only=False))
+        if sinth_order != 0:
+            terms_ci[-1] += '*s(%s)'%fmt_mpf(sinth_order,arg_only=True)
+    terms_ci = '+'.join(terms_ci)
+    if terms_ci.isdigit():
+        terms_ci = 'm(%s)'%terms_ci
+    print('    c%i = %s'%(u_order,terms_ci))
+print('    def calc_taylor( x ):')
+print('        u = m(x)*m(2) # Keep coefficients small by this variable change')
+print('        return c0+u*'+''.join('(c%i+u*'%i for i in range(1,order))+'c%i'%order+')'*(order-1))
+print('    def calc_taylor_errorbound( x ):')
+print('        # very conservative error bound, based on absolute size of')
+print('        # contributions of last three orders')
+print('        u = m(x)*m(2) # Keep coefficients small by this variable change')
+print('        return (u**%i)*(abs(c%i)+u*(abs(c%i)+u*abs(c%i)))'%( int(order)-2,
+                                                                    int(order)-2,
+                                                                    int(order)-1,
+                                                                    int(order) ) )
+
+
