@@ -1,0 +1,135 @@
+#!/usr/bin/env -S sage -python
+# -*- mode: python; -*-
+
+from sage.all import ( var, assume, #unicode_art,
+                       exp, log, sqrt, infinity,
+                       Integer as sage_int )
+
+eta,s,x,y,u,sinth,a,k,t = var('eta,s,x,y,u,sinth,a,k,t')
+assume(eta>0,s>=0,x>0,u>0,sinth>=-1,sinth<=1,a>1,k>0,k<=1,t>0)
+
+#for eta>0, we have (1+eta)^2 = (1 + eta^2) + 2eta > 1 + eta^2
+
+fmax=sage_int(1) / eta**2
+fmin=sage_int(1) / ( sage_int(1) + eta )**2
+f = sage_int(1) / (eta**2 + sage_int(1))
+
+phi0=(sage_int(3)/(64*s**3))*(8*(s**2)+4*s*exp(-4*s)-(1-exp(-4*s)))
+phipi=(sage_int(3)/(4*s**3))*(s**2-s+log(1+2*s)/2)
+phi=phi0(s=s)+sinth**(sage_int(3)/2)*(phipi(s=s*sqrt(sinth))-phi0(s=s*sqrt(sinth)))
+
+#g is the integrand.
+xscale = (sage_int(4)/sage_int(3)) # 4/3 for Lorentz, 1 for Primary/Gaussian/Fresnel
+g = f(eta=eta)*phi(s=xscale*x*f(eta=eta))
+
+#Now we actually evaluate integrals from a to infinty. We do so via a taylor
+#expansion in t=1/a:
+ntaylor = 20#FIXME HIGHER
+#We need at least twice as many intermediate orders of terms in the taylor
+#expansions before the coefficients at each order in the final results reach
+#their final value (this can be seen from simply playing around with the number
+#of terms and inspecting the results. For safety we actually use more than
+#double the terms in the intermediate calculations.
+ntaylor_intermediate = int(ntaylor * 2.1 + 3)
+print("Estimating ataylor...")
+ataylor=(g(eta=1/u).taylor(u,0,ntaylor_intermediate)(u=1/eta)).integrate(eta,a,infinity)
+
+print('------------------')
+print('--- variables ---')
+print('------------------')
+print(' sinth : sin(theta) as in paper')
+print(' x : x as in paper')
+print(' a : lower range of integration. Assume a>1 and a>x')
+print(' k = x/a (so 0<k<=1)')
+print()
+
+def estimate_maxabs( c ):
+    from itertools import product
+    from numpy import linspace
+    return float(max(abs(c(k=k,sinth=sinth))
+                     for k, sinth in product(linspace(0.0,1.0,30),
+                                             linspace(0.0,1.0,30))))
+
+def show_maxcoefficients( expr ):
+    clast = None
+    for c,i in (expr)(x=a*k)(a=1/t).collect(t).coefficients(t):
+        c = estimate_maxabs(c)
+        tolast = '   (%.4g times previous)'%(c/clast) if clast else ''
+        clast = c
+        print(' +  %.4g / a**%i%s'%( c, i, tolast ))
+        if i==ntaylor:
+            break
+
+print('--------------------------------------------------')
+print('--- integral from a to infinity: direct taylor ---')
+print('--------------------------------------------------')
+
+ataylor_coef = (ataylor)(x=a*k)(a=1/t).collect(t).coefficients(t)
+for c,i in ataylor_coef:
+    print(' + ( %s ) / a**%i '%( c, i ))
+    if i==ntaylor:
+        break
+
+print('------------------------------------------------')
+print('--- integral from a to infinity: direct taylor max order factors ---')
+print('------------------------------------------------')
+
+show_maxcoefficients(ataylor)
+
+print('------------------------------------------------')
+print()
+
+print("Code suitable for Python mpmath code. Note that we use the last three")
+print("terms of the Taylor expansion as an upper bound on the error")
+
+def fmt_mpf( v, arg_only = False ):
+    s = str(v)
+    s = '"%s"'%s if not s.isdigit() else '%s'%s
+    return s if arg_only else 'm(%s)'%s
+
+print('def _impl_taylor_tail_scnd_lorentz( sinth, x, a ):')
+print('    m = mpf')
+print('    sinth = m(sinth)')
+print('    a = m(a)')
+print('    b = m(1)/m(a)')
+print('    k = m(x)*b')
+print('    def s( power ):')
+print('        return sinth**m(power)')
+for e in ataylor_coef:
+    order = e[1]
+    if order>ntaylor:
+        order = order-1
+        break
+    ci = (e[0]).simplify().factor()
+    terms_ci = []
+    for es in ci.coefficients(sinth):
+        sinth_order = es[1]
+        sinth_coeff = es[0]
+        terms_sinthcoeff = []
+        for ek in sinth_coeff.coefficients(k):
+            k_order = ek[1]
+            k_coeff = ek[0]
+            terms_sinthcoeff.append(fmt_mpf(k_coeff))
+            if k_order != 0:
+                assert k_order == int(k_order)
+                if int(k_order)==1:
+                    terms_sinthcoeff[-1] += '*k'
+                else:
+                    terms_sinthcoeff[-1] += '*(k**%i)'%int(k_order)
+        if len(terms_sinthcoeff)==1:
+            sinth_coeff = terms_sinthcoeff[0]
+        else:
+            sinth_coeff = '( %s )'%('+'.join(terms_sinthcoeff))
+        terms_ci.append(sinth_coeff)
+        if sinth_order != 0:
+            terms_ci[-1] += '*s(%s)'%fmt_mpf(sinth_order,arg_only=True)
+    terms_ci = '%s'%('+'.join(terms_ci))
+    print('    c%i = %s'%(order,terms_ci))
+print('    res = b*'+''.join('(c%i+b*'%i for i in range(1,order))+'c%i'%order+')'*(order-1))
+print('    # very conservative error bound, based on absolute size of')
+print('    # contributions of last three orders')
+print('    errorbound = (b**%i)*(abs(c%i)+b*(abs(c%i)+b*abs(c%i)))'%( int(order)-2,
+                                                                      int(order)-2,
+                                                                      int(order)-1,
+                                                                      int(order) ) )
+print('    return res, errorbound')
