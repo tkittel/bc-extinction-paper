@@ -1,0 +1,36 @@
+#!/usr/bin/env -S sage -python
+# -*- mode: python; -*-
+
+from sage.all import ( var, assume, unicode_art, Integer as sage_int, sin )
+
+eta = var('eta')
+assume(eta>=0)
+
+f = ( sin(3*eta/4)/(3*eta/4) )**2
+
+print("Considering the function f(eta) given as:")
+print()
+print(unicode_art(f))
+# Choosing Taylor expansions to be used for eta<0.1 = 1/10, we find the
+# order and coefficients of the Taylor expansion via (aiming for better than
+# 1e-100 precision):
+
+eta_cutoff = sage_int(1)/sage_int(10)
+order = sage_int(60)
+print()
+print("Performing taylor expansion of f(eta)...")
+f_taylor = f.taylor(eta,0,order)
+print("...done")
+print()
+print(f"Precision at order {order} at eta={eta_cutoff}:")
+print('   absolute: %.4g' % ( (f_taylor-f)(eta=eta_cutoff).n(digits=500) ) )
+print('   relative: %.4g' % ( ((f_taylor-f)/f)(eta=eta_cutoff).n(digits=500) ) )
+print()
+print("The coefficients in a form suitable for mpmath code:")
+for c in f_taylor.coefficients(eta):
+    assert int(c[1])==c[1]
+    assert int(c[1])%2==0, "expected only even orders"
+    print( '        c%i = mpf("%s")'%(c[1],str(c[0])) )
+print('        def taylor( eta ):')
+print('            x = eta*eta')
+print('            return c0+x*'+''.join('(c%i+x*'%i for i in range(2,order,2))+'c%i'%order+')'*(order//2-1))
