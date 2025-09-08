@@ -1,4 +1,7 @@
 from .eval_eq36 import eval_eq36
+from .eval_eq36_scnd import ( eval_eq36_scnd_gauss,
+                              eval_eq36_scnd_lorentz,
+                              eval_eq36_scnd_fresnel )
 import numpy as np
 import pathlib
 import sys
@@ -6,9 +9,19 @@ import time
 
 def worker( args ):
     t = time.time()
-    theta_deg, xval = args
+    fcttype,theta_deg, xval = args
+    assert fcttype in ('primary','scndgauss','scndlorentz','scndfresnel')
+    if fcttype=='primary':
+        fct = eval_eq36
+    elif fcttype=='scndlorentz':
+        fct = eval_eq36_scnd_lorentz
+    elif fcttype=='scndfresnel':
+        fct = eval_eq36_scnd_fresnel
+    else:
+        assert fcttype == 'scndgauss'
+        fct = eval_eq36_scnd_gauss
     print(f"Starting worker at theta={theta_deg:g} x={xval:g}")
-    val, max_err = eval_eq36( theta_deg, xval )
+    val, max_err = fct( theta_deg, xval )
     t = time.time() - t
     return ( float(theta_deg),
              float(xval),
@@ -16,9 +29,17 @@ def worker( args ):
              float(max_err),
              float(t) )
 
-def find_output_fn( quick, table1_points, thetascan ):
+def find_output_fn( quick, table1_points, thetascan,
+                    is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel ):
+    assert sum(int(bool(e)) for e in [is_scnd_gauss,is_scnd_lorentz,is_scnd_fresnel]) in (0,1)
     assert not (table1_points and thetascan)
     bn = 'bcdata'
+    if is_scnd_gauss:
+        bn += '_scndgauss'
+    if is_scnd_lorentz:
+        bn += '_scndlorentz'
+    if is_scnd_fresnel:
+        bn += '_scndfresnel'
     if table1_points:
         bn += '_table1pts'
     if thetascan:
@@ -50,7 +71,20 @@ def main():
     quick = '--quick' in sys.argv[1:]
     table1_points = '--table1' in sys.argv[1:]
     thetascan = '--thetascan' in sys.argv[1:]
+    is_scnd_gauss = '--scnd-gauss' in sys.argv[1:]
+    is_scnd_lorentz = '--scnd-lorentz' in sys.argv[1:]
+    is_scnd_fresnel = '--scnd-fresnel' in sys.argv[1:]
     assert not (table1_points and thetascan)
+    assert not (is_scnd_gauss and is_scnd_lorentz)
+    assert not (is_scnd_gauss and is_scnd_fresnel)
+    assert not (is_scnd_fresnel and is_scnd_lorentz)
+    fcttype = 'primary'
+    if is_scnd_gauss:
+        fcttype = 'scndgauss'
+    if is_scnd_lorentz:
+        fcttype = 'scndlorentz'
+    if is_scnd_fresnel:
+        fcttype = 'scndfresnel'
 
     x_range = ( 1e-3, 1e3 )
     nx = 10 if quick else 100
@@ -94,7 +128,8 @@ def main():
                                   (9 if quick else 180) +1 )
 
     def find_outname():
-        return find_output_fn( quick, table1_points, thetascan )
+        return find_output_fn( quick, table1_points, thetascan,
+                               is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel )
 
     outfile = find_outname()
     print(f"Target file: {outfile}")
@@ -103,7 +138,7 @@ def main():
     worklist = []
     for th in theta_vals:
         for x in xvals:
-            worklist.append( (th, x) )
+            worklist.append( (fcttype, th, x) )
 
     results = multiproc_run_worklist( worklist )
 
