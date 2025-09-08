@@ -16,37 +16,17 @@ def numint_eq36( theta_degree, x, eps ):
             return v, e
         yp_0a.grow_a()
 
-def integrand_fct_eq36( theta_degree, x ):
-    from .eval_fofeta import F_of_Eta
-    from .eval_phipi import PhiPi
-    from .eval_phi0 import Phi0
-    f = F_of_Eta()
-    phi0 = Phi0()
-    phipi = PhiPi()
-    x = mpf(x)
-    sinth = mp.sin(mpf(theta_degree) * mp.pi/mpf(180) )
-    sqrtsinth = mp.sqrt( sinth )
-    sinth_to_3div2 = sinth * sqrtsinth
-    if not sinth:
-        phi = phi0
-    elif sinth == mpf(1):
-        phi = phipi
-    else:
-        def phi( sr ):
-            #BC 1974 eq. 34 ( sr = sigma*r )
-            assert sr >= 0.0
-            u = sr * sqrtsinth
-            return phi0( sr ) + sinth_to_3div2 * ( phipi(u) - phi0(u) )
-    def integrand( eta ):
-        fval = f(eta)
-        return fval * phi( x * fval )
-    return integrand
-
 class FiniteIntegralEq36:
 
     #integrates eq. 36 from 0 to a finite value, a.
     def __init__( self, theta_degree, x, eps ):
-        self.__g = integrand_fct_eq36( theta_degree, x )
+        from .integrand import create_integrand_fct_eq36
+        from .eval_fofeta import F_of_Eta
+        #print(f"TestingG th={theta_degree}, x={x}")
+        eps = mpf(eps) * 0.1 #safety
+        self.__g = create_integrand_fct_eq36( f_of_eta_fct = F_of_Eta(),
+                                              theta_degree = theta_degree,
+                                              x = x )
         self.__eps = eps
         assert 0 < eps < 1e-4
         #We always integrate over boundaries in steps of 1, since integrand

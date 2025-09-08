@@ -11,7 +11,7 @@ class F_of_Eta:
     # to ensure numerical precision and stability.
 
     def __init__( self ):
-        # Taylor expansion to be used for s<0.1. Code validated and
+        # Taylor expansion to be used for eta<0.1. Code validated and
         # produced by the script bin/sagemath_taylor_f_of_eta:
         c0 = mpf("1")
         c2 = mpf("-2/9")
