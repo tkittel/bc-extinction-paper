@@ -1,4 +1,5 @@
 def create_integrand_fct_eq36( f_of_eta_fct, theta_degree, x, xscale = 1 ):
+    #Integrand: f(eta)*phi(theta,xscale*x*f(eta))
     from .mpmath import mp, mpf
     from .eval_phipi import PhiPi
     from .eval_phi0 import Phi0

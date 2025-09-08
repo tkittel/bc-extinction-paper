@@ -4,10 +4,9 @@ class TailIntegral:
     def __init__(self,theta_degree, x, a):
         sinth = mp.sin(mpf(theta_degree) * mp.pi/mpf(180) )
         v, e = _impl_taylor_tail_scnd_lorentz( sinth, x, a )
-        k = ( mpf(6)/ (mpf(4)*mp.pi) )
-        k = mpf(1)#FIXME
-        self.__val = k * v
-        self.__err = k * e
+        norm = mpf(2) / mp.pi
+        self.__val = norm * v
+        self.__err = norm * e
 
     @property
     def a( self ):
