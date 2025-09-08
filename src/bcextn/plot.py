@@ -36,50 +36,104 @@ def main_xscan( args ):
     assert len(args)==1 and (args[0]=='all' or args[0] in std_modemap.keys())
     std_plots( load_xscan(), args[0] )
 
-def main_table1( args ):
-    from .load import ( load_table1scan_origpts,
-                        load_table1scan_allpts )
-    from .bc1974_tables import table1 as orig_table
+def _tableN_as_dataframe( thedata ):
+    flat = []
+    xvals = thedata['xvals']
+    for th, ypvals in thedata['theta_2_ypvals'].items():
+        sinth = float('%g'%(np.sin(kDeg2Rad*float(th))))
+        for x, yp in zip( xvals, ypvals ):
+            flat.append( ( x, sinth, yp ) )
+    return pd.DataFrame(flat, columns=['x', 'sinth', 'value'])
+
+def _tableN_df_as_table( df ):
+    return df.pivot(index='x', columns='sinth', values='value')
+
+
+def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct ):
     modes = ['all','plot','diff','updated']
     mode = args[0] if (len(args)==1 and args[0] in modes) else None
     if not mode:
-        raise SystemExit('Please provide table1 sub-mode, one of: %s'%(' '.join(modes)))
+        raise SystemExit(f'Please provide {tablename} sub-mode, one of: %s'%(' '.join(modes)))
 
-    data = load_table1scan_origpts()
-    data_all = load_table1scan_allpts()
+    data = load_origptfct()
+    data_all = load_allptsfct()
 
     if mode in ('all','plot'):
         std_plots(data_all,'all')
         if mode=='plot':
             return
 
-    orig_table = orig_table()
+    orig_table = origtable_fct()
     df_orig = pd.DataFrame(orig_table['x_sinth_yp_list'],
                            columns=['x', 'sinth', 'value'])
-    def as_dataframe( thedata ):
-        flat = []
-        xvals = thedata['xvals']
-        for th, ypvals in thedata['theta_2_ypvals'].items():
-            sinth = float('%g'%(np.sin(kDeg2Rad*float(th))))
-            for x, yp in zip( xvals, ypvals ):
-                flat.append( ( x, sinth, yp ) )
-        return pd.DataFrame(flat, columns=['x', 'sinth', 'value'])
 
-    def as_table( df ):
-        return df.pivot(index='x', columns='sinth', values='value')
-
+    as_table = _tableN_df_as_table
     if mode in ('all','diff'):
-        df = as_dataframe(data)
+        df = _tableN_as_dataframe(data)
         from .print_table1_diff import write_table1_diff_heatmap as ft
-        ft( as_table(df_orig), as_table(df), 'table1_diff.html',
+        ft( as_table(df_orig), as_table(df), f'{tablename}_diff.html',
             do_print = True )
-        ft( as_table(df_orig), as_table(df), 'table1_diff.tex' )
+        ft( as_table(df_orig), as_table(df), f'{tablename}_diff.tex' )
 
     if mode in ('all','updated'):
-        df = as_dataframe(data_all)
+        df = _tableN_as_dataframe(data_all)
         from .print_table1_diff import write_updated_table1 as ft
-        ft( as_table(df), 'table1_updated.html',do_print = True )
-        ft( as_table(df), 'table1_updated.tex' )
+        ft( as_table(df), f'{tablename}_updated.html',do_print = True )
+        ft( as_table(df), f'{tablename}_updated.tex' )
+
+
+def main_bc1974tables( args ):
+    assert not args
+    from .bc1974_tables import table1, table3, table4
+    def doit( tablename, tablefct ):
+        t0 = tablefct()
+        df = pd.DataFrame(t0['x_sinth_yp_list'],
+                          columns=['x', 'sinth', 'value'])
+        t = _tableN_df_as_table(df)
+        #Follow style of BC1974 Table 1, multiply by 1e4 and show now decimals:
+        t *= 10000
+        #df = _tableN_as_dataframe( t )
+        t.columns = ['%4g'%e for e in t.columns]
+        t.index = ['%5g'%e for e in t.index]
+        t.columns.name = 'sinth'
+        t.index.name = '    x'
+        print(t.style.format("{:04.0f}").to_string())
+
+    doit('Table 1 (BC1974)', table1)
+    doit('Table 3 (BC1974)', table3)
+    doit('Table 3 (BC1974)', table4)
+
+
+
+def main_table1( args ):
+    from .load import ( load_table1scan_origpts,
+                        load_table1scan_allpts )
+    from .bc1974_tables import table1 as orig_table
+    plot_table( args,
+                'table1',
+                load_table1scan_origpts,
+                load_table1scan_allpts,
+                orig_table )
+
+def main_table3( args ):
+    from .load import ( load_table3scan_origpts,
+                        load_table3scan_allpts )
+    from .bc1974_tables import table3 as orig_table
+    plot_table( args,
+                'table3',
+                load_table3scan_origpts,
+                load_table3scan_allpts,
+                orig_table )
+
+def main_table4( args ):
+    from .load import ( load_table4scan_origpts,
+                        load_table4scan_allpts )
+    from .bc1974_tables import table4 as orig_table
+    plot_table( args,
+                'table4',
+                load_table4scan_origpts,
+                load_table4scan_allpts,
+                orig_table )
 
 def main_fit( args ):
     from .load import load_thetascan
