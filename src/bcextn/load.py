@@ -7,17 +7,29 @@ def load_xscan():
 def load_thetascan():
     return _loadcache('bcdata_thetascan.json')
 
-def load_table1scan_origpts():
-    cachekey = 'load_table1scan_origpts_cache'
+def _impl_load_tablescan_origpts( tablename ):
+    assert tablename in ('table1','table3','table4')
+    cachekey = f'load_{tablename}scan_origpts_cache'
     if cachekey in _cache:
         return _cache[cachekey]
 
-    from .bc1974_tables import table1
+    from .bc1974_tables import table1, table3, table4
     from .plotutils import array
     import numpy as np
     import copy
 
-    orig_table_data = table1()
+    if tablename == 'table1':
+        orig_table_data = table1()
+        d_all = load_table1scan_allpts()
+    elif tablename == 'table3':
+        orig_table_data = table3()
+        d_all = load_table3scan_allpts()
+    elif tablename == 'table4':
+        orig_table_data = table4()
+        d_all = load_table4scan_allpts()
+    else:
+        assert False
+    d_all = copy.deepcopy(d_all)
     orig_xvals = orig_table_data['xvals']
     orig_th_vals = [ np.asin(float(e))*180/np.pi
                      for e in orig_table_data['sinthvals'] ]
@@ -25,7 +37,6 @@ def load_table1scan_origpts():
         return any(abs(float(xval)-float(e))<1e-13 for e in orig_xvals)
     def th_ok( thval ):
         return any(abs(float(thval)-float(e))<1e-13 for e in orig_th_vals)
-    d_all = copy.deepcopy(load_table1scan_allpts())
     mask = np.array( [x_ok(e) for e in d_all['xvals']],dtype = bool )
     d_filtered = {}
     d_filtered['xvals'] = array([ e for e in d_all['xvals'] if x_ok(e) ])
@@ -36,8 +47,23 @@ def load_table1scan_origpts():
     _cache[cachekey] = d_filtered
     return d_filtered
 
+def load_table1scan_origpts():
+    return _impl_load_tablescan_origpts('table1')
+
+def load_table3scan_origpts():
+    return _impl_load_tablescan_origpts('table3')
+
+def load_table4scan_origpts():
+    return _impl_load_tablescan_origpts('table4')
+
 def load_table1scan_allpts():
     return _loadcache('bcdata_table1pts.json')
+
+def load_table3scan_allpts():
+    return _loadcache('bcdata_scndgauss_table1pts.json')
+
+def load_table4scan_allpts():
+    return _loadcache('bcdata_scndlorentz_table1pts.json')
 
 _cache={}
 def _loadcache( fn ):
