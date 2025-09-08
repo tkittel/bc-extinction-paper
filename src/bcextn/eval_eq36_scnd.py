@@ -187,13 +187,13 @@ def test_fresnel():
         assert 0 < val - err
         assert val + err <= 1
         toterr = abs(ref_releps*ref) + abs(err)
-        print(f"   val: %g +- %g"%(float(val), float(err)))
-        print(f"   ref: %g +- %g"%(float(ref), float(ref_releps*ref)))
-        print(f"   error from ref: {float(ref_releps*ref):g}")
-        print(f"   error from nsum: {float(err):g}")
+        print("   val: %g +- %g"%(float(val), float(err)))
+        print("   ref: %g +- %g"%(float(ref), float(ref_releps*ref)))
+        print("   error from ref: {float(ref_releps*ref):g}")
+        print("   error from nsum: {float(err):g}")
         toterr = abs(ref_releps*ref) + abs(err)
-        print(f"   toterr: {float(toterr):g}")
-        print( "   ys_fresnel ndiff: ",abs(val-ref) / (toterr or 1e-200) )
+        print("   toterr: {float(toterr):g}")
+        print("   ys_fresnel ndiff: ",abs(val-ref) / (toterr or 1e-200) )
         assert abs(val-ref) < toterr
 
 def test():
