@@ -68,12 +68,50 @@ def multiproc_run_worklist( worklist, workfct = worker ):
     return sorted(results)
 
 def main():
-    quick = '--quick' in sys.argv[1:]
-    table1_points = '--table1' in sys.argv[1:]
-    thetascan = '--thetascan' in sys.argv[1:]
-    is_scnd_gauss = '--scnd-gauss' in sys.argv[1:]
-    is_scnd_lorentz = '--scnd-lorentz' in sys.argv[1:]
-    is_scnd_fresnel = '--scnd-fresnel' in sys.argv[1:]
+    args = sys.argv[1:]
+    if '--all' not in args:
+        doit( args )
+        return
+    is_quick = '--quick' in args
+    import multiprocessing
+    subjobs = []
+    for m in [None,'--scnd-gauss','--scnd-lorentz','--scnd-fresnel']:
+        for t in [None,'--table1','--thetascan']:
+            j = []
+            if m is not None:
+                j.append(m)
+            if t is not None:
+                j.append(t)
+            if is_quick:
+                j.append('--quick')
+            subjobs.append(j)
+    for i,jobargs in enumerate(subjobs):
+        print()
+        print( '-'*80 )
+        print( '-'*80 )
+        print( '-'*80 )
+        print( '------ LAUNCHING SUBJOB %i of %i: args=%s'%(i+1,
+                                                            len(subjobs),
+                                                            jobargs) )
+        print( '-'*80 )
+        print( '-'*80 )
+        print( '-'*80 )
+        print()
+
+        #Run in separate processes for safety (but not concurrently, since there
+        #is already concurrency at a lower level):
+        p = multiprocessing.Process(target=doit, args=(jobargs,))
+        p.start()
+        p.join()
+        #doit( jobargs )
+
+def doit( args ):
+    quick = '--quick' in args
+    table1_points = '--table1' in args
+    thetascan = '--thetascan' in args
+    is_scnd_gauss = '--scnd-gauss' in args
+    is_scnd_lorentz = '--scnd-lorentz' in args
+    is_scnd_fresnel = '--scnd-fresnel' in args
     assert not (table1_points and thetascan)
     assert not (is_scnd_gauss and is_scnd_lorentz)
     assert not (is_scnd_gauss and is_scnd_fresnel)
@@ -87,7 +125,7 @@ def main():
         fcttype = 'scndfresnel'
 
     x_range = ( 1e-3, 1e3 )
-    nx = 10 if quick else 100
+    nx = 3 if quick else 100
     nth = 3 if quick else 18
 
     #Hit nicer values:
