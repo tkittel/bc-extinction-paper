@@ -1,11 +1,23 @@
 
 # Load data previously created with the createdata script
 
-def load_xscan():
-    return _loadcache('bcdata.json')
+def load_xscan( mode = 'primary' ):
+    if mode.startswith('curve::'):
+        return load_curves( mode[len('curve::'):], 'xscan' )
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode == 'primary':
+        return _loadcache('bcdata.json')
+    else:
+        return _loadcache(f'bcdata_{mode}.json')
 
-def load_thetascan():
-    return _loadcache('bcdata_thetascan.json')
+def load_thetascan( mode = 'primary' ):
+    if mode.startswith('curve::'):
+        return load_curves( mode[len('curve::'):], 'thetascan' )
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode == 'primary':
+        return _loadcache('bcdata_thetascan.json')
+    else:
+        return _loadcache(f'bcdata_{mode}_thetascan.json')
 
 def _impl_load_tablescan_origpts( tablename ):
     assert tablename in ('table1','table3','table4')
@@ -85,3 +97,38 @@ def _prepdata( data ):
             for thstr,v in d[k].items():
                 d[k][thstr] = array( d[k][thstr] )
     return d
+
+
+_cache_curvedata = {}
+def load_curves( curvekey, mode ):
+    assert mode in 'xscan','thetascan'
+    if curvekey in _cache_curvedata:
+        return _cache_curvedata[curvekey]
+    from . import curves
+    if curvekey == 'sabineprimary':
+        fct = curves.SabineCurve_Primary()
+    elif curvekey == 'sabinescndrec':
+        fct = curves.SabineCurve_ScndRec()
+    elif curvekey == 'sabinescndtri':
+        fct = curves.SabineCurve_ScndTri()
+    else:
+        assert False, "bad curvekey"
+    refdata = ( load_xscan('primary')
+                if mode == 'xscan'
+                else load_thetascan('primary') )
+    res = _prepdata( _load_curves_impl(fct,refdata) )
+    _cache_curvedata[curvekey] = res
+    return res
+
+def _load_curves_impl( curvefct, refdata ):
+    xvals = refdata['xvals'].copy()
+    th2y, th2ye, th2t = {}, {}, {}
+    for thkey, ypvals in refdata['theta_2_ypvals'].items():
+        th = float(thkey)
+        th2y[thkey] = [ curvefct(x,th) for x in xvals ]
+        th2ye[thkey] = [ 0.0, ] * len(xvals)
+        th2t[thkey] = [ 0.0, ] * len(xvals)
+    return dict( xvals = xvals,
+                 theta_2_ypvals = th2y,
+                 theta_2_ypvals_maxerr = th2ye,
+                 theta_2_calctime = th2t )
