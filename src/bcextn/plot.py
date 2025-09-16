@@ -211,6 +211,7 @@ def main_table4( args ):
                 orig_table )
 
 def main_fit( args ):
+    print("WARNING: This non-global fit function is kept for reference only!!!")
     mode = args[0] if args else 'missing'
     modes=['primary','scndfresnel','scndlorentz','scndgauss']
     if mode not in modes:
@@ -921,10 +922,6 @@ def main_highx( args ):
 
 def do_highx( mode ):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
-    output_filename='global_fitted_curves_ABC'
-    if mode != 'primary':
-        output_filename += f'_{mode}'
-    output_filename += '.json'
 
     from .load import load_xscan as load
     data = load(mode)
@@ -965,7 +962,7 @@ def main_printcpp( args ):
     if len(args)>1 or mode not in modes:
         raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
     from .curves import load_fitted_curve_parameters
-    d = load_fitted_curve_parameters(mode,globalfit=True)
+    d = load_fitted_curve_parameters(mode)
     print(d)
     dp = d['proposed']
     npars = 7
@@ -1327,3 +1324,118 @@ def do_legfit( datasets, do_lux ):
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     plt.show()
+
+
+def main_fitglobal( args ):
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+    if len(args)!=1:
+        raise SystemExit('Please only provide a single (mode) argument')
+    do_fitglobal(mode)
+
+def do_fitglobal( mode ):
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    output_filename='global_refitted_classic_curves'
+    if mode != 'primary':
+        output_filename += f'_{mode}'
+    output_filename += '.json'
+
+    from .load import load_thetascan
+    from . import curves
+    if mode == 'primary':
+        FitClassic = curves.ClassicCurve_Primary
+    elif mode == 'scndgauss':
+        FitClassic = curves.ClassicCurve_ScndGauss
+    elif mode == 'scndlorentz':
+        FitClassic = curves.ClassicCurve_ScndLorentz
+    elif mode == 'scndfresnel':
+        FitClassic = curves.ClassicCurve_ScndFresnel
+    else:
+        assert False
+
+    def flatten_data( thedata ):
+        #Flatten data into list of (x, theta, y):
+        xvals = thedata['xvals']
+        flattened_data = []
+        for theta_degree_str, yvals in thedata['theta_2_ypvals'].items():
+            theta = float(theta_degree_str)
+            for x, y in zip( xvals, yvals ):
+                flattened_data.append( (x, theta, y) )
+            #    if len(flattened_data)==10:
+            #        break#FIXME
+            #if len(flattened_data)==10:
+            #    break#FIXME
+        return np.asarray(flattened_data)
+
+    data = load_thetascan(mode)
+    flatdata = flatten_data(data)
+
+    def do_fit_by_fct( flatdata, fitter ):
+
+        #@np.vectorize
+        def fitfct( xth, *params ):
+            print("FITFCT called with params:",params)
+            xarr, tharr  = xth
+            return np.vectorize( lambda xval, thval
+                                 : fitter( xval, thval, params ) )(xarr, tharr)
+        #yvals = flatdata[:,2]
+        #errors = 1/(0.0001+abs(yvals-0.5))
+
+        def estimate_ysigma():
+            #Make sure the fit won't ignore the tail where y <<1:
+            yy = flatdata[:,2]
+            ysigma = abs(np.minimum(yy,1.0-yy))
+            if mode=='scndlorentz':
+                ysigma = ysigma**1.5 #Oddly sensitive here!!
+            #if mode=='scndgauss':
+            #    ysigma[flatdata[:,0] < 0.5] /=10000
+            return ysigma
+
+
+        ysigma = estimate_ysigma()
+
+        fit_flatdata, fit_ysigma = flatdata, ysigma
+
+        minx = None
+        if hasattr(fitter,'taylor_cutoff'):
+            minx = fitter.taylor_cutoff()
+        if minx is not None and minx>0:
+            mask = flatdata[:,0] >= minx
+            fit_flatdata = fit_flatdata[mask]
+            fit_ysigma = fit_ysigma[mask]
+
+        if False:#FIXME
+            mask = np.logical_and(flatdata[:,0] >= 0.05,flatdata[:,0] <= 5.0)
+            fit_flatdata = fit_flatdata[mask]
+            fit_ysigma = fit_ysigma[mask]
+
+        fitparams,fitcov = scipy.optimize.curve_fit( fitfct,
+                                                     fit_flatdata[:,:2].T,
+                                                     fit_flatdata[:,2],
+                                                     sigma=fit_ysigma,
+                                                     p0 = fitter.p0(),
+                                                     nan_policy='raise')
+        corrmat = np.corrcoef(fitcov)
+        corrlist = [ (abs(corrmat[i, j]),i,j)
+                     for i in range(len(corrmat))
+                     for j in range(len(corrmat))
+                     if i<j ]
+        corrlist.sort()
+        for _,i,j in corrlist[::-1][0:10]:
+            print( 'Correlation between parameters %i and %i : %.4g'%(i,j,corrmat[i,j]))
+        print(fitparams)
+        print(fitter.p0())
+        return fitparams
+
+    fitpars_classic = do_fit_by_fct( flatdata, FitClassic() )
+
+    from .json import save_json
+    def tostdlist_or_none( arr ):
+        return [float(e) for e in arr] if arr is not None else None
+    save_json(
+        output_filename,
+        dict( classic = tostdlist_or_none(fitpars_classic) ),
+        force = True
+    )
