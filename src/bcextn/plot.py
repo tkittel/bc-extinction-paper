@@ -11,30 +11,108 @@ std_modemap = { 'yp':'theta_2_ypvals',
                 't':'theta_2_calctime'
                 }
 
-def std_plots( data, mode ):
+def std_plots( data,
+               mode,
+               do_map = False,
+               do_cmpwithstd = False,
+               finalise_plot = True,
+               legend = True ):
+
+    from . import trf
     if mode == 'all':
         for m in std_modemap.keys():
-            std_plots(data,m)
+            std_plots(data,m,do_map=do_map)
         return
+
     data_key = std_modemap[mode]
+
+    xvals_orig = data['xvals']
+    xvals = xvals_orig.copy()
+
+    mask = xvals >= 100
+    mask = xvals >= -1 # all
+    xvals = xvals[mask]
+
+    yvals_std = np.sqrt(xvals_orig*2.0 + 1.0)**(-1.0)
+    if do_cmpwithstd:
+        yprime_std = trf.transform_to_yprime( yvals_std, xvals_orig )
+    def trf_cmpy(y):
+        return ( y/yprime_std ) if do_cmpwithstd else y
+
+    def trf_y( y):
+        return trf_cmpy(y)
+    if do_map:
+        xvals_orig = xvals.copy()
+        xvals = trf.transform_to_xprime(xvals)
+        def trf_y( y):
+            return trf_cmpy(trf.transform_to_yprime( y, xvals_orig ))
 
     for thstr in data['th_keys']:
         thval = float(thstr)
         color = th2color(thstr)
-        plt.plot( data['xvals'],
-                  data[data_key][thstr],
+        plt.plot( xvals,
+                  trf_y( data[data_key][thstr][mask] ),
                   label = f'$\\theta={thval:g}\\degree$',
                   color = color )
-    plt.ylabel(mode)
-    plt.xlabel('x')
-    plt.legend()
-    plt.grid()
-    plt.show()
+    if finalise_plot:
+        #plt.plot( xvals, trf_y(yvals_std), label='y=1/sqrt(1+2x)', color='black')
 
-def main_xscan( args ):
-    from .load import load_xscan
-    assert len(args)==1 and (args[0]=='all' or args[0] in std_modemap.keys())
-    std_plots( load_xscan(), args[0] )
+        plt.ylabel(mode)
+        if do_map and mode=='yp':
+            plt.ylabel('yprime')
+        plt.xlabel('xprime' if do_map else 'x')
+        if not do_map:
+            plt.semilogx()
+        if legend:
+            plt.legend()
+        plt.grid()
+        plt.show()
+
+def main_xscan090( args ):
+    return main_xscan(args,is_xscan090=True)
+
+def main_xscan( args, is_xscan090 = False ):
+    plotmodes = [e for e in std_modemap.keys()]+['all']
+    modes=['primary',
+           'scndfresnel',
+           'scndlorentz',
+           'scndgauss',
+           'curve::sabineprimary',
+           'curve::sabinescndrec',
+           'curve::sabinescndtri',
+           'all']
+    flagnames = ['map','cmpwithstd']
+    def usage():
+        print('Please provide data-mode (e.g. "primary") followed by plot-mode (e.g. "all")')
+        print('  data-modes: %s'%(' '.join(modes)))
+        print('  plot-modes: %s'%(' '.join(plotmodes)))
+        print('You can also provide the following additional keywords: %s'%(' '.join(flagnames)))
+        raise SystemExit(1)
+    flags = set()
+    for fn in flagnames:
+        while fn in args:
+            args.remove(fn)
+            flags.add(fn)
+    if len(args)!=2:
+        usage()
+    mode, plotmode = args
+    if mode not in modes:
+        usage()
+    if plotmode not in plotmodes:
+        usage()
+    from .load import load_xscan, load_xscan090
+    loadfct = load_xscan090 if is_xscan090 else load_xscan
+    common_args = dict( mode = plotmode,
+                        do_map = ( 'map' in flags),
+                        do_cmpwithstd = ( 'cmpwithstd' in flags) )
+    if mode != 'all':
+        std_plots( loadfct(mode), **common_args )
+    else:
+        actual_modes = [e for e in modes if e!='all']
+        for i,m in enumerate(actual_modes):
+            std_plots( loadfct(m), **common_args,
+                       legend = True,
+                       finalise_plot = (len(actual_modes)==i+1 ) )
 
 def _tableN_as_dataframe( thedata ):
     flat = []
@@ -92,7 +170,6 @@ def main_bc1974tables( args ):
         t = _tableN_df_as_table(df)
         #Follow style of BC1974 Table 1, multiply by 1e4 and show now decimals:
         t *= 10000
-        #df = _tableN_as_dataframe( t )
         t.columns = ['%4g'%e for e in t.columns]
         t.index = ['%5g'%e for e in t.index]
         t.columns.name = 'sinth'
@@ -102,8 +179,6 @@ def main_bc1974tables( args ):
     doit('Table 1 (BC1974)', table1)
     doit('Table 3 (BC1974)', table3)
     doit('Table 3 (BC1974)', table4)
-
-
 
 def main_table1( args ):
     from .load import ( load_table1scan_origpts,
@@ -136,141 +211,157 @@ def main_table4( args ):
                 orig_table )
 
 def main_fit( args ):
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+    if len(args)!=1:
+        raise SystemExit('Please only provide a single (mode) argument')
+    do_fit(mode)
+
+def do_fit( mode ):
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    output_filename='refitted_bc1974_curves'
+    if mode != 'primary':
+        output_filename += f'_{mode}'
+    output_filename += '.json'
+
     from .load import load_thetascan
-    from .curves import yp_proposed_curve as f
-    from .curves import yp_bc1974_curve as orig_f
-    assert len(args)==0
-    data = load_thetascan()
+    from . import curves
+    if mode == 'primary':
+        orig_f = curves.yp_bc1974_curve
+    elif mode == 'scndgauss':
+        orig_f = curves.ys_bc1974_curve_scndgauss #with factor 2.12
+    elif mode == 'scndlorentz':
+        orig_f = curves.yp_bc1974_curve #same as primary
+    else:
+        assert False, "not implemented"
+
+    data = load_thetascan(mode)
     xvals = data['xvals']
 
     orig_optimalA = []
     orig_optimalB = []
-    optimalA = []
-    optimalB = []
-    optimalC = []
     thvals = []
 
     for theta_degree_str, ypvals in data['theta_2_ypvals'].items():
+        xval_fitmask = xvals<1e999#>=1e-3 and xvals>=1e-3 #FIXME
+        xvals_fit = xvals[xval_fitmask]
+        yvals_fit = ypvals[xval_fitmask]
+
         thvals.append(float(theta_degree_str))
-        (A,B,C),_ = scipy.optimize.curve_fit(f,xvals, ypvals,
-                                             p0 = [1.0,1.0,1.0] )
-        optimalA.append(A)
-        optimalB.append(B)
-        optimalC.append(C)
-        (A,B),_ = scipy.optimize.curve_fit(orig_f,xvals, ypvals,
-                                           p0 = [1.0,1.0] )
+        (A,B),_ = scipy.optimize.curve_fit( orig_f,xvals_fit, yvals_fit,
+                                            p0 = [1.0,1.0],
+                                            bounds = (-10.,5.) )#FIXME: TESTING
         orig_optimalA.append(A)
         orig_optimalB.append(B)
 
+        if False and abs(float(theta_degree_str)-60.0)<1e-3:
+            print("AB = ",A,B)
+            plt.plot( xvals, orig_f( xvals, A, B ), label="NewBestABFit",ls=':',lw=2 )
+            plt.plot( xvals, ypvals, label='integration ref' )
+            plt.legend()
+            plt.grid()
+            plt.semilogx()
+            plt.show()
+            raise SystemExit('early abort')
+
     thvals = array(thvals)
-    optimalA = array(optimalA)
-    optimalB = array(optimalB)
-    optimalC = array(optimalC)
     orig_optimalA = array(orig_optimalA)
     orig_optimalB = array(orig_optimalB)
 
-    #Let us fit and visualise proposed and original forms:
-    fctA_p0 = [ 1.0, ] * 7
-    @np.vectorize
-    def fctA( theta, p0, p1, p2,p3,p4,p5,p6 ):
-        u = math.sin( theta*kDeg2Rad )
-        return p0 + p1*u + p2*u**2 + p3*u**3 +p4*u**4 +p5*u**5 + p6*u**6
-    res_fctA,_ = scipy.optimize.curve_fit( fctA, thvals, optimalA, p0 = fctA_p0 )
-    print('fctA(theta) pars:',res_fctA)
+    #Let us fit and visualise:
 
-    fctB_p0 = [ 1.0, ]*7
-    @np.vectorize
-    def fctB( theta, p0, p1, p2, p3, p4, p5, p6 ):
-        u = math.sin( theta*kDeg2Rad )
-        return p0 + p1*u + p2*u**2 + p3*u**3 + p4*u**4 + p5*u**5 + p6*u**6
-    res_fctB,_ = scipy.optimize.curve_fit( fctB, thvals, optimalB, p0 = fctB_p0 )
-    print('fctB(theta) pars:',res_fctB)
+    if mode == 'primary':
+        orig_fctA_BC1974_pars = [0.20,0.45]
+        orig_fctB_BC1974_pars = [0.22,-0.12]
+        def orig_fctA( theta, p0, p1 ):
+            u = math.cos( 2 * theta*kDeg2Rad )
+            return p0 + p1*u
+        def orig_fctB( theta, p0, p1 ):
+            u = math.cos( 2 * theta*kDeg2Rad )
+            return p0 + p1*(0.5-u)**2
+    elif mode == 'scndgauss':
+        orig_fctA_BC1974_pars = [0.58,0.48,0.24]
+        orig_fctB_BC1974_pars = [0.02,-0.025]
+        def orig_fctA( theta, p0, p1, p2 ):
+            u = math.cos( 2 * theta*kDeg2Rad )
+            return p0+p1*u+p2*u**2
+        def orig_fctB( theta, p0, p1 ):
+            u = math.cos( 2 * theta*kDeg2Rad )
+            return p0 + p1*u
+    elif mode == 'scndlorentz':
+        orig_fctA_BC1974_pars = [0.025,0.285]
+        orig_fctB_BC1974_pars = [0.15, -0.2,0.75,-0.45]
+        def orig_fctA( theta, p0, p1 ):
+            u = math.cos( 2 * theta*kDeg2Rad )
+            p0, p1 = 0.025, 0.285
+            return p0+p1*u
+        def orig_fctB( theta, p0, p1, p2, p3 ):
+            u = math.cos( 2 * theta*kDeg2Rad )
+            #alternatively take only 3 pars and enforce continuity by p0 = -p1*p2*p2
+            #p0 = 0.15#p1*p2*p2
+            #p1 = 0.2
+            #p2 = 0.75
+            #p3 = -0.45
+            return ( (p0-p1*(p2-u)**2 ) if u>0.0 else p3*u )
+    else:
+        assert False, "not implemented"
 
-    fctC_p0 = [ 1.0, ] * 7
-    @np.vectorize
-    def fctC( theta, p0, p1, p2, p3, p4, p5, p6 ):
-        u = math.sin( theta*kDeg2Rad )
-        return p0 + p1*u + p2*u**2 + p3*u**3 + p4*u**4 + p5*u**5 + p6*u**6
-    res_fctC,_ = scipy.optimize.curve_fit( fctC, thvals, optimalC, p0 = fctC_p0 )
-    print('fctC(theta) pars:',res_fctC)
+    orig_fctA = np.vectorize(orig_fctA)
+    orig_fctB = np.vectorize(orig_fctB)
+    orig_fctA_p0 = [ 1.0, ] * len(orig_fctA_BC1974_pars)
+    orig_fctB_p0 = [ 1.0, ] * len(orig_fctB_BC1974_pars)
+    if mode == 'scndlorentz':
+        #help fit:
+        orig_fctA_p0 = orig_fctA_BC1974_pars[:]
+        orig_fctB_p0 = orig_fctB_BC1974_pars[:]
 
-    orig_fctA_p0 = [ 1.0, ] * 2
-    @np.vectorize
-    def orig_fctA( theta, p0, p1 ):
-        u = math.cos( 2 * theta*kDeg2Rad )
-        return p0 + p1*u
     orig_res_fctA,_ = scipy.optimize.curve_fit( orig_fctA, thvals,
                                                 orig_optimalA, p0 = orig_fctA_p0 )
     print('orig fctA(theta) pars:',orig_res_fctA)
 
-    orig_fctB_p0 = [ 1.0, ] * 2
-    @np.vectorize
-    def orig_fctB( theta, p0, p1 ):
-        u = math.cos( 2 * theta*kDeg2Rad )
-        return p0 + p1*(0.5-u)**2
     orig_res_fctB,_ = scipy.optimize.curve_fit( orig_fctB, thvals,
                                                 orig_optimalB, p0 = orig_fctB_p0 )
     print('orig fctB(theta) pars:',orig_res_fctB)
 
+    do_plot = True
+    if do_plot:
+        plots = [ ( thvals, 'theta [degree]' ),
+                  ( np.cos(thvals*(2*np.pi/180.)), 'cos(2*theta)' ),
+                  ( np.sin(thvals*(np.pi/180.)), 'sin(theta)' ),
+                 ]
+        for xvals, xlabel in plots:
+            plt.plot( xvals, orig_optimalA, label = 'A (optimal at each theta)',
+                      color='blue')
+            plt.plot( xvals, orig_fctA(thvals,*orig_res_fctA),
+                      label = 'proposed A(theta)',
+                      color='blue',linestyle='--',lw=3 )
 
-    plots = [ ( thvals, 'theta [degree]' ),
-              ( np.cos(thvals*(2*np.pi/180.)), 'cos(2*theta)' ),
-              ( np.sin(thvals*(np.pi/180.)), 'sin(theta)' ),
-             ]
-    for xvals, xlabel in plots:
-        plt.plot( xvals, optimalA, label = 'A (optimal at each theta)',
-                  color='blue')
-        plt.plot( xvals, fctA(thvals,*res_fctA),
-                  label = 'proposed A(theta)',
-                  color='blue',linestyle='--',lw=3)
-        plt.plot( xvals, optimalB, label = 'B (optimal at each theta)',
-                  color='green')
-        plt.plot( xvals, fctB(thvals,*res_fctB),
-                  label = 'proposed B(theta)',
-                  color='green',linestyle='--',lw=3)
-        plt.plot( xvals, optimalC, label = 'C (optimal at each theta)',
-                  color='red')
-        plt.plot( xvals, fctC(thvals,*res_fctC),
-                  label = 'proposed C(theta)',
-                  color='red',linestyle='--',lw=3)
-        plt.grid()
-        plt.xlabel(xlabel)
-        plt.legend()
-        plt.show()
-    for xvals, xlabel in plots:
-        plt.plot( xvals, orig_optimalA, label = 'A (optimal at each theta)',
-                  color='blue')
-        plt.plot( xvals, orig_fctA(thvals,*orig_res_fctA),
-                  label = 'proposed A(theta)',
-                  color='blue',linestyle='--',lw=3 )
+            plt.plot( xvals, orig_fctA(thvals,*orig_fctA_BC1974_pars),
+                      label = 'original 1974 A(theta)',
+                      color='blue',linestyle=':',lw=3, alpha=0.5 )
+            plt.plot( xvals, orig_optimalB, label = 'B (optimal at each theta)',
+                      color='green')
+            plt.plot( xvals, orig_fctB(thvals,*orig_res_fctB),
+                      label = 'proposed B(theta)',
+                      color='green',linestyle='--',lw=3 )
+            plt.plot( xvals, orig_fctB(thvals,*orig_fctB_BC1974_pars),
+                      label = 'original 1974 B(theta)',
+                      color='green',linestyle=':',lw=3, alpha=0.5 )
 
-        plt.plot( xvals, orig_fctA(thvals,0.20,0.45),
-                  label = 'original 1974 A(theta)',
-                  color='blue',linestyle=':',lw=3, alpha=0.5 )
-        plt.plot( xvals, orig_optimalB, label = 'B (optimal at each theta)',
-                  color='green')
-        plt.plot( xvals, orig_fctB(thvals,*orig_res_fctB),
-                  label = 'proposed B(theta)',
-                  color='green',linestyle='--',lw=3 )
-        plt.plot( xvals, orig_fctB(thvals,0.22,-0.12),
-                  label = 'original 1974 B(theta)',
-                  color='green',linestyle=':',lw=3, alpha=0.5 )
+            plt.grid()
+            plt.xlabel(xlabel)
+            plt.legend()
+            plt.show()
 
-        plt.grid()
-        plt.xlabel(xlabel)
-        plt.legend()
-        plt.show()
-
-    results = { 'A' : [ p for p in res_fctA ],
-                'B' : [ p for p in res_fctB ],
-                'C' : [ p for p in res_fctC ],
-                'origA' : [ p for p in orig_res_fctA ],
+    results = { 'origA' : [ p for p in orig_res_fctA ],
                 'origB' : [ p for p in orig_res_fctB ]
                }
 
     from .json import save_json
     save_json(
-        'fitted_curves_ABC.json',
+        output_filename,
         results,
         force = True
     )
@@ -282,6 +373,20 @@ def lookup_float_key( adict, key, eps=1e-12 ):
     return vals[0]
 
 def main_cmprecipes( args ):
+    do_strict = True
+    if 'nostrict' in args:
+        args.remove('nostrict')
+        do_strict = False
+    do_lux = False
+    if 'lux' in args:
+        args.remove('lux')
+        do_lux = True
+
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+    args = args[1:]
     assert len(args) in ( 0,1 )
     do_reldiff = True
     if 'abs' in args:
@@ -292,31 +397,51 @@ def main_cmprecipes( args ):
         do_vs_old = True
         args.remove('vsold')
     assert not args
-
     do_cmprecipes( do_reldiff = do_reldiff,
-                   do_vs_old = do_vs_old )
+                   do_vs_old = do_vs_old,
+                   mode = mode,
+                   do_strict = do_strict,
+                   do_lux = do_lux )
 
-def do_cmprecipes( do_reldiff, do_vs_old ):
-    from .curves import ClassicCurve, UpdatedClassicCurve, ProposedCurve
+def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux ):
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    from . import curves
+    ( ClassicCurve,
+      UpdatedClassicCurve,
+      ProposedCurve,
+      ProposedLuxCurve ) = curves.mode_curves(mode)
+    if do_lux:
+      ProposedCurve = ProposedLuxCurve
+    del ProposedLuxCurve
+
     from .load import load_xscan as dataload
 
     if do_vs_old:
         assert do_reldiff, "vsold only for reldiff"
-    data = dataload()
-    print( data.keys() )
+    data = dataload(mode=mode)
+    #print( data.keys() )
     xvals = data['xvals']
 
     def fleq( a, b, eps=1e-12 ):
         return abs(float(a)-float(b))<eps
 
     th2yp = dict( (th,ypvals)
-                  for th,ypvals in data['theta_2_ypvals'].items()
-                  #if ( int(float(th)) == float(th) and int(float(th))==80 ) #int(float(th))%30==0
-                  #if ( int(float(th)) == float(th) and int(float(th))%5==0 )
-                  )
+                  for th,ypvals in data['theta_2_ypvals'].items() )
+    worst_reldiff_classic = [1e-99]
+    worst_reldiff_updatedclassic = [1e-99]
+    worst_reldiff_proposed = [1e-99]
     if do_reldiff:
-        def ytrf( yp, ypref ):
-            return np.clip(abs(yp/ypref-1.0),0.0,1.0)
+        def ytrf( yp, ypref, worst_reldiff_obj = None ):
+            if do_strict:
+                #Relative difference to smallest of y and 1-y:
+                v = ( abs(yp-ypref)/np.minimum(abs(ypref),abs(1.0-ypref)) )
+            else:
+                #Relative difference to absolute y value
+                v = abs(yp/ypref-1.0)
+            v = np.clip(v,0.0,1.0)
+            if worst_reldiff_obj is not None:
+                worst_reldiff_obj[0] = max(v.max(),worst_reldiff_obj[0])
+            return v
     else:
         def ytrf( yp, ypref ):
             return np.clip(yp,0.0,1.0)
@@ -324,12 +449,10 @@ def do_cmprecipes( do_reldiff, do_vs_old ):
     seen_lbls = set()
     for th,yref in th2yp.items():
         th = float(th)
-        #if th > 61:
-        #    continue
         color = th2color(th)
         yp_classic = ClassicCurve()(xvals,th)
-        yp_updatedclassic = UpdatedClassicCurve()(xvals,th)
-        yp_proposed = ProposedCurve()(xvals,th)
+        yp_updatedclassic = UpdatedClassicCurve()(xvals,th) if UpdatedClassicCurve else None
+        yp_proposed = ProposedCurve()(xvals,th) if ProposedCurve else None
         if do_vs_old:
             yref = yp_classic
 
@@ -363,7 +486,7 @@ def do_cmprecipes( do_reldiff, do_vs_old ):
         if th > split_th:
             color='green'
         if not do_vs_old:
-            plt.plot( xvals, ytrf(yp_classic,yref),
+            plt.plot( xvals, ytrf(yp_classic,yref,worst_reldiff_classic),
                       **common,
                       color=color,
                       ls = '-.',
@@ -372,76 +495,119 @@ def do_cmprecipes( do_reldiff, do_vs_old ):
         color = 'red'#th2color(th*0.3,'Greens')
         if do_vs_old and th > split_th:
             color='green'
-        plt.plot( xvals, ytrf(yp_updatedclassic,yref),
-                  **common,
-                  color=color,
-                  ls = '--',
-                  label = lbltrf('updated BC1974',
-                                 split_theta = split_th if do_vs_old else None) )
+        if yp_updatedclassic is not None:
+            plt.plot( xvals, ytrf(yp_updatedclassic,yref,worst_reldiff_updatedclassic),
+                      **common,
+                      color=color,
+                      ls = '--',
+                      label = lbltrf('updated BC1974',
+                                     split_theta = split_th if do_vs_old else None) )
+
+
         #color='blue'
         color = 'black'#th2color(th*0.2,'Blues')
         if do_vs_old and th > split_th:
             color='gray'
         #color = th2color(th)
-        plt.plot( xvals, ytrf(yp_proposed,yref),
-                  **common,
-                  color=color,
-                  ls = '-',
-                  label = lbltrf('new form',
-                                 split_theta = split_th if do_vs_old else None) )
+        if yp_proposed is not None:
+            plt.plot( xvals, ytrf(yp_proposed,yref,worst_reldiff_proposed),
+                      **common,
+                      color=color,
+                      ls = '-',
+                      label = lbltrf('new form',
+                                     split_theta = split_th if do_vs_old else None) )
+    yvalname = 'yp' if mode=='primary' else 'ys'
+
     if do_reldiff:
         plt.semilogy()
-        plt.ylim(1e-6,1.0)
-        plt.ylabel('yp/ypref-1')
+        plt.ylim(1e-10,1.0)
+        if do_strict:
+            plt.ylabel(f'max({yvalname}/{yvalname}ref-1,(1-{yvalname})/(1-{yvalname}ref)-1)')
+        else:
+            plt.ylabel(f'{yvalname}/{yvalname}ref-1')
     else:
         plt.ylim(0.0,1.0)
-        plt.ylabel('yp')
+        plt.ylabel(yvalname)
+    plt.title(mode)
     plt.xlim(xvals[0],xvals[-1])
     plt.grid()
     plt.semilogx()
     plt.legend()
     plt.xlabel('x')
+    print("Worst reldiff (CLASSIC)    : %g"%worst_reldiff_classic[0])
+    print("Worst reldiff (UpdCLASSIC) : %g"%worst_reldiff_updatedclassic[0])
+    print("Worst reldiff (Proposed)   : %g"%worst_reldiff_proposed[0])
+
+    for cn,curve in [ ('classic',ClassicCurve),
+                      ('updclassic',UpdatedClassicCurve),
+                      ('proposed',ProposedCurve) ]:
+        if curve is None:
+            continue
+        print('%20s at x=1e6 and theta=0,45,90: %g   %g   %g'
+              %(cn, curve()(1e6,0), curve()(1e6,45), curve()(1e6,90) ) )
+
+
+
     plt.show()
 
 def main_fittest( args ):
     #Try to fit new candidates.
+    print("WARNING: Not really relevant after this was superseded by the Legendre fit.")
+    #Fixme: remove this code?
+
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if len(args)>1 or mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+
     from .load import load_xscan as dataload
     from .curves import safediv, safesqrt
     from .fit import fitfunction
-    assert len(args)==0
+
+    val2 = 2.0 if mode!='scndgauss' else 3/math.sqrt(2)
 
     fcts = []
     @fitfunction
     def f0( x, A, B ):
         k = 1 + B*x
-        k2 = 1.0+2.0*x+safediv(A*x*x,k)
+        k2 = 1.0+val2*x+safediv(A*x*x,k)
         return safediv( 1.0, safesqrt( k2 ) )
 
     fcts = []#fixme
     @fitfunction
     def f1( x, A, B, C ):
         k = 1 + B*x
-        k2 = 1.0+2.0*x+safediv(A*x*x+C*x,k)
+        k2 = 1.0+val2*x+safediv(A*x*x+C*x,k)
         return safediv( 1.0, safesqrt( k2 ) )
 
     @fitfunction
     def f2( x, A, B, C, D ):
         b = D*(x/(1.0+x))
         k = 1.0 + B*x +b
-        k2 = 1.0+2.0*x+safediv(A*x*x+C*x,k)
+        k2 = 1.0+val2*x+safediv(A*x*x+C*x,k)
         return safediv( 1.0, safesqrt( k2 ) )
 
     @fitfunction
     def f3( x, A, B, C ):
         k = 1.0 + B*x + C*x/(1.0+x)
-        k2 = 1.0+2.0*x+safediv( A*x*x-0.1*x, k )
+        k2 = 1.0+val2*x+safediv( A*x*x-0.1*x, k )
         return safediv( 1.0, safesqrt( k2 ) )
+
+    @fitfunction
+    def f4( x, A, B, C ):
+        b = C*(x/(1.0+x))
+        k = 1.0 + B*x + b
+        k2 = 1.0+val2*x+safediv(A*x*x,k)
+        return safediv( 1.0, safesqrt( k2 ) )
+
+
     fcts.append((f0,'orig','green'))
     fcts.append( (f1,f1.name,'blue') )
     fcts.append( (f2,f2.name,'red') )
     fcts.append( (f3,f3.name,'orange') )
+    fcts.append( (f4,f4.name,'brown') )
 
-    data = dataload()
+    data = dataload(mode)
     print( data.keys() )
     x = data['xvals']
     ycurves = [ ( f'$\\theta={th:g}\\degree$',
@@ -478,7 +644,8 @@ def main_fittest( args ):
 def main_par2latex( args ):
     assert len(args)==0
     from .curves import load_fitted_curve_parameters
-    data = load_fitted_curve_parameters()
+    data = load_fitted_curve_parameters('primary')
+    raise SystemExit("FIXME: This needs update for the new proposed curves")
 
     print(r'\begin{align}')
     pA0, pA1 = data['origA']
@@ -541,7 +708,8 @@ def find_taylor_maxx( theta, eps ):
             return 0.5*(xmax+xmin)
 
 def main_taylorreach( args ):
-
+    print("WARNING: This is only for the primary mode right now (and does"
+          " not show reach of taylor user recipes)")
     n = 1000
     split_x = 5
     theta_vals = np.concat( ( np.linspace(0,split_x,n//2,endpoint=False),
@@ -559,10 +727,20 @@ def main_taylorreach( args ):
     plt.show()
 
 def main_spread( args ):
-    assert not args
-    from .curves import ProposedCurve
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+    if len(args)!=1:
+        raise SystemExit('Please only provide a single (mode) argument')
+    do_spread(mode)
+
+def do_spread( mode ):
+    #Fixme: just plot all modes in same plot.
+    from .curves import mode_curves
+    _,_,_,ProposedLuxCurve = mode_curves(mode)
     from .load import load_xscan as dataload
-    data = dataload()
+    data = dataload(mode)
     xvals = data['xvals']
     def key_theta( theta ):
         keys = [ k for k in data['th_keys']
@@ -576,7 +754,7 @@ def main_spread( args ):
         return (yp90-yp0)/(0.5*(yp90+yp0))
     plt.plot( xvals, reldiff(yp90,yp0), label='numerical integration' )
     plt.plot( xvals,
-              reldiff(ProposedCurve()(xvals,90),ProposedCurve()(xvals,0)),
+              reldiff(ProposedLuxCurve()(xvals,90),ProposedLuxCurve()(xvals,0)),
               label='Via new parameterisation' )
     #plt.semilogx()
     plt.loglog()
@@ -592,16 +770,36 @@ def find_nearest_idx( arr, val):
     assert idx < len(arr)
     return idx
 
-def plot_breakdown( curve, ref ):
-    from .curves import ProposedCurve, ClassicCurve, UpdatedClassicCurve
-    from .load import load_xscan as dataload
-
-    assert curve in ('classic','updatedclassic','proposed')
-    assert ref in ('numint','proposed')
+def plot_breakdown( mode, curve, ref ):
+    assert curve in ('classic','updatedclassic','proposed','proposedlux')
+    assert ref in ('numint','proposedlux')
     assert curve != ref
 
+    print(f"Performing reldiff 2D plot of {curve} vs {ref} for {mode}")
+    from .curves import mode_curves
+
+    ( ClassicCurve,
+      UpdatedClassicCurve,
+      ProposedCurve,
+      ProposedLuxCurve ) = mode_curves(mode)
+
+    if ref=='proposedlux' and ProposedLuxCurve is None:
+        print("Skipping plot breakdown vs. proposed lux curve since it is not yet ready")
+        return
+    if curve=='updatedclassic' and UpdatedClassicCurve is None:
+        print("Skipping plot breakdown of updated classic curve since it is not yet ready")
+        return
+    if curve=='proposed' and ProposedCurve is None:
+        print("Skipping plot breakdown of proposed curve since it is not yet ready")
+        return
+    if curve=='proposedlux' and ProposedLuxCurve is None:
+        print("Skipping plot breakdown of proposed curve since it is not yet ready")
+        return
+
+    from .load import load_xscan as dataload
+
     if ref=='numint':
-        refdata = dataload()
+        refdata = dataload(mode)
         x = refdata['xvals']
         th = array(sorted(float(e) for e in refdata['th_keys']))
         _last_lookup = [None,None]
@@ -614,9 +812,10 @@ def plot_breakdown( curve, ref ):
             assert _last_lookup[0] == thval
             return _last_lookup[1][find_nearest_idx(x,xval)]
     else:
+        assert ref == 'proposedlux'
         x = np.geomspace(0.1, 100.0, 400)  # Adjust the range and resolution as needed
         th = np.linspace(0.1, 100.0, 400)
-        ref_curve = ProposedCurve()
+        ref_curve = ProposedLuxCurve()
         def lookup_ref(xval, thval):
             return ref_curve(xval,thval)
 
@@ -625,9 +824,11 @@ def plot_breakdown( curve, ref ):
         curvefct = ClassicCurve()
     elif curve=='updatedclassic':
         curvefct = UpdatedClassicCurve()
-    else:
-        assert curve=='proposed'
+    elif curve=='proposed':
         curvefct = ProposedCurve()
+    else:
+        assert curve=='proposedlux'
+        curvefct = ProposedLuxCurve()
 
     @np.vectorize
     def z_calc( xval, thval ):
@@ -696,29 +897,87 @@ def plot_breakdown( curve, ref ):
     plt.savefig('%s_vs_%s.pdf'%(curve,ref),format='pdf',dpi=300)
     plt.show()
 
-
-
 def main_breakdown( args ):
-    assert not args
-    plot_breakdown( 'classic', ref='proposed')
-    plot_breakdown( 'classic', ref='numint')
-    plot_breakdown( 'updatedclassic', ref='numint')
-    plot_breakdown( 'updatedclassic', ref='proposed')
-    plot_breakdown( 'proposed', ref='numint')
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if len(args)>1 or mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
 
+    plot_breakdown( mode, 'proposedlux', ref='numint')
+    plot_breakdown( mode, 'classic', ref='proposedlux')
+    #plot_breakdown( mode, 'classic', ref='numint')
+    #plot_breakdown( mode, 'updatedclassic', ref='numint')
+    plot_breakdown( mode, 'updatedclassic', ref='proposedlux')
+    plot_breakdown( mode, 'proposed', ref='proposedlux')
+
+def main_highx( args ):
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+    if len(args)!=1:
+        raise SystemExit('Please only provide a single (mode) argument')
+    do_highx(mode)
+
+def do_highx( mode ):
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    output_filename='global_fitted_curves_ABC'
+    if mode != 'primary':
+        output_filename += f'_{mode}'
+    output_filename += '.json'
+
+    from .load import load_xscan as load
+    data = load(mode)
+    xvals = data['xvals']
+    mask = xvals>=100.0
+    xvals = xvals[mask]
+
+    def fpow(x,norm,power):
+        return norm * (x**power)
+
+    for thstr in data['th_keys']:
+        thval = float(thstr)
+        color = th2color(thstr)
+        yvals = data['theta_2_ypvals'][thstr][mask]
+        plt.plot( xvals,
+                  yvals,
+                  label = f'$\\theta={thval:g}\\degree$',
+                  color = color )
+        do_fit = any(abs(thval-e)<1e-3 for e in [0,45,90])
+        if do_fit:
+            res,_ = scipy.optimize.curve_fit( fpow,
+                                              xvals, yvals,
+                                              p0 = [1,-0.5], nan_policy='raise')
+            print(res[1])
+            plt.plot(xvals,fpow(xvals,*res),ls=':',lw=3,color=color)
+
+    plt.ylabel(mode)
+    plt.xlabel('x')
+    plt.legend()
+    plt.grid()
+    plt.loglog()
+    plt.show()
 
 def main_printcpp( args ):
-    assert not args
+    raise SystemExit("FIXME: Code needs to be updated for new legendre fits")
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if len(args)>1 or mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
     from .curves import load_fitted_curve_parameters
-    d = load_fitted_curve_parameters()
+    d = load_fitted_curve_parameters(mode,globalfit=True)
     print(d)
+    dp = d['proposed']
     npars = 7
-    for v in 'ABC':
-        assert len(d[v]) == npars
-        for i,pi in enumerate(d[v]):
+    varnames = 'ABC' if len(dp)==21 else 'AB'
+    assert len(dp)==len(varnames)*npars
+    for i,v in enumerate(varnames):
+        dv = dp[i:i+npars]
+        assert len(dv) == npars
+        for i,pi in enumerate(dv):
             print(f'constexpr double c{v}{i} = %g;'%pi)
     print('const double s = sintheta;')
-    for v in 'ABC':
+    for v in varnames:
         c = f'c{v}'
         s = f'{c}0'
         for i in range(1,npars):
@@ -726,8 +985,8 @@ def main_printcpp( args ):
         s+=')'*(npars-1)
         print(f'const double {v} = {s};')
     print()
-    for v in 'ABC':
-        pars = d[v]
+    for i,v in enumerate(varnames):
+        pars = dp[i:i+npars]
         assert npars == len(pars)
         s = '%g'%pars[0]
         for pv in pars[1:-1]:
@@ -738,3 +997,333 @@ def main_printcpp( args ):
         s+='%s*s'%pv
         s+=')'*(npars-2)
         print(f'const double {v} = {s};')
+
+def main_investigatefcts( args ):
+    print("FIXME: This mode might be outdated")
+    mode = args[0] if args else 'missing'
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+    if len(args)!=1:
+        raise SystemExit('Please only provide a single (mode) argument')
+    from .load import load_xscan as load
+    data = load(mode)
+    is_lorentz = (mode=='scndlorentz')
+    is_gauss = (mode=='scndgauss')
+    xvals = data['xvals']
+    fitmask = xvals > 0.1 #focus on area where taylor expansion is not enough
+
+    from .curves import safediv, safesqrt
+
+    #TEST FIT FCT:
+    fitnpars = 5
+    p0 = [ 0.0, 1.0, 0.0, 0.0, 0.0 ]
+    def fitfct( x, A, B, C, D, E ):
+        powval = 2.87 if is_gauss else 2.0
+        def step(v):
+            return v*v / (1+v*v)
+        k = 1.0 + (2+E)*x  + ( (1+A)*x**powval + D*x) / (1+B*x+C*step(x))
+        return safediv( 1.0, safesqrt( k ))
+
+    fitnpars_lorentz = 3
+    def fitfct_lorentz( x, A, B, C ):
+        k = ( 1.0
+              + 2*x
+              + ( A*x**(2+C) ) / (1+B*x)
+              )
+        return safediv( 1.0, safesqrt( k ))
+
+
+    if is_lorentz and False:
+        fitfct = fitfct_lorentz
+        fitnpars = fitnpars_lorentz
+
+
+    ############### TEMP TRY:
+    fitnpars = 3
+    def fitfct( x, A, B, C ):
+        #powval = 2.87 if is_gauss else 2.0
+        #def step(v):
+        #    return v*v / (1+v*v)
+        factor1 = safediv( 1.0, safesqrt( 1.0 + A * x ))
+        factor2 = safediv( ( 1.0 ), ( 1.0 + C*x**(B-0.5)) )
+        return factor1*factor2
+
+    dummyx = np.geomspace(1e-6,1e6,1000)
+    plt.plot( dummyx,
+              np.vectorize( lambda x : fitfct(x,2.0,0.9,3.0) )(dummyx) )
+    plt.semilogx()
+    plt.grid()
+    plt.show()
+    ################################################################
+
+    fig, axs = plt.subplots(2, 1, sharex=True)
+    fig.subplots_adjust(hspace=0)
+    ax, axdiff = axs
+
+    worst_rd = -1.0
+    for thstr in data['th_keys']:
+        thval = float(thstr)
+        if not any(abs(thval-e)<1e-3 for e in [0,30,60,90]):
+            continue
+        color = th2color(thstr)
+        yvals = data['theta_2_ypvals'][thstr]
+        ax.plot( xvals,
+                 yvals,
+                 label = f'$\\theta={thval:g}\\degree$',
+                 color = color )
+        #Fit:
+        xfit, yfitdata = xvals[fitmask], yvals[fitmask]
+        ysigma = abs(np.minimum(yfitdata,1.0-yfitdata))
+        if is_lorentz:
+            ysigma = ysigma**1.5 #Oddly sensitive here!!
+
+        p0=[0.0,]*fitnpars
+
+        def objective( params ):
+            abs(np.minimum(yfitdata,1.0-yfitdata))
+            yfit=np.vectorize(lambda xval : fitfct(xval,*params))(xfit)
+            rd = abs(yfit-yfitdata)/(np.minimum(yfitdata,1.0-yfitdata))
+            return rd.max()
+
+
+        if False:
+            print("Annealing...")
+            anneal = scipy.optimize.dual_annealing(objective, [[-10,10],]*fitnpars)
+            print(anneal)
+            p0 = [e for e in anneal.x]
+
+
+
+        def do_fit(p0):
+            return scipy.optimize.curve_fit( fitfct, xfit, yfitdata,
+                                             sigma = ysigma,
+                                             p0 = p0,
+                                             nan_policy='raise',
+                                             maxfev = 10000,
+                                            )[0]
+        print("Fit1...")
+        res = do_fit(p0)
+        def fmt(a):
+            return [float('%g'%e) for e in a]
+        print("Fit2...")
+        res = do_fit(res)
+        print("Fit3...")
+        res = do_fit(res)
+        print("Final result:",fmt(res))
+        yfit = fitfct(xfit,*res)
+        ax.plot(xfit,yfit,ls=':',lw=3,color=color)
+        rd = abs(yfit-yfitdata)/(np.minimum(yfitdata,1.0-yfitdata))
+        worst_rd = max(worst_rd,rd.max())
+        axdiff.plot(xfit,rd,ls=':',lw=3,color=color)
+
+    print("WORST RELDIFF PERFORMANCE: %.3g"%worst_rd)
+    ax.grid()
+    ax.loglog()
+    axdiff.semilogy()
+    ax.legend()
+    ax.set_xlabel('x')
+    axdiff.grid()
+    ax.set_xlim(0.05)
+    plt.show()
+
+#Fixme: to utils.py:
+def print_taylor_code( poly_coefficients, varname='xp', mode='py',
+                       resvarname = 'yp'):
+    np = len(poly_coefficients)
+    assert np>1
+    assert mode in ['cpp','py']
+    def fmtcoeff(val):
+        return '%.14g'%val
+    s = 'const double ' if mode=='cpp' else ''
+    s += '%s = '%resvarname
+    for i,c in enumerate(poly_coefficients):
+        if i+1==np:
+            if c < 0.0:
+                s += '-%s*%s'%(varname,fmtcoeff(abs(c)))
+            else:
+                s += '+%s*%s'%(varname,fmtcoeff(c))
+        elif i:
+            s += '+%s*(%s'%(varname,fmtcoeff(c))
+        else:
+            s += fmtcoeff(c)
+    s+=')'*(np-2)
+    if mode=='cpp':
+        s+=';'
+    print(s)
+    return s
+
+########################################################
+###### Transform + Legendre fit ########################
+########################################################
+
+def legfit_weight_fct(x,y,xp,yp):
+    return ( 1.0/np.minimum(abs(y),abs(1.0-y)) )**0.3 #Fixme: revisit this, make it easy to describe in paper
+
+def main_legfit( args ):
+    from .load import load_xscan090
+    do_lux = False
+    while 'lux' in args:
+        args.remove('lux')
+        do_lux = True
+    assert len(args)==0
+    modes=['primary',
+           'scndfresnel',
+           'scndlorentz',
+           'scndgauss',
+           #'curve::sabineprimary',
+           #'curve::sabinescndrec',
+           #'curve::sabinescndtri',
+           ]
+    thvals=[0,90]#Due to final interpolation, only these matters
+    datasets = []
+    for m in modes:
+        data = load_xscan090(m)
+        for th, y in data['theta_2_ypvals'].items():
+            if thvals and not any( abs(float(th)-e)<1e-6 for e in thvals ):
+                continue
+            assert int(float(th))==float(th)
+            datasets.append( ( data['xvals'].copy(),
+                               y.copy(),
+                               f'{m} ({float(th):g} deg)',
+                               f'yprime_{m}_{int(float(th))}' ) )
+    do_legfit( datasets,
+               do_lux=do_lux )
+
+def try_legfit( x, y, order, nchop  ):
+    from .trf import xy_prime, xy_unprime
+
+    xp, yp = xy_prime( x, y )
+    fit_weights = legfit_weight_fct(x,y,xp,yp)
+    legendre_coefs = np.polynomial.legendre.legfit( xp, yp,
+                                                    order,
+                                                    w = fit_weights )
+    poly_coeffs = np.polynomial.legendre.leg2poly(legendre_coefs)
+
+    #Chop values (and remove highest orders if necessary):
+    def do_chop( iorder, val ):
+        return float((f'%.{nchop}g')%val)
+    poly_coeffs = [do_chop(i,val) for i,val in enumerate(poly_coeffs)]
+
+    while not poly_coeffs[-1]:
+        poly_coeffs = poly_coeffs[:-1]
+
+    ypfit = np.polynomial.polynomial.polyval(xp, poly_coeffs)
+    _, yfit = xy_unprime( xp, ypfit )
+    diff_yp = abs(ypfit-yp)
+    diff_y = ( abs(yfit-y)/np.minimum(abs(y),abs(1-y)) )
+    maxdiff = diff_y.max()
+    return dict( maxdiff = maxdiff,
+                 diff_y = diff_y,
+                 diff_yp = diff_yp,
+                 poly_coeffs = poly_coeffs,
+                 xp = xp,
+                 yp = yp,
+                 ypfit = ypfit,
+                 yfit = yfit )
+
+
+def cost_legfit_recipe( order, nchop ):
+    #Estimate "length" of recipe, when written as c0+xp*(c1+xp*(...)).
+    #Penalise slightly for order, since higher order also means more multiplications
+    str_length_approx = (10+nchop)*order
+    return str_length_approx + order*3
+
+def do_legfit( datasets, do_lux ):
+    from .trf import xy_prime, xy_unprime
+
+    target_prec = 1e-7 if do_lux else 1e-3
+
+    output_filename='legendre_coefficients'
+    if do_lux:
+        output_filename += '_lux'
+    output_filename += '.json'
+
+    results = {}
+    fitresults = []
+
+    order_nchop_tries = []
+    order_ini, nchop_ini = (7, 8) if do_lux else (4,3)
+    nchop_vals = list(range(nchop_ini,16))
+    for order in range( order_ini, 60 ):
+        for nchop in nchop_vals:
+            order_nchop_tries.append( ( cost_legfit_recipe(order,nchop),
+                                        order, nchop ) )
+    order_nchop_tries.sort()
+
+    for x, y, lbl, resvarname in datasets:
+        ok = False
+        for _, order, nchop in order_nchop_tries:
+            print(f"    Trying legendre {order}-order fit for {resvarname} (nchop={nchop})")
+            lf = try_legfit( x, y, order, nchop)
+            if lf['maxdiff'] < target_prec:
+                ok = True
+                break
+        if not ok:
+            raise SystemExit('Failed to find proper fit')
+        fitresults.append( lf )
+        results[resvarname] = [ float(e) for e in lf['poly_coeffs'] ]
+        print_taylor_code(lf['poly_coeffs'],resvarname=resvarname)
+        print(f"DONE at order={order}")
+    print()
+    print()
+    print()
+
+    highest_maxdiff = 0.0
+    for (x, y, lbl, resvarname),lf in zip(datasets,fitresults):
+        highest_maxdiff = max(highest_maxdiff,lf['maxdiff'])
+        print("Worst precision of %s : %g"%(resvarname,lf['maxdiff']))
+    print("Worst precision overall: %g"%highest_maxdiff)
+
+    print()
+    for (x, y, lbl, resvarname),lf in zip(datasets,fitresults):
+        print_taylor_code(lf['poly_coeffs'],resvarname=resvarname)
+
+    from .json import save_json
+    save_json(
+        output_filename,
+        results,
+        force = True
+    )
+
+    fig, axs = plt.subplots(2, 1, sharex=True)
+    fig.subplots_adjust(hspace=0)
+    ax, axdiff = axs
+
+    data_colors = []
+
+    for (x, y, lbl, resvarname), lf in zip(datasets,fitresults):
+        xp, yp = xy_prime( x, y )
+        col = ax.plot( xp, yp, label=lbl )[0].get_color()
+        ax.plot(xp,lf['ypfit'],ls='-.',lw=5,color=col)
+        axdiff.plot(xp,lf['diff_yp'],color=col)
+        data_colors.append( col )
+
+    ax.grid()
+    axdiff.grid()
+    axdiff.semilogy()
+    axdiff.set_ylabel('yprimefit-yprime')
+    ax.legend()
+    ax.set_xlabel('xprime')
+    ax.set_ylabel('yprime')
+    plt.show()
+
+    fig, axs = plt.subplots(2, 1, sharex=True)
+    fig.subplots_adjust(hspace=0)
+    ax, axdiff = axs
+    for (x, y, lbl,resvarname),lf,col in zip(datasets,fitresults,data_colors):
+        xp,yp = xy_prime( x, y )
+        _, yfit = xy_unprime( xp, lf['ypfit'] )
+        ax.plot(x,y,label=lbl,color=col)
+        ax.plot(x,yfit,ls='-.',lw=5,color=col)
+        axdiff.plot(x,lf['diff_y'],color=col)
+
+    axdiff.plot( [x[0],x[-1]],[target_prec,]*2, color='black',lw=4, ls=':' )
+    ax.grid()
+    axdiff.grid()
+    ax.semilogx()
+    axdiff.semilogy()
+    ax.legend()
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    plt.show()
