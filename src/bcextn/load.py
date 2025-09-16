@@ -10,6 +10,15 @@ def load_xscan( mode = 'primary' ):
     else:
         return _loadcache(f'bcdata_{mode}.json')
 
+def load_xscan090( mode = 'primary' ):
+    if mode.startswith('curve::'):
+        return load_curves( mode[len('curve::'):], 'xscan090' )
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode == 'primary':
+        return _loadcache('bcdata_xscan090.json')
+    else:
+        return _loadcache(f'bcdata_{mode}_xscan090.json')
+
 def load_thetascan( mode = 'primary' ):
     if mode.startswith('curve::'):
         return load_curves( mode[len('curve::'):], 'thetascan' )
@@ -101,7 +110,7 @@ def _prepdata( data ):
 
 _cache_curvedata = {}
 def load_curves( curvekey, mode ):
-    assert mode in 'xscan','thetascan'
+    assert mode in ('xscan','thetascan', 'xscan090')
     if curvekey in _cache_curvedata:
         return _cache_curvedata[curvekey]
     from . import curves
@@ -113,9 +122,10 @@ def load_curves( curvekey, mode ):
         fct = curves.SabineCurve_ScndTri()
     else:
         assert False, "bad curvekey"
-    refdata = ( load_xscan('primary')
-                if mode == 'xscan'
-                else load_thetascan('primary') )
+    loadfct = dict(xscan=load_xscan,
+                   xscan090=load_xscan090,
+                   thetascan=load_thetascan,)[mode]
+    refdata = loadfct('primary')
     res = _prepdata( _load_curves_impl(fct,refdata) )
     _cache_curvedata[curvekey] = res
     return res
