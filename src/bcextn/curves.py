@@ -53,8 +53,7 @@ class ClassicCurve_Primary:
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
             setattr( self, '_fitparams',
-                     load_fitted_curve_parameters('primary',
-                                                  globalfit=True)['classic'][:])
+                     load_fitted_curve_parameters('primary')['classic'][:])
         assert len(self._fitparams)==4
         return self._fitparams
 
@@ -87,8 +86,7 @@ class ClassicCurve_ScndGauss:
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
             setattr( self, '_fitparams',
-                     load_fitted_curve_parameters('scndgauss',
-                                                  globalfit=True)['classic'][:])
+                     load_fitted_curve_parameters('scndgauss')['classic'][:])
         assert len(self._fitparams)==5
         return self._fitparams
 
@@ -122,8 +120,7 @@ class ClassicCurve_ScndLorentz:
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
             setattr( self, '_fitparams',
-                     load_fitted_curve_parameters('scndlorentz',
-                                                  globalfit=True)['classic'][:])
+                     load_fitted_curve_parameters('scndlorentz')['classic'][:])
         assert len(self._fitparams)==6
         return self._fitparams
 
@@ -158,8 +155,7 @@ class ClassicCurve_ScndFresnel:
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
             setattr( self, '_fitparams',
-                     load_fitted_curve_parameters('scndfresnel',
-                                                  globalfit=True)['classic'][:])
+                     load_fitted_curve_parameters('scndfresnel')['classic'][:])
         assert len(self._fitparams)==5
         return self._fitparams
 
@@ -361,10 +357,9 @@ def safesqrt( x ):
     return math.sqrt(max( 0.0, x ))
 
 _cache_fcp = {}
-def load_fitted_curve_parameters(mode, globalfit = False):
-    assert globalfit#fixme move all to globalfit
+def load_fitted_curve_parameters(mode):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
-    key = (mode,bool(globalfit))
+    key = mode
     if key in _cache_fcp:
         return _cache_fcp[key]
 
@@ -378,11 +373,9 @@ def load_fitted_curve_parameters(mode, globalfit = False):
             #FIXME: return float('%.4g'%x)
             return float('%.7g'%x)
     from .data import load_json_data
-    fn = 'fitted_curves_ABC.json'
+    fn = 'global_refitted_classic_curves.json'
     if mode != 'primary':
-        fn = f'fitted_curves_ABC_{mode}.json'
-    if globalfit:
-        fn = 'global_' + fn
+        fn = f'global_refitted_classic_curves_{mode}.json'
     data = load_json_data(fn)
     for k in data.keys():
         data[k] = [ fmt(k,e) for e in data[k] ] if data[k] is not None else None
