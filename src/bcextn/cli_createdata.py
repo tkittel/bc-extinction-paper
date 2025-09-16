@@ -29,7 +29,7 @@ def worker( args ):
              float(max_err),
              float(t) )
 
-def find_output_fn( quick, table1_points, thetascan,
+def find_output_fn( quick, table1_points, thetascan, xscan090,
                     is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel ):
     assert sum(int(bool(e)) for e in [is_scnd_gauss,is_scnd_lorentz,is_scnd_fresnel]) in (0,1)
     assert not (table1_points and thetascan)
@@ -44,6 +44,8 @@ def find_output_fn( quick, table1_points, thetascan,
         bn += '_table1pts'
     if thetascan:
         bn += '_thetascan'
+    if xscan090:
+        bn += '_xscan090'
     if quick:
         bn += '_quick'
 
@@ -76,7 +78,7 @@ def main():
     import multiprocessing
     subjobs = []
     for m in [None,'--scnd-gauss','--scnd-lorentz','--scnd-fresnel']:
-        for t in [None,'--table1','--thetascan']:
+        for t in [None,'--table1','--thetascan','--xscan090']:
             j = []
             if m is not None:
                 j.append(m)
@@ -109,10 +111,13 @@ def doit( args ):
     quick = '--quick' in args
     table1_points = '--table1' in args
     thetascan = '--thetascan' in args
+    xscan090 = '--xscan090' in args
+    xscan = not( xscan090 or thetascan or table1_points )
     is_scnd_gauss = '--scnd-gauss' in args
     is_scnd_lorentz = '--scnd-lorentz' in args
     is_scnd_fresnel = '--scnd-fresnel' in args
-    assert not (table1_points and thetascan)
+
+    assert sum(int(bool(e)) for e in (xscan,table1_points,thetascan,xscan090))==1
     assert not (is_scnd_gauss and is_scnd_lorentz)
     assert not (is_scnd_gauss and is_scnd_fresnel)
     assert not (is_scnd_fresnel and is_scnd_lorentz)
@@ -164,9 +169,15 @@ def doit( args ):
             xvals[-1] = xmax
         theta_vals = np.linspace( 0.0, 90.0,
                                   (9 if quick else 180) +1 )
+    if xscan090:
+        #For fitting at theta=0 or theta=90
+        x_range = ( 1e-3, 1e3 )
+        nx = 10 if quick else 1000
+        xvals = np.geomspace( *x_range, nx )
+        theta_vals = np.asarray([0.0, 90.0],dtype=float)
 
     def find_outname():
-        return find_output_fn( quick, table1_points, thetascan,
+        return find_output_fn( quick, table1_points, thetascan, xscan090,
                                is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel )
 
     outfile = find_outname()
