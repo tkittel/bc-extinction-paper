@@ -1230,6 +1230,8 @@ def do_legfit( datasets, do_lux ):
     from .trf import xy_prime, xy_unprime
 
     target_prec = 1e-7 if do_lux else 1e-3
+    target_prec *= 0.9 #safety (but do NOT decrease lux lvl further, since ref
+                       #data can not handle it).
 
     output_filename='legendre_coefficients'
     if do_lux:
