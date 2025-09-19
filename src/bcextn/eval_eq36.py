@@ -1,4 +1,4 @@
-eq36_result_tolerance = 1e-9
+eq36_result_tolerance = 1e-8
 
 def eval_eq36( theta_degree, x, eps = None ):
     from .eq36_lowx_taylor import taylor_lowx_eq36
