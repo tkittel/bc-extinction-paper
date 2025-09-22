@@ -142,3 +142,24 @@ def _load_curves_impl( curvefct, refdata ):
                  theta_2_ypvals = th2y,
                  theta_2_ypvals_maxerr = th2ye,
                  theta_2_calctime = th2t )
+
+def load_legendre_lux( mode ):
+    return load_legendre( mode, is_lux = True )
+
+_cache_leg = {}
+def load_legendre( mode, is_lux = False ):
+    fn = 'legendre_coefficients%s.json'%('_lux' if is_lux else '')
+    key = (fn, mode, is_lux )
+    if key in _cache_leg:
+        return _cache_leg[key]
+    key_filedata = ('filedata',fn)
+    data = _cache_leg.get( key_filedata )
+    if not data:
+        from .data import load_json_data
+        data = load_json_data(fn)
+        _cache_leg[ key_filedata] = data
+    p0 = data[f'yprime_{mode}_0'][:]
+    p90 = data[f'yprime_{mode}_90'][:]
+    result = dict(p0=p0, p90=p90)
+    _cache_leg[key] = result
+    return result
