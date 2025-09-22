@@ -200,12 +200,8 @@ class ProposedCurve_StdLegFit:
             from .data import load_json_data
             _cache_stdlegfit[datafilename] = load_json_data(datafilename)
         data = _cache_stdlegfit[datafilename]
-        if True:
-            p0_fct  = np.polynomial.polynomial.Polynomial( data[f'yprime_{key}_0'] )
-            p90_fct = np.polynomial.polynomial.Polynomial( data[f'yprime_{key}_90'] )
-        else:
-            p0_fct  = create_polyfct( data[f'yprime_{key}_0'] )
-            p90_fct = create_polyfct( data[f'yprime_{key}_90'] )
+        p0_fct  = np.polynomial.polynomial.Polynomial( data[f'yprime_{key}_0'] )
+        p90_fct = np.polynomial.polynomial.Polynomial( data[f'yprime_{key}_90'] )
         setattr( self,'_fcts',( p0_fct, p90_fct ) )
 
     def __call__( self, x, theta ):
@@ -385,16 +381,3 @@ def load_fitted_curve_parameters(mode):
 @np.vectorize
 def np_fsum3( a, b, c ):
     return math.fsum([a,b,c])
-
-def create_polyfct( coeffs ):
-    #Test if this one is better than the one in numpy (fixme: otherwise discard?)
-    c0 = coeffs[0]
-    rev = [e for e in coeffs[1:][::-1] ]
-    def poly( x ):
-        v = 0.0
-        for c in rev:
-            v += c
-            v *= x
-        v += c0
-        return v
-    return poly
