@@ -20,17 +20,23 @@ def worker( args ):
     else:
         assert fcttype == 'scndgauss'
         fct = eval_eq36_scnd_gauss
-    print(f"Starting worker at theta={theta_deg:g} x={xval:g}")
+    #print(f"Starting worker at theta={theta_deg:g} x={xval:g}")
     val, max_err = fct( theta_deg, xval )
     t = time.time() - t
+    #print("WORKER DONE!!")
     return ( float(theta_deg),
              float(xval),
              float(val),
              float(max_err),
              float(t) )
 
+def worker2( args ):
+    fcttype,theta_deg, xval = args
+    res = worker( args )
+    return fcttype, res
+
 def find_output_fn( quick, table1_points, thetascan, xscan090,
-                    is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel ):
+                    is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel, is_user_test_data ):
     assert sum(int(bool(e)) for e in [is_scnd_gauss,is_scnd_lorentz,is_scnd_fresnel]) in (0,1)
     assert not (table1_points and thetascan)
     bn = 'bcdata'
@@ -46,6 +52,9 @@ def find_output_fn( quick, table1_points, thetascan, xscan090,
         bn += '_thetascan'
     if xscan090:
         bn += '_xscan090'
+    if is_user_test_data:
+        #Override
+        bn = 'bc2025_reference_x_sintheta_yp'
     if quick:
         bn += '_quick'
 
@@ -65,8 +74,8 @@ def multiproc_run_worklist( worklist, workfct = worker ):
     random.shuffle(worklist)#more reliable progress bar
 
     with multiprocessing.Pool() as pool:
-        results = list(tqdm.tqdm( pool.imap(workfct, worklist),
-                                  total=len(worklist)))
+        results = list(tqdm.tqdm( pool.imap_unordered(workfct, worklist,chunksize=1),
+                                  total=len(worklist) ))
     return sorted(results)
 
 def main():
@@ -87,6 +96,11 @@ def main():
             if is_quick:
                 j.append('--quick')
             subjobs.append(j)
+    j = ['--usertestdata']
+    if is_quick:
+        j.append('--quick')
+
+    subjobs.append(j)
     for i,jobargs in enumerate(subjobs):
         print()
         print( '-'*80 )
@@ -108,16 +122,18 @@ def main():
         #doit( jobargs )
 
 def doit( args ):
+    is_user_test_data = '--usertestdata' in args
+
     quick = '--quick' in args
     table1_points = '--table1' in args
     thetascan = '--thetascan' in args
     xscan090 = '--xscan090' in args
-    xscan = not( xscan090 or thetascan or table1_points )
+    xscan = not( xscan090 or thetascan or table1_points or is_user_test_data )
     is_scnd_gauss = '--scnd-gauss' in args
     is_scnd_lorentz = '--scnd-lorentz' in args
     is_scnd_fresnel = '--scnd-fresnel' in args
 
-    assert sum(int(bool(e)) for e in (xscan,table1_points,thetascan,xscan090))==1
+    assert sum(int(bool(e)) for e in (xscan,table1_points,thetascan,xscan090,is_user_test_data))==1
     assert not (is_scnd_gauss and is_scnd_lorentz)
     assert not (is_scnd_gauss and is_scnd_fresnel)
     assert not (is_scnd_fresnel and is_scnd_lorentz)
@@ -128,6 +144,9 @@ def doit( args ):
         fcttype = 'scndlorentz'
     if is_scnd_fresnel:
         fcttype = 'scndfresnel'
+
+    if is_user_test_data and fcttype!='primary':
+        raise SystemExit('Do not put a mode keyword with --usertestdata')
 
     x_range = ( 1e-3, 1e3 )
     nx = 3 if quick else 100
@@ -178,13 +197,71 @@ def doit( args ):
 
     def find_outname():
         return find_output_fn( quick, table1_points, thetascan, xscan090,
-                               is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel )
+                               is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel,
+                               is_user_test_data = is_user_test_data )
 
     outfile = find_outname()
     print(f"Target file: {outfile}")
 
 
     worklist = []
+    if is_user_test_data:
+        del theta_vals
+        del xvals
+        xvals_extrapolation_threshold = 1000
+        xvals = [ 1e-20, 1e-13,1e-12,1e-4,1e-3,
+                  0.009,0.01,0.011,#around lux taylor threshold
+                  0.09,0.1,0.11,#around std taylor threshold
+                  0.5, 1.5, 4.0, 10.0, 30.0,#normal values
+                  999,xvals_extrapolation_threshold
+                 ]
+        xvals_extrapolated = [ 1000.1, 1e4, 1e12, 1e99, 1e200 ]
+        sinthvals = [ 0.0, 0.37, 0.7071, 0.93, 1.0 ]
+        if quick:
+            #xvals = xvals[::3]
+            #sinthvals = sinthvals[::3]
+            xvals = [1.0]
+        fcttypes = ['primary','scndgauss','scndlorentz','scndfresnel']
+
+        worklist = []
+
+        for fcttype in fcttypes:
+            for sinth in sinthvals:
+                for x in xvals:
+                    thdeg = float(np.asin(sinth)*180.0/np.pi)
+                    if sinth==0.0:
+                        thdeg = 0
+                    if sinth==1.0:
+                        thdeg = 90
+                    worklist.append( (fcttype, thdeg, x) )
+        results = multiproc_run_worklist( worklist, workfct = worker2 )
+        data = {}
+        for fcttype, (th, x, yp, yp_maxerr, t) in results:
+            if fcttype not in data:
+                data[fcttype] = []
+            assert yp_maxerr < 1e-9
+            assert yp+yp_maxerr <= 1.0
+            assert yp-yp_maxerr >= 0.0
+            sinth_approx = float(np.sin(float(th)*np.pi/180.))
+            sinth = [ v for v in sinthvals if abs(v-sinth_approx)<1e-9 ]
+            assert len(sinth)==1
+            sinth = sinth[0]
+            data[fcttype].append( ( float(x), sinth, float(yp) ) )
+            if abs(x-xvals_extrapolation_threshold)<1e-9:
+                #Fire off extrapolation values:
+                epower = 0.93 if fcttype=='scndgauss' else 0.5
+                for xe in xvals_extrapolated:
+                    yp_e = yp*( xe/xvals_extrapolation_threshold) ** (-epower)
+                    data[fcttype].append( ( float(xe), sinth, float(yp_e) ) )
+
+        assert set(data.keys()) == set(fcttypes)
+        for f in fcttypes:
+            data[f] = sorted(data[f][:])
+        from .json import save_json
+        save_json( outfile,data )
+        raise SystemExit
+
+
     for th in theta_vals:
         for x in xvals:
             worklist.append( (fcttype, th, x) )
