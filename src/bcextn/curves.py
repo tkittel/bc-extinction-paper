@@ -81,7 +81,6 @@ class ClassicCurve_ScndGauss:
 
     def p0( self ):
         return [0.94422166,0.56110532, 0.18150111, 0.03482274, 0.00949109]
-        #return self.bc1974_params()
 
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
@@ -178,7 +177,6 @@ class UpdatedClassicCurve_ScndGauss( ClassicCurve_ScndGauss ):
         super().__init__()
         self._defaultparams = self.bestfit_params()
 class UpdatedClassicCurve_ScndLorentz( ClassicCurve_ScndLorentz ):
-    #FIXME: Need to follow up on the issues near theta=45 seen in ./bin/plot breakdown scndlorentz
     def __init__(self):
         super().__init__()
         self._defaultparams = self.bestfit_params()
@@ -187,70 +185,85 @@ class UpdatedClassicCurve_ScndFresnel( ClassicCurve_ScndFresnel ):
         super().__init__()
         self._defaultparams = self.bestfit_params()
 
-
 #Proposed curves:
 
-_cache_stdlegfit = {}
 class ProposedCurve_StdLegFit:
-
-    def __do_init(self):
-        assert not hasattr(self,'_fcts')
-        datafilename, key = self._poly_coeff_src()
-        if datafilename not in _cache_stdlegfit:
-            from .data import load_json_data
-            _cache_stdlegfit[datafilename] = load_json_data(datafilename)
-        data = _cache_stdlegfit[datafilename]
-        p0_fct  = np.polynomial.polynomial.Polynomial( data[f'yprime_{key}_0'] )
-        p90_fct = np.polynomial.polynomial.Polynomial( data[f'yprime_{key}_90'] )
-        setattr( self,'_fcts',( p0_fct, p90_fct ) )
 
     def __call__( self, x, theta ):
         if not hasattr(self,'_fcts'):
             self.__do_init()
-        fct_yp_theta0, fct_yp_theta90 = self._fcts
+        #sinth = math.sin( float(theta)*kDeg2Rad )
+        sinth = float(mp.sin(mp.radians(mpf(theta))))
+        return self.__fct(x,sinth)
 
-        sinth =  math.sin( float(theta)*kDeg2Rad )
-        sqrt_sinth = math.sqrt(sinth)
-        #need y0 at x=x
-        xp = trf.transform_to_xprime( x )
-        yp0 = fct_yp_theta0( xp )
-        y0 = trf.y_unprime( xp, yp0 )
-        #need y0 and y90 at x=x*sqrt(sintheta):=u_x
-        u_x = x * sqrt_sinth
-        u_xp = trf.transform_to_xprime( u_x )
-        u_yp0 = fct_yp_theta0( u_xp )
-        u_yp90 = fct_yp_theta90( u_xp )
-        u_y0 = trf.y_unprime( u_xp, u_yp0 )
-        u_y90 = trf.y_unprime( u_xp, u_yp90 )
-        #Now combine as, taking care to avoid numerical issues by using fsum:
-        #y(x) = y0(x) + sinth^(3/2)*(y90(u_x)-y0(u_x))
-        s32 = sinth*sqrt_sinth
-        return np_fsum3(y0,s32*u_y90,-s32*u_y0)
+    def __do_init(self):
+        assert not hasattr(self,'_fcts')
+        is_lux, mode = self._poly_coeff_src()
+        from .load import load_legendre
+        data = load_legendre( mode = mode, is_lux = is_lux )
+        p0_fct  = np.polynomial.polynomial.Polynomial( data['p0'] )
+        pdelta_fct = np.polynomial.polynomial.Polynomial( data['pdelta'] )
+        from .taylor_recipes import taylor_ydelta_coeffs, taylor_y0_coeffs
+        y0_taylor_fct = np.polynomial.polynomial.Polynomial(taylor_y0_coeffs( mode ))
+        ydelta_taylor_fct = np.polynomial.polynomial.Polynomial(taylor_ydelta_coeffs( mode ))
+        setattr( self,'_fcts',( p0_fct, pdelta_fct, y0_taylor_fct, ydelta_taylor_fct ) )
+        from .new_recipes import recipe_taylor_cutoff, recipe_taylor_order
+        assert ydelta_taylor_fct.degree() == recipe_taylor_order()
+        assert y0_taylor_fct.degree() == recipe_taylor_order()
+        from .new_recipes import recipe_highx_cutoff, recipe_highx_pow
+        highx_thr = recipe_highx_cutoff()
+        highx_pow = recipe_highx_pow(mode=mode)
+        taylor_thr = recipe_taylor_cutoff(lux=is_lux)
+        @np.vectorize
+        def f( x, sintheta ):
+            ( fct_yp_theta0,
+              fct_xp_to_ydelta,
+              fct_taylor_y0,
+              fct_taylor_ydelta ) = self._fcts
+            #need y0 at x=x
+            if x < taylor_thr:
+                y0 = fct_taylor_y0(x)
+            else:
+                if x > highx_thr:
+                    return f(highx_thr,sintheta)*(highx_thr/x)**highx_pow
+                xp = bc2025_xprime( x )
+                y0 = trf.y_unprime( xp, fct_yp_theta0( xp ) )
+            #need ydelta at x=x*sqrt(sintheta):=u_x
+            sqrt_sinth = math.sqrt(sintheta)
+            u_x = x * sqrt_sinth
+            if u_x < taylor_thr:
+                ydelta = fct_taylor_ydelta(u_x)
+            else:
+                u_xp = bc2025_xprime( u_x )
+                ydelta = fct_xp_to_ydelta( u_xp )
+            return y0 + sintheta*sqrt_sinth*ydelta
+
+        self.__fct = f
 
 class ProposedCurve_Primary(ProposedCurve_StdLegFit):
     def _poly_coeff_src( self ):
-        return 'legendre_coefficients.json', 'primary'
+        return False, 'primary'
 class ProposedLuxCurve_Primary(ProposedCurve_StdLegFit):
     def _poly_coeff_src( self ):
-        return 'legendre_coefficients_lux.json', 'primary'
+        return True, 'primary'
 class ProposedCurve_ScndGauss(ProposedCurve_StdLegFit):
     def _poly_coeff_src( self ):
-        return 'legendre_coefficients.json', 'scndgauss'
+        return False, 'scndgauss'
 class ProposedLuxCurve_ScndGauss(ProposedCurve_StdLegFit):
     def _poly_coeff_src( self ):
-        return 'legendre_coefficients_lux.json', 'scndgauss'
+        return True, 'scndgauss'
 class ProposedCurve_ScndLorentz(ProposedCurve_StdLegFit):
     def _poly_coeff_src( self ):
-        return 'legendre_coefficients.json', 'scndlorentz'
+        return False, 'scndlorentz'
 class ProposedLuxCurve_ScndLorentz(ProposedCurve_StdLegFit):
     def _poly_coeff_src( self ):
-        return 'legendre_coefficients_lux.json', 'scndlorentz'
+        return True, 'scndlorentz'
 class ProposedCurve_ScndFresnel(ProposedCurve_StdLegFit):
     def _poly_coeff_src( self ):
-        return 'legendre_coefficients.json', 'scndfresnel'
+        return False, 'scndfresnel'
 class ProposedLuxCurve_ScndFresnel(ProposedCurve_StdLegFit):
     def _poly_coeff_src( self ):
-        return 'legendre_coefficients_lux.json', 'scndfresnel'
+        return True, 'scndfresnel'
 
 ########################################################
 ############# Sabine model wrappers ####################
@@ -381,3 +394,7 @@ def load_fitted_curve_parameters(mode):
 @np.vectorize
 def np_fsum3( a, b, c ):
     return math.fsum([a,b,c])
+
+def bc2025_xprime( x ):
+  xs = x**0.5
+  return (xs-1.0) / (xs+1.0)
