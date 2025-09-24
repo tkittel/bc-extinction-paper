@@ -79,8 +79,8 @@ class FiniteIntegralEq36:
         maxdegree_max = 6
         ok = False
         for maxdegree in range(maxdegree_min,maxdegree_max+1):
-            print("mp.quad( .., len(bounds)=%i, maxdegree=%i )"%( len(bounds),
-                                                                  maxdegree) )
+            #print("mp.quad( .., len(bounds)=%i, maxdegree=%i )"%( len(bounds),
+            #                                                      maxdegree) )
             res, error = mp.quad( g,
                                   bounds,
                                   method='gauss-legendre',
