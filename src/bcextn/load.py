@@ -148,18 +148,23 @@ def load_legendre_lux( mode ):
 
 _cache_leg = {}
 def load_legendre( mode, is_lux = False ):
-    fn = 'legendre_coefficients%s.json'%('_lux' if is_lux else '')
-    key = (fn, mode, is_lux )
+    fn1 = 'legendre_coefficients%s.json'%('_lux' if is_lux else '')
+    fn2 = 'legendre_coefficients_ydelta%s.json'%('_lux' if is_lux else '')
+    key = ('leg',fn1, fn2, mode, is_lux )
     if key in _cache_leg:
         return _cache_leg[key]
-    key_filedata = ('filedata',fn)
+    key_filedata = ('filedata',fn1,fn2)
     data = _cache_leg.get( key_filedata )
     if not data:
         from .data import load_json_data
-        data = load_json_data(fn)
-        _cache_leg[ key_filedata] = data
-    p0 = data[f'yprime_{mode}_0'][:]
-    p90 = data[f'yprime_{mode}_90'][:]
-    result = dict(p0=p0, p90=p90)
+        data1 = load_json_data(fn1)
+        data2 = load_json_data(fn2)
+        _cache_leg[ key_filedata] = (data1,data2)
+    else:
+        data1, data2 = data
+    p0 = data1[f'yprime_{mode}_0'][:]
+    p90 = data1[f'yprime_{mode}_90'][:]#fixme: obsolete?
+    pdelta = data2[f'ydelta_{mode}'][:]
+    result = dict(p0=p0, p90=p90, pdelta=pdelta)
     _cache_leg[key] = result
     return result
