@@ -375,13 +375,18 @@ def lookup_float_key( adict, key, eps=1e-12 ):
 
 def main_cmprecipes( args ):
     do_strict = True
-    if 'nostrict' in args:
+    while 'nostrict' in args:
         args.remove('nostrict')
         do_strict = False
     do_lux = False
-    if 'lux' in args:
+    while 'lux' in args:
         args.remove('lux')
         do_lux = True
+
+    do_xscan090 = False
+    while 'xscan090' in args:
+        args.remove('xscan090')
+        do_xscan090 = True
 
     mode = args[0] if args else 'missing'
     modes=['primary','scndfresnel','scndlorentz','scndgauss']
@@ -402,9 +407,10 @@ def main_cmprecipes( args ):
                    do_vs_old = do_vs_old,
                    mode = mode,
                    do_strict = do_strict,
-                   do_lux = do_lux )
+                   do_lux = do_lux,
+                   do_xscan090 = do_xscan090 )
 
-def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux ):
+def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux, do_xscan090  ):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
     from . import curves
     ( ClassicCurve,
@@ -415,11 +421,11 @@ def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux ):
       ProposedCurve = ProposedLuxCurve
     del ProposedLuxCurve
 
-    from .load import load_xscan as dataload
+    from .load import load_xscan090, load_xscan
 
     if do_vs_old:
         assert do_reldiff, "vsold only for reldiff"
-    data = dataload(mode=mode)
+    data = (load_xscan090 if do_xscan090 else load_xscan)(mode=mode)
     #print( data.keys() )
     xvals = data['xvals']
 
@@ -457,8 +463,11 @@ def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux ):
         if do_vs_old:
             yref = yp_classic
 
-        common = dict( alpha = 0.5,
+        common = dict( alpha = 0.4,
                        lw = 2 )
+        if abs(th-0.0)<1e-7 or abs(th-90.0)<1e-7:
+            common['lw'] = 5
+            common['alpha'] = 0.8
 
         def lbltrf(curve_type, split_theta = None):
             lbl = curve_type
@@ -511,6 +520,8 @@ def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux ):
             color='gray'
         #color = th2color(th)
         if yp_proposed is not None:
+            #bla = ytrf(yp_proposed,yref,worst_reldiff_proposed)
+            #print( 'BLA',th,xvals[bla>1e-5],yref[bla>1e-5])
             plt.plot( xvals, ytrf(yp_proposed,yref,worst_reldiff_proposed),
                       **common,
                       color=color,
