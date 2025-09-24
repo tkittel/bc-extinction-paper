@@ -116,19 +116,19 @@ def numint_eq36_scnd_fresnel( theta_degree, x, eps, print_ref = False ):
 
     #Very tricky, but we try with Richardsons extrapolation.
     from .eval_fofeta_scnd_fresnel import F_of_Eta
-    eps = mpf(eps) * 0.1 #safety
+    eps = mpf(eps) * 0.01 #safety
     g = create_integrand_fct_eq36( f_of_eta_fct = F_of_Eta(),
                                    theta_degree = theta_degree,
                                    x = x )
 
-    tol = eps * 1e-5
+    tol = eps * 1e-15
 
     #Zeroes are at multiples of ((4/3)*pi), so we define the n'th contribution
     #as the integral over [ n * ((4/3)*pi),  (n+1) * ((4/3)*pi) ]
     def contribn( n ):
         assert n>=0 and n==int(n)
         n=int(n)
-        maxdegree = 6# 4 is fastest, since 3 triggers retry below
+        maxdegree = 8# 4 is fastest, since 3 triggers retry below
         bounds = [ mpf(n*4)*mp.pi/(mpf(3)),
                    mpf((n+1)*4)*mp.pi/(mpf(3)) ]
         if n>0:
@@ -149,8 +149,8 @@ def numint_eq36_scnd_fresnel( theta_degree, x, eps, print_ref = False ):
                    [0,mp.inf],#n=0,1,2,...
                    tol = tol,
                    method='richardson',#easier to describe in paper than a multi-method
-                   maxterms = 100*mp.dps,#default is 10*dps
-                   steps=[100,1]
+                   maxterms = 10000*mp.dps,#default is 10*dps
+                   steps=[400,1]
                   )
     k_norm=mpf('3/2')/mp.pi
     if print_ref:
