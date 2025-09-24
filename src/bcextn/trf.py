@@ -57,13 +57,16 @@ def xy_unprime( xp, yp ):
     y -= _primeimpl_yshift(xp)
     return x, y
 
+def x_to_xprime(x):
+    xpow = np.sqrt(x)
+    return ( xpow-1.0 ) / (xpow+1.0)
+
 @np.vectorize
 def xy_prime( x, y ):
     if math.isinf(x) and x>0:
         xp = 1.0
     else:
-        xpow = np.sqrt(x)
-        xp = ( xpow-1.0 ) / (xpow+1.0)
+        xp = x_to_xprime(x)
     if y is None:
         return xp
     yp = y.copy() if hasattr(y,'copy') else y
