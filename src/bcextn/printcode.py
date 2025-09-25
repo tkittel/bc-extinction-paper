@@ -2,12 +2,15 @@ import math
 
 languages = ['py','c','cpp']
 
-def doit( lang, do_print = True ):
+def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
     from .data import load_json_data
     from .mpmath import mp
     from .taylor_recipes import taylor_ydelta_coeffs, taylor_y0_coeffs
     from .load import load_legendre
     from .new_recipes import recipe_target_prec
+    import pathlib
+    if include_main:
+        assert include_testfcts, "must include test functions if including main"
 
     assert lang in languages
 
@@ -121,135 +124,140 @@ def doit( lang, do_print = True ):
                 o.append('}')
             o.append('')
 
-    refdata = load_json_data('bc2025_reference_x_sintheta_yp.json')
-    assert set(refdata.keys()) == set(modes)
+    if include_testfcts:
 
-    for e in textbox(lang,
-                     'Test code for BC2025 Recipes',
-                     'Test function to call: bc2015_test_implementation()'):
-        o.append(e)
+        refdata = load_json_data('bc2025_reference_x_sintheta_yp.json')
+        assert set(refdata.keys()) == set(modes)
 
-    if lang=='cpp':
-        o.append( '#include <iostream>')
-        o.append( '#include <sstream>')
-        o.append( '#include <stdexcept>')
+        for e in textbox(lang,
+                         'Test code for BC2025 Recipes',
+                         'Test function to call: bc2015_test_implementation()'):
+            o.append(e)
 
-    if lang=='c':
-        o.append( '#include "stdio.h"')
-        o.append( '#include "stdlib.h"')
-        o.append('')
-        for mode in modes:
-            fctname = f'bc2025_y_{mode}'
-            fctname_lux = f'{fctname}_lux'
-            o.append(f'void bc2015_test_implementation_{mode}( double x, double sinth, double refval)')
-            o.append( '{')
-            o.append(f'  const double val = {fctname}(x,sinth);')
-            o.append(f'  const double val_lux = {fctname}_lux(x,sinth);')
-            o.append(f'  if (!(fabs(val-refval) <= {eps_std}*fmin(refval,1.0-refval))) '+'{')
-            o.append(f'    printf("bc2015_test_implementation: Failure in {fctname}(%g,%g)\\n",x,sinth);')
-            o.append( '    exit(1);')
-            o.append( '  }')
-            o.append(f'  if (!(fabs(val_lux-refval) <= {eps_lux}*fmin(refval,1.0-refval))) '+'{')
-            o.append(f'    printf("bc2015_test_implementation: Failure in {fctname_lux}(%g,%g)\\n",x,sinth);')
-            o.append( '    exit(1);')
-            o.append( '  }')
-            o.append( '}')
+        if lang=='cpp':
+            o.append( '#include <iostream>')
+            o.append( '#include <sstream>')
+            o.append( '#include <stdexcept>')
 
-    if lang=='py':
-        o.append('def bc2015_test_implementation():')
-    else:
-        assert lang in ('c','cpp')
-        o.append('void bc2015_test_implementation()')
-        o.append('{')
-
-    if lang=='cpp':
-        for imode,mode in enumerate(modes):
-            fctname = f'bc2025_y_{mode}'
-            fctname_lux = f'{fctname}_lux'
-            if imode:
-                o.append('')
-            o.append(f'  auto test_{mode} = []( double x, double sinth, double refval)')
-            o.append( '  {')
-            o.append(f'    const double val = {fctname}(x,sinth);')
-            o.append(f'    const double val_lux = {fctname}_lux(x,sinth);')
-            o.append(f'    if (!({ns}fabs(val-refval) <= {eps_std}*{ns}fmin(refval,1.0-refval))) '+'{')
-            o.append( '      std::ostringstream ss;;')
-            o.append(f'      ss << "bc2015_test_implementation: Failure in {fctname}("<<x<<","<<sinth<<")\\n";')
-            o.append( '      throw std::runtime_error(ss.str());')
-            o.append( '    }')
-            o.append(f'    if (!({ns}fabs(val_lux-refval) <= {eps_lux}*{ns}fmin(refval,1.0-refval))) '+'{')
-            o.append( '      std::ostringstream ss;;')
-            o.append(f'      ss << "bc2015_test_implementation: Failure in {fctname_lux}("<<x<<","<<sinth<<")\\n";')
-            o.append( '      throw std::runtime_error(ss.str());')
-            o.append( '    }')
-            o.append( '  };')
-        for mode in modes:
+        if lang=='c':
+            o.append( '#include "stdio.h"')
+            o.append( '#include "stdlib.h"')
             o.append('')
-            o.append(f'  std::cout<<"Testing {fctname} + {fctname_lux}"<<std::endl;;')
-            for x,sinth,y in refdata[mode]:
-                o.append( '  test_%s(%.14g,%.14g,%.18g);'%(mode,x,sinth,y))
-        o.append('  std::cout<<"All tests completed"<<std::endl;')
+            for mode in modes:
+                fctname = f'bc2025_y_{mode}'
+                fctname_lux = f'{fctname}_lux'
+                o.append(f'void bc2015_test_implementation_{mode}( double x, double sinth, double refval)')
+                o.append( '{')
+                o.append(f'  const double val = {fctname}(x,sinth);')
+                o.append(f'  const double val_lux = {fctname}_lux(x,sinth);')
+                o.append(f'  if (!(fabs(val-refval) <= {eps_std}*fmin(refval,1.0-refval))) '+'{')
+                o.append(f'    printf("bc2015_test_implementation: Failure in {fctname}(%g,%g)\\n",x,sinth);')
+                o.append( '    exit(1);')
+                o.append( '  }')
+                o.append(f'  if (!(fabs(val_lux-refval) <= {eps_lux}*fmin(refval,1.0-refval))) '+'{')
+                o.append(f'    printf("bc2015_test_implementation: Failure in {fctname_lux}(%g,%g)\\n",x,sinth);')
+                o.append( '    exit(1);')
+                o.append( '  }')
+                o.append( '}')
 
-    if lang=='c':
-        for mode in modes:
-            fctname = f'bc2025_y_{mode}'
-            fctname_lux = f'{fctname}_lux'
-            o.append('')
-            o.append(f'  printf("Testing {fctname} + {fctname_lux}\\n");')
-            for x,sinth,y in refdata[mode]:
-                o.append(f'  bc2015_test_implementation_{mode}(%.14g,%.14g,%.18g);'%(x,sinth,y))
-        o.append('  printf("All tests completed\\n");')
-        o.append('}')
-
-    for mode in modes:
-        fctname = f'bc2025_y_{mode}'
-        fctname_lux = f'{fctname}_lux'
         if lang=='py':
-            o.append( '    def t(x,sinth,refval):')
-            o.append(f'        val = {fctname}(x,sinth)')
-            o.append(f'        val_lux = {fctname}_lux(x,sinth)')
-            o.append(f'        if not ( abs(val-refval) <= {eps_std}*min(refval,1.0-refval) ):')
-            o.append(f'            raise RuntimeError("bc2015_test_implementation: Failure in {fctname}(%g,%g)"%(x,sinth))')
-            o.append(f'        if not (abs(val_lux-refval) <= {eps_lux}*min(refval,1.0-refval)):')
-            o.append(f'            raise RuntimeError("bc2015_test_implementation: Failure in {fctname_lux}(%g,%g)"%(x,sinth))')
-            o.append(f'    print("Testing {fctname} + {fctname_lux}")')
-            for x,sinth,y in refdata[mode]:
-                o.append( '    t(%.14g,%.14g,%.18g)'%(x,sinth,y))
+            o.append('def bc2015_test_implementation():')
+        else:
+            assert lang in ('c','cpp')
+            o.append('void bc2015_test_implementation()')
+            o.append('{')
 
-    if lang=='py':
-        o.append('    print("All tests completed")')
+        if lang=='cpp':
+            for imode,mode in enumerate(modes):
+                fctname = f'bc2025_y_{mode}'
+                fctname_lux = f'{fctname}_lux'
+                if imode:
+                    o.append('')
+                o.append(f'  auto test_{mode} = []( double x, double sinth, double refval)')
+                o.append( '  {')
+                o.append(f'    const double val = {fctname}(x,sinth);')
+                o.append(f'    const double val_lux = {fctname}_lux(x,sinth);')
+                o.append(f'    if (!({ns}fabs(val-refval) <= {eps_std}*{ns}fmin(refval,1.0-refval))) '+'{')
+                o.append( '      std::ostringstream ss;;')
+                o.append(f'      ss << "bc2015_test_implementation: Failure in {fctname}("<<x<<","<<sinth<<")\\n";')
+                o.append( '      throw std::runtime_error(ss.str());')
+                o.append( '    }')
+                o.append(f'    if (!({ns}fabs(val_lux-refval) <= {eps_lux}*{ns}fmin(refval,1.0-refval))) '+'{')
+                o.append( '      std::ostringstream ss;;')
+                o.append(f'      ss << "bc2015_test_implementation: Failure in {fctname_lux}("<<x<<","<<sinth<<")\\n";')
+                o.append( '      throw std::runtime_error(ss.str());')
+                o.append( '    }')
+                o.append( '  };')
+            for mode in modes:
+                o.append('')
+                o.append(f'  std::cout<<"Testing {fctname} + {fctname_lux}"<<std::endl;;')
+                for x,sinth,y in refdata[mode]:
+                    o.append( '  test_%s(%.14g,%.14g,%.18g);'%(mode,x,sinth,y))
+            o.append('  std::cout<<"All tests completed"<<std::endl;')
 
-    if lang=='cpp':
-        o.append('}')
+        if lang=='c':
+            for mode in modes:
+                fctname = f'bc2025_y_{mode}'
+                fctname_lux = f'{fctname}_lux'
+                o.append('')
+                o.append(f'  printf("Testing {fctname} + {fctname_lux}\\n");')
+                for x,sinth,y in refdata[mode]:
+                    o.append(f'  bc2015_test_implementation_{mode}(%.14g,%.14g,%.18g);'%(x,sinth,y))
+            o.append('  printf("All tests completed\\n");')
+            o.append('}')
 
-    for e in textbox(lang,'Hook for executing file as test application'):
-        o.append(e)
+        for mode in modes:
+            fctname = f'bc2025_y_{mode}'
+            fctname_lux = f'{fctname}_lux'
+            if lang=='py':
+                o.append( '    def t(x,sinth,refval):')
+                o.append(f'        val = {fctname}(x,sinth)')
+                o.append(f'        val_lux = {fctname}_lux(x,sinth)')
+                o.append(f'        if not ( abs(val-refval) <= {eps_std}*min(refval,1.0-refval) ):')
+                o.append(f'            raise RuntimeError("bc2015_test_implementation: Failure in {fctname}(%g,%g)"%(x,sinth))')
+                o.append(f'        if not (abs(val_lux-refval) <= {eps_lux}*min(refval,1.0-refval)):')
+                o.append(f'            raise RuntimeError("bc2015_test_implementation: Failure in {fctname_lux}(%g,%g)"%(x,sinth))')
+                o.append(f'    print("Testing {fctname} + {fctname_lux}")')
+                for x,sinth,y in refdata[mode]:
+                    o.append( '    t(%.14g,%.14g,%.18g)'%(x,sinth,y))
 
-    o.append('')
+        if lang=='py':
+            o.append('    print("All tests completed")')
 
-    if lang=='py':
-        o.append('if __name__== "__main__":')
-        o.append('    bc2015_test_implementation()')
-    if lang in ('c','cpp'):
-        o.append('#ifndef BC2025_NO_MAIN')
-    if lang=='c':
-        o.append('int main( int argc, char ** argv )')
-        o.append('{')
-        o.append('  (void)argc;')
-        o.append('  (void)argv;')
-        o.append('  bc2015_test_implementation();')
-        o.append('  return 0;')
-        o.append('}')
-    if lang=='cpp':
-        o.append('int main()')
-        o.append('{')
-        o.append('  bc2015_test_implementation();')
-        o.append('  return 0;')
-        o.append('}')
-    if lang in ('c','cpp'):
-        o.append('#endif')
-    if print:
-        print('\n'.join(o))
+        if lang=='cpp':
+            o.append('}')
+
+    if include_main:
+        for e in textbox(lang,'Hook for executing file as test application'):
+            o.append(e)
+        o.append('')
+        if lang=='py':
+            o.append('if __name__== "__main__":')
+            o.append('    bc2015_test_implementation()')
+        if lang in ('c','cpp'):
+            o.append('#ifndef BC2025_NO_MAIN')
+        if lang=='c':
+            o.append('int main( int argc, char ** argv )')
+            o.append('{')
+            o.append('  (void)argc;')
+            o.append('  (void)argv;')
+            o.append('  bc2015_test_implementation();')
+            o.append('  return 0;')
+            o.append('}')
+        if lang=='cpp':
+            o.append('int main()')
+            o.append('{')
+            o.append('  bc2015_test_implementation();')
+            o.append('  return 0;')
+            o.append('}')
+        if lang in ('c','cpp'):
+            o.append('#endif')
+
+    content = '\n'.join(o) + '\n'
+    if outfile:
+        pathlib.Path(outfile).write_text(content)
+    else:
+        print(content,end='')
     return o
 
 def fmt_horner( polycoeffs, varname = 'x' ):
