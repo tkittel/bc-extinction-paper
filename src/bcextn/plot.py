@@ -126,6 +126,7 @@ def _tableN_df_as_table( df ):
 
 
 def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct ):
+    norm_is_min_y_1minusy = True
     modes = ['all','plot','diff','updated']
     mode = args[0] if (len(args)==1 and args[0] in modes) else None
     if not mode:
@@ -147,9 +148,15 @@ def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct )
     if mode in ('all','diff'):
         df = _tableN_as_dataframe(data)
         from .print_table1_diff import write_table1_diff_heatmap as ft
-        ft( as_table(df_orig), as_table(df), f'{tablename}_diff.html',
-            do_print = True )
-        ft( as_table(df_orig), as_table(df), f'{tablename}_diff.tex' )
+        ft(
+            as_table(df_orig), as_table(df), f'{tablename}_diff.html',
+            do_print = True,
+            norm_is_min_y_1minusy = norm_is_min_y_1minusy
+           )
+        ft(
+            as_table(df_orig), as_table(df), f'{tablename}_diff.tex',
+            norm_is_min_y_1minusy = norm_is_min_y_1minusy
+        )
 
     if mode in ('all','updated'):
         df = _tableN_as_dataframe(data_all)
@@ -208,12 +215,6 @@ def main_table4( args ):
                 load_table4scan_allpts,
                 orig_table )
 
-def lookup_float_key( adict, key, eps=1e-12 ):
-    vals = [ v for k,v in adict.items()
-             if abs(float(key)-float(k))<eps ]
-    assert len(vals)==1
-    return vals[0]
-
 def main_cmprecipes( args ):
     do_strict = True
     while 'nostrict' in args:
@@ -267,7 +268,6 @@ def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux, do_xscan090  
     if do_vs_old:
         assert do_reldiff, "vsold only for reldiff"
     data = (load_xscan090 if do_xscan090 else load_xscan)(mode=mode)
-    #print( data.keys() )
     xvals = data['xvals']
 
     def fleq( a, b, eps=1e-12 ):
@@ -361,8 +361,6 @@ def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux, do_xscan090  
             color='gray'
         #color = th2color(th)
         if yp_proposed is not None:
-            #bla = ytrf(yp_proposed,yref,worst_reldiff_proposed)
-            #print( 'BLA',th,xvals[bla>1e-5],yref[bla>1e-5])
             plt.plot( xvals, ytrf(yp_proposed,yref,worst_reldiff_proposed),
                       **common,
                       color=color,
@@ -398,148 +396,165 @@ def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux, do_xscan090  
             continue
         print('%20s at x=1e6 and theta=0,45,90: %g   %g   %g'
               %(cn, curve()(1e6,0), curve()(1e6,45), curve()(1e6,90) ) )
-
-
-
     plt.show()
 
-def main_fittest( args ):
-    #Try to fit new candidates.
-    print("WARNING: Not really relevant after this was superseded by the Legendre fit.")
-    #Fixme: remove this code?
+def main_recipevstaylor( args ):
+    from .eq36_lowx_taylor import mode_taylorfct
+    from .curves import mode_curves
+    from .mpmath import mpf
 
-    mode = args[0] if args else 'missing'
-    modes=['primary','scndfresnel','scndlorentz','scndgauss']
-    if len(args)>1 or mode not in modes:
-        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+    do_oneminusy = True
+    do_showrelprec = True
 
-    from .load import load_xscan as dataload
-    from .curves import safediv, safesqrt
-    from .fit import fitfunction
+    taylor_eps = 1e-20
 
-    val2 = 2.0 if mode!='scndgauss' else 3/math.sqrt(2)
+    assert not args
+    xvals = np.geomspace( 1e-8, 1.8e-1, 500 )
+    thetavals = np.asarray( [0,
+                             #15, 30, 45, 60, 75, 90
+                             ], dtype=float )
+    modes = ['primary','scndfresnel','scndlorentz','scndgauss']
 
-    fcts = []
-    @fitfunction
-    def f0( x, A, B ):
-        k = 1 + B*x
-        k2 = 1.0+val2*x+safediv(A*x*x,k)
-        return safediv( 1.0, safesqrt( k2 ) )
+    curve_lbls_col = [ ( 'BC1974', 'blue' ),
+                       ( 'updated BC1974', 'red' ),
+                       ( 'Proposed', 'black' ),
+                       ( 'Proposed (Lux)', 'green' ) ]
 
-    fcts = []#fixme
-    @fitfunction
-    def f1( x, A, B, C ):
-        k = 1 + B*x
-        k2 = 1.0+val2*x+safediv(A*x*x+C*x,k)
-        return safediv( 1.0, safesqrt( k2 ) )
+    def mapy( y ):
+        return y
+    if do_oneminusy:
+        def mapy( y ):
+            return mpf(1)-y
 
-    @fitfunction
-    def f2( x, A, B, C, D ):
-        b = D*(x/(1.0+x))
-        k = 1.0 + B*x +b
-        k2 = 1.0+val2*x+safediv(A*x*x+C*x,k)
-        return safediv( 1.0, safesqrt( k2 ) )
+    for imode,mode in enumerate(modes):
+        for itheta,theta in enumerate(thetavals):
+            def taylor( x ):
+                return mode_taylorfct(mode)( theta, x, eps = taylor_eps )[0]
+            yref = np.vectorize(lambda xx : mapy(taylor(xx)))(xvals)
+            curveobjs = [c() for c in mode_curves(mode)]
+            if not do_showrelprec:
+                plt.plot( xvals, yref, color='gray', label='ref', ls=':',lw=4 )
+            for curvefct, (lbl,col) in zip(curveobjs,curve_lbls_col):
+                print (curvefct.__class__)
+                if itheta > 0 or imode > 0:
+                    lbl = None
+                y = np.vectorize(lambda xx : mapy(curvefct(xx,theta)))(xvals)
+                yprec = abs(y-yref) / (1e-300 + np.minimum(yref,1.0-yref) )
+                print("itheta,lbl = ",itheta,lbl)
+                if do_showrelprec:
+                    plt.plot( xvals, yprec, color=col, label=lbl )
+                else:
+                    plt.plot( xvals, y, color=col, label=lbl )
 
-    @fitfunction
-    def f3( x, A, B, C ):
-        k = 1.0 + B*x + C*x/(1.0+x)
-        k2 = 1.0+val2*x+safediv( A*x*x-0.1*x, k )
-        return safediv( 1.0, safesqrt( k2 ) )
+    plt.semilogx()
+    plt.semilogy()
+    plt.grid()
+    plt.legend()
+    plt.xlabel('x')
+    plt.show()
 
-    @fitfunction
-    def f4( x, A, B, C ):
-        b = C*(x/(1.0+x))
-        k = 1.0 + B*x + b
-        k2 = 1.0+val2*x+safediv(A*x*x,k)
-        return safediv( 1.0, safesqrt( k2 ) )
+def main_taylororders( args ):
+    from .new_recipes import recipe_target_prec_each_main_term
+
+    ignore_c0 = None
+    while '1minusy' in args:
+        args.remove('1minusy')
+        ignore_c0 = True
+    while 'raw' in args:
+        args.remove('raw')
+        ignore_c0 = False
+    if args or ignore_c0 is None:
+        raise SystemExit('Please specify either "raw" or "1minusy" (and no other args).')
+
+    #ignore_c0 means that we do all comparisions with ignore_c0 = True, to
+    #leave out the leading c0=1 in the Taylor expansions.
+
+    from .eq36_lowx_taylor import ( mode_taylorfct,
+                                    create_taylorfct_lowx_eq36_limited_order )
+
+    modes = ['primary','scndfresnel','scndlorentz','scndgauss']
+    xvals = np.geomspace( 1e-5 if ignore_c0 else 1e-17,
+                          0.2,
+                          2000//10 )#FIXME
+    thetavals = np.asarray( [0, 15, 30, 45, 60, 75, 90], dtype=float )
+    orders = list(range(1,8+1)) + [12, 16 ]#, 20]
+
+    min_eps = 1e-17
+
+    mode2yreflist = {}
+    for mode in modes:
+        print(f"Preparing reference values for mode {mode}")
+        yref_list = []
+        raw_highresfct = mode_taylorfct(mode)
+        for th in thetavals:
+            @np.vectorize
+            def highres_fct( x ):
+                eps = 1e-20 if (mode!='scndfresnel' or x<0.01) else 1e-4
+                eps = 1e-4
+                v = raw_highresfct(x=x,theta_degree=th,
+                                   eps=eps,
+                                   ignore_c0=ignore_c0)
+                if v is None:
+                    raise SystemExit(f'Failed at mode={mode}, theta={th} and x={x}')
+                return float(v[0])
+            yref_list.append( highres_fct( xvals ) )
+        mode2yreflist[mode] = yref_list
 
 
-    fcts.append((f0,'orig','green'))
-    fcts.append( (f1,f1.name,'blue') )
-    fcts.append( (f2,f2.name,'red') )
-    fcts.append( (f3,f3.name,'orange') )
-    fcts.append( (f4,f4.name,'brown') )
+    plt.plot( [ xvals[0], xvals[-1] ],
+              [ recipe_target_prec_each_main_term(lux=True), ]*2,
+              color='black',ls=':',lw=3)
+    plt.plot( [ xvals[0], xvals[-1] ],
+              [ recipe_target_prec_each_main_term(lux=False), ]*2,
+              color='black',ls=':',lw=3)
+    from .new_recipes import recipe_taylor_cutoff as tc
+    plt.plot( [ tc(lux=False), ]*2, [ min_eps,1.0, ], color='black',ls=':',lw=3)
+    plt.plot( [ tc(lux=True), ]*2, [ min_eps,1.0, ], color='black',ls=':',lw=3)
 
-    data = dataload(mode)
-    print( data.keys() )
-    x = data['xvals']
-    ycurves = [ ( f'$\\theta={th:g}\\degree$',
-                  ls,
-                  lookup_float_key(data['theta_2_ypvals'],th) )
-                for th,ls in [
-                        (0,':'),
-                        (20,'-'),
-                        (45,'-'),
-                        (70,'--'),
-                        (90,'--'),
-                ]]
+    for i,order in enumerate(orders):
+        #Find worst precision for any theta and any of the four modes:
+        rd_worst = None
+        for mode in modes:
+            yref_list = mode2yreflist[mode]
+            for th, yref in zip(thetavals,yref_list):
+                sinth = float(math.sin(th * np.pi/180 ))
+                f = create_taylorfct_lowx_eq36_limited_order( mode = mode,
+                                                              sinth=sinth,
+                                                              order=order,
+                                                              ignore_c0=ignore_c0 )
+                y = f(xvals)
+                rd = np.clip(abs(yref-y)/np.maximum(1e-300,np.minimum(abs(yref),abs(1.0-yref))),min_eps*1e-5,1.0)
+                if rd_worst is None:
+                    rd_worst = rd
+                else:
+                    rd_worst = np.maximum(rd_worst,rd)
+        plt.plot( xvals, rd_worst, label=f'Taylor order {order}', lw=3, alpha=1.0 )
 
-    fig, axs = plt.subplots(2, 1, sharex=True)
-    fig.subplots_adjust(hspace=0)
-    ax, axdiff = axs
-
-    for theta_lbl, ls, y  in ycurves:
-        print(theta_lbl)
-        ax.plot(x,y,ls=ls,color='black',label=f'reference ({theta_lbl})')
-        for f,fname,col in fcts:
-            fit = f.fit(x,y)
-            print(fname,fit.parameters)
-            ax.plot(x,fit(x),ls=ls,color=col,label=f'fit ({fname}, {theta_lbl})')
-            axdiff.plot(x,abs((fit(x)-y)/y),ls=ls,color=col,alpha=0.5,lw=3)
-    ax.grid()
-    ax.semilogx()
-    axdiff.semilogy()
-    ax.legend()
-    ax.set_xlabel('x')
-    axdiff.grid()
+    plt.ylabel('Worst relative precision of 1-y(x) for any model and theta_bragg')
+    plt.semilogx()
+    plt.semilogy()
+    plt.ylim(min_eps,1.0)
+    plt.xlim(xvals[0],0.2)#xvals[-1])#fixme?
+    plt.grid()
+    plt.legend()
+    plt.xlabel('x')
     plt.show()
 
 def main_par2latex( args ):
     assert len(args)==0
-    from .curves import load_fitted_curve_parameters
-    data = load_fitted_curve_parameters('primary')
-    raise SystemExit("FIXME: This needs update for the new proposed curves")
-
-    print(r'\begin{align}')
-    pA0, pA1 = data['origA']
-    pB0, pB1 = data['origB']
-    sA0 = '%g'%pA0
-    sB0 = '%g'%pB0
-    sA1 = '%g'%pA1
-    sB1 = '%g'%pB1
-    if not sA1.startswith('-'):
-        sA1 = '+' + sA1
-    if not sB1.startswith('-'):
-        sB1 = '+' + sB1
-    print(r'  A(\theta) &= %s%s\cos(2\theta)\nonumber\\'%(sA0,sA1))
-    print(r'  B(\theta) &= %s%s(0.5-\cos(2\theta))^2'%(sB0,sB1))
-    print(r'\labeqn{ypfitfctparsupdated}')
-    print(r'\end{align}')
-    print()
-    print(r'\begin{align}')
-    for pn in 'ABC':
-        pars = data[pn]
-        s = r'  %s(\theta) &= '%pn
-        for i,p in enumerate(pars):
-            f = '%.5g'%p
-            if i==0:
-                s += f
-                continue
-            if i==4:
-                print(s+r'\nonumber\\')
-                s=r'             &\hspace*{1em} '
-            if not f.startswith('-'):
-                f = f'+{f}'
-            if i==1:
-                s += r'%s\sin(\theta)'%f
-            else:
-                s += r'%s\sin^%i(\theta)'%(f,i)
-        if pn!='C':
-            s += r'\nonumber\\'
-        print(s)
-    print(r'\labeqn{ypfitfctluxpars}')
-    print(r'\end{align}')
-
+    from .curves import mode_curves
+    for mode in ['primary','scndfresnel','scndlorentz','scndgauss']:
+        if not hasattr(mode_curves(mode)[1](),'params2latex'):
+            print("WARNING: Skipping %s for now"%mode)
+            continue
+        p2l = mode_curves(mode)[1]().params2latex()
+        print()
+        print(r'\begin{align}')
+        for i,(k,v) in enumerate(p2l):
+            is_last = (i+1==len(p2l))
+            print(r'  %s &= %s%s\\'%(k,v,('' if is_last else r'\nonumber')))
+        print(r'  \labeqn{refitted1974%s}'%mode)
+        print(r'\end{align}')
 
 @np.vectorize
 def find_taylor_maxx( theta, eps ):
@@ -580,48 +595,41 @@ def main_taylorreach( args ):
     plt.show()
 
 def main_spread( args ):
-    mode = args[0] if args else 'missing'
-    modes=['primary','scndfresnel','scndlorentz','scndgauss']
-    if mode not in modes:
-        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
-    if len(args)!=1:
-        raise SystemExit('Please only provide a single (mode) argument')
-    do_spread(mode)
-
-def do_spread( mode ):
-    #Fixme: just plot all modes in same plot.
     from .curves import mode_curves
-    _,_,_,ProposedLuxCurve = mode_curves(mode)
-    from .load import load_xscan as dataload
-    data = dataload(mode)
-    xvals = data['xvals']
-    def key_theta( theta ):
-        keys = [ k for k in data['th_keys']
-                 if abs(float(k)-float(theta))<1e-12 ]
-        assert len(keys)==1
-        return keys[0]
-    yp0 = data['theta_2_ypvals'][key_theta(0)]
-    #yp45 = data['theta_2_ypvals'][key_theta(0)]
-    yp90 = data['theta_2_ypvals'][key_theta(90)]
-    def reldiff(yp90,yp0):
-        return (yp90-yp0)/(0.5*(yp90+yp0))
-    plt.plot( xvals, reldiff(yp90,yp0), label='numerical integration' )
-    plt.plot( xvals,
-              reldiff(ProposedLuxCurve()(xvals,90),ProposedLuxCurve()(xvals,0)),
-              label='Via new parameterisation' )
-    #plt.semilogx()
+    from .load import load_xscan090 as dataload
+    show_ref_numint = False
+    while 'ref' in args:
+        args.remove('ref')
+        show_ref_numint = True
+    assert not args
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    for mode in modes:
+        def reldiff(_yp90,_yp0):
+            return (_yp90-_yp0)/(0.5*(_yp90+_yp0))
+        if show_ref_numint:
+            data = dataload(mode)
+            xvals = data['xvals']
+            def key_theta( theta ):
+                keys = [ k for k in data['th_keys']
+                         if abs(float(k)-float(theta))<1e-12 ]
+                assert len(keys)==1
+                return keys[0]
+            yp0 = data['theta_2_ypvals'][key_theta(0)]
+            yp90 = data['theta_2_ypvals'][key_theta(90)]
+            plt.plot( xvals, reldiff(yp90,yp0), label=f'{mode} reference integration' )
+
+        _,_,_,ProposedLuxCurve = mode_curves(mode)
+        xvals_recipe = np.geomspace(1e-5,1e5,10000)
+        plt.plot( xvals_recipe,
+                  reldiff( ProposedLuxCurve()(xvals_recipe,90),
+                           ProposedLuxCurve()(xvals_recipe,0)),
+                  label=f'{mode} (BC2025 Lux recipe)' )
     plt.loglog()
     plt.grid()
     plt.legend()
     plt.xlabel('x')
-    plt.ylabel('Max relative spread in yp values for different theta')
+    plt.ylabel('Max relative spread in y values for different theta')
     plt.show()
-
-def find_nearest_idx( arr, val):
-    assert isinstance(arr, np.ndarray)
-    idx = (np.abs(arr - val)).argmin()
-    assert idx < len(arr)
-    return idx
 
 def plot_breakdown( mode, curve, ref ):
     assert curve in ('classic','updatedclassic','proposed','proposedlux')
@@ -656,6 +664,11 @@ def plot_breakdown( mode, curve, ref ):
         x = refdata['xvals']
         th = array(sorted(float(e) for e in refdata['th_keys']))
         _last_lookup = [None,None]
+        def find_nearest_idx( arr, val):
+            assert isinstance(arr, np.ndarray)
+            idx = (np.abs(arr - val)).argmin()
+            assert idx < len(arr)
+            return idx
         def lookup_ref(xval,thval):
             if _last_lookup[0] != thval:
                 for _th,_yp in refdata['theta_2_ypvals'].items():
@@ -666,6 +679,7 @@ def plot_breakdown( mode, curve, ref ):
             return _last_lookup[1][find_nearest_idx(x,xval)]
     else:
         assert ref == 'proposedlux'
+        #Fixme: higher res for paper:
         x = np.geomspace(0.1, 100.0, 400)  # Adjust the range and resolution as needed
         th = np.linspace(0.1, 100.0, 400)
         ref_curve = ProposedLuxCurve()
@@ -689,7 +703,7 @@ def plot_breakdown( mode, curve, ref ):
             return 1.0
         y = curvefct(xval, thval)
         yref = lookup_ref(xval,thval)
-        return max(0.0,min(1.0,abs((y-yref)/yref)))
+        return max(0.0,min(1.0,float(abs((y-yref)/yref))))#FIXME: DIFFERENT PRECISION DEFINITION
 
     map_top = ( 25, 30 )
     @np.vectorize
@@ -725,6 +739,10 @@ def plot_breakdown( mode, curve, ref ):
     Z = z_calc(X, TH)
     Z = val_fix(Z)
     #Z = np.clip(Z,0.0,20.0)
+
+    print('x',x.dtype)
+    print('th',th.dtype)
+    print('Z',Z.dtype)
 
     plt.pcolormesh(x, th, Z,
                    cmap=cmap, vmin=0.0, vmax=map_top[-1],
@@ -778,7 +796,7 @@ def do_highx( mode ):
     from .load import load_xscan as load
     data = load(mode)
     xvals = data['xvals']
-    mask = xvals>=100.0
+    mask = xvals>=870# FIXME??
     xvals = xvals[mask]
 
     def fpow(x,norm,power):
@@ -806,46 +824,6 @@ def do_highx( mode ):
     plt.grid()
     plt.loglog()
     plt.show()
-
-def main_printcpp( args ):
-    raise SystemExit("FIXME: Code needs to be updated for new legendre fits")
-    mode = args[0] if args else 'missing'
-    modes=['primary','scndfresnel','scndlorentz','scndgauss']
-    if len(args)>1 or mode not in modes:
-        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
-    from .curves import load_fitted_curve_parameters
-    d = load_fitted_curve_parameters(mode)
-    print(d)
-    dp = d['proposed']
-    npars = 7
-    varnames = 'ABC' if len(dp)==21 else 'AB'
-    assert len(dp)==len(varnames)*npars
-    for i,v in enumerate(varnames):
-        dv = dp[i:i+npars]
-        assert len(dv) == npars
-        for i,pi in enumerate(dv):
-            print(f'constexpr double c{v}{i} = %g;'%pi)
-    print('const double s = sintheta;')
-    for v in varnames:
-        c = f'c{v}'
-        s = f'{c}0'
-        for i in range(1,npars):
-            s+=f'+s*({c}{i}'
-        s+=')'*(npars-1)
-        print(f'const double {v} = {s};')
-    print()
-    for i,v in enumerate(varnames):
-        pars = dp[i:i+npars]
-        assert npars == len(pars)
-        s = '%g'%pars[0]
-        for pv in pars[1:-1]:
-            s+='+s*(%g'%pv
-        pv ='%g'%pars[-1]
-        if not pv.startswith('-'):
-            pv=f'+{pv}'
-        s+='%s*s'%pv
-        s+=')'*(npars-2)
-        print(f'const double {v} = {s};')
 
 def main_investigatefcts( args ):
     print("FIXME: This mode might be outdated")
@@ -975,321 +953,3 @@ def main_investigatefcts( args ):
     axdiff.grid()
     ax.set_xlim(0.05)
     plt.show()
-
-#Fixme: to utils.py:
-def print_taylor_code( poly_coefficients, varname='xp', mode='py',
-                       resvarname = 'yp'):
-    np = len(poly_coefficients)
-    assert np>1
-    assert mode in ['cpp','py']
-    def fmtcoeff(val):
-        return '%.14g'%val
-    s = 'const double ' if mode=='cpp' else ''
-    s += '%s = '%resvarname
-    for i,c in enumerate(poly_coefficients):
-        if i+1==np:
-            if c < 0.0:
-                s += '-%s*%s'%(varname,fmtcoeff(abs(c)))
-            else:
-                s += '+%s*%s'%(varname,fmtcoeff(c))
-        elif i:
-            s += '+%s*(%s'%(varname,fmtcoeff(c))
-        else:
-            s += fmtcoeff(c)
-    s+=')'*(np-2)
-    if mode=='cpp':
-        s+=';'
-    print(s)
-    return s
-
-########################################################
-###### Transform + Legendre fit ########################
-########################################################
-
-def legfit_weight_fct(x,y,xp,yp):
-    return ( 1.0/np.minimum(abs(y),abs(1.0-y)) )**0.3 #Fixme: revisit this, make it easy to describe in paper
-
-def main_legfit( args ):
-    from .load import load_xscan090
-    do_lux = False
-    while 'lux' in args:
-        args.remove('lux')
-        do_lux = True
-    assert len(args)==0
-    modes=['primary',
-           'scndfresnel',
-           'scndlorentz',
-           'scndgauss',
-           #'curve::sabineprimary',
-           #'curve::sabinescndrec',
-           #'curve::sabinescndtri',
-           ]
-    thvals=[0,90]#Due to final interpolation, only these matters
-    datasets = []
-    for m in modes:
-        data = load_xscan090(m)
-        for th, y in data['theta_2_ypvals'].items():
-            if thvals and not any( abs(float(th)-e)<1e-6 for e in thvals ):
-                continue
-            assert int(float(th))==float(th)
-            datasets.append( ( data['xvals'].copy(),
-                               y.copy(),
-                               f'{m} ({float(th):g} deg)',
-                               f'yprime_{m}_{int(float(th))}' ) )
-    do_legfit( datasets,
-               do_lux=do_lux )
-
-def try_legfit( x, y, order, nchop  ):
-    from .trf import xy_prime, xy_unprime
-
-    xp, yp = xy_prime( x, y )
-    fit_weights = legfit_weight_fct(x,y,xp,yp)
-    legendre_coefs = np.polynomial.legendre.legfit( xp, yp,
-                                                    order,
-                                                    w = fit_weights )
-    poly_coeffs = np.polynomial.legendre.leg2poly(legendre_coefs)
-
-    #Chop values (and remove highest orders if necessary):
-    def do_chop( iorder, val ):
-        return float((f'%.{nchop}g')%val)
-    poly_coeffs = [do_chop(i,val) for i,val in enumerate(poly_coeffs)]
-
-    while not poly_coeffs[-1]:
-        poly_coeffs = poly_coeffs[:-1]
-
-    ypfit = np.polynomial.polynomial.polyval(xp, poly_coeffs)
-    _, yfit = xy_unprime( xp, ypfit )
-    diff_yp = abs(ypfit-yp)
-    diff_y = ( abs(yfit-y)/np.minimum(abs(y),abs(1-y)) )
-    maxdiff = diff_y.max()
-    return dict( maxdiff = maxdiff,
-                 diff_y = diff_y,
-                 diff_yp = diff_yp,
-                 poly_coeffs = poly_coeffs,
-                 xp = xp,
-                 yp = yp,
-                 ypfit = ypfit,
-                 yfit = yfit )
-
-
-def cost_legfit_recipe( order, nchop ):
-    #Estimate "length" of recipe, when written as c0+xp*(c1+xp*(...)).
-    #Penalise slightly for order, since higher order also means more multiplications
-    str_length_approx = (10+nchop)*order
-    return str_length_approx + order*3
-
-def do_legfit( datasets, do_lux ):
-    from .trf import xy_prime, xy_unprime
-
-    target_prec = 1e-7 if do_lux else 1e-3
-    target_prec *= 0.9 #safety (but do NOT decrease lux lvl further, since ref
-                       #data can not handle it).
-
-    output_filename='legendre_coefficients'
-    if do_lux:
-        output_filename += '_lux'
-    output_filename += '.json'
-
-    results = {}
-    fitresults = []
-
-    order_nchop_tries = []
-    order_ini, nchop_ini = (7, 8) if do_lux else (4,3)
-    nchop_vals = list(range(nchop_ini,16))
-    for order in range( order_ini, 60 ):
-        for nchop in nchop_vals:
-            order_nchop_tries.append( ( cost_legfit_recipe(order,nchop),
-                                        order, nchop ) )
-    order_nchop_tries.sort()
-
-    for x, y, lbl, resvarname in datasets:
-        ok = False
-        for _, order, nchop in order_nchop_tries:
-            print(f"    Trying legendre {order}-order fit for {resvarname} (nchop={nchop})")
-            lf = try_legfit( x, y, order, nchop)
-            if lf['maxdiff'] < target_prec:
-                ok = True
-                break
-        if not ok:
-            raise SystemExit('Failed to find proper fit')
-        fitresults.append( lf )
-        results[resvarname] = [ float(e) for e in lf['poly_coeffs'] ]
-        print_taylor_code(lf['poly_coeffs'],resvarname=resvarname)
-        print(f"DONE at order={order}")
-    print()
-    print()
-    print()
-
-    highest_maxdiff = 0.0
-    for (x, y, lbl, resvarname),lf in zip(datasets,fitresults):
-        highest_maxdiff = max(highest_maxdiff,lf['maxdiff'])
-        print("Worst precision of %s : %g"%(resvarname,lf['maxdiff']))
-    print("Worst precision overall: %g"%highest_maxdiff)
-
-    print()
-    for (x, y, lbl, resvarname),lf in zip(datasets,fitresults):
-        print_taylor_code(lf['poly_coeffs'],resvarname=resvarname)
-
-    from .json import save_json
-    save_json(
-        output_filename,
-        results,
-        force = True
-    )
-
-    fig, axs = plt.subplots(2, 1, sharex=True)
-    fig.subplots_adjust(hspace=0)
-    ax, axdiff = axs
-
-    data_colors = []
-
-    for (x, y, lbl, resvarname), lf in zip(datasets,fitresults):
-        xp, yp = xy_prime( x, y )
-        col = ax.plot( xp, yp, label=lbl )[0].get_color()
-        ax.plot(xp,lf['ypfit'],ls='-.',lw=5,color=col)
-        axdiff.plot(xp,lf['diff_yp'],color=col)
-        data_colors.append( col )
-
-    ax.grid()
-    axdiff.grid()
-    axdiff.semilogy()
-    axdiff.set_ylabel('yprimefit-yprime')
-    ax.legend()
-    ax.set_xlabel('xprime')
-    ax.set_ylabel('yprime')
-    plt.show()
-
-    fig, axs = plt.subplots(2, 1, sharex=True)
-    fig.subplots_adjust(hspace=0)
-    ax, axdiff = axs
-    for (x, y, lbl,resvarname),lf,col in zip(datasets,fitresults,data_colors):
-        xp,yp = xy_prime( x, y )
-        _, yfit = xy_unprime( xp, lf['ypfit'] )
-        ax.plot(x,y,label=lbl,color=col)
-        ax.plot(x,yfit,ls='-.',lw=5,color=col)
-        axdiff.plot(x,lf['diff_y'],color=col)
-
-    axdiff.plot( [x[0],x[-1]],[target_prec,]*2, color='black',lw=4, ls=':' )
-    ax.grid()
-    axdiff.grid()
-    ax.semilogx()
-    axdiff.semilogy()
-    ax.legend()
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    plt.show()
-
-
-def main_fitglobal( args ):
-    mode = args[0] if args else 'missing'
-    modes=['primary','scndfresnel','scndlorentz','scndgauss']
-    if mode not in modes:
-        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
-    if len(args)!=1:
-        raise SystemExit('Please only provide a single (mode) argument')
-    do_fitglobal(mode)
-
-def do_fitglobal( mode ):
-    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
-    output_filename='global_refitted_classic_curves'
-    if mode != 'primary':
-        output_filename += f'_{mode}'
-    output_filename += '.json'
-
-    from .load import load_thetascan
-    from . import curves
-    if mode == 'primary':
-        FitClassic = curves.ClassicCurve_Primary
-    elif mode == 'scndgauss':
-        FitClassic = curves.ClassicCurve_ScndGauss
-    elif mode == 'scndlorentz':
-        FitClassic = curves.ClassicCurve_ScndLorentz
-    elif mode == 'scndfresnel':
-        FitClassic = curves.ClassicCurve_ScndFresnel
-    else:
-        assert False
-
-    def flatten_data( thedata ):
-        #Flatten data into list of (x, theta, y):
-        xvals = thedata['xvals']
-        flattened_data = []
-        for theta_degree_str, yvals in thedata['theta_2_ypvals'].items():
-            theta = float(theta_degree_str)
-            for x, y in zip( xvals, yvals ):
-                flattened_data.append( (x, theta, y) )
-            #    if len(flattened_data)==10:
-            #        break#FIXME
-            #if len(flattened_data)==10:
-            #    break#FIXME
-        return np.asarray(flattened_data)
-
-    data = load_thetascan(mode)
-    flatdata = flatten_data(data)
-
-    def do_fit_by_fct( flatdata, fitter ):
-
-        #@np.vectorize
-        def fitfct( xth, *params ):
-            print("FITFCT called with params:",params)
-            xarr, tharr  = xth
-            return np.vectorize( lambda xval, thval
-                                 : fitter( xval, thval, params ) )(xarr, tharr)
-        #yvals = flatdata[:,2]
-        #errors = 1/(0.0001+abs(yvals-0.5))
-
-        def estimate_ysigma():
-            #Make sure the fit won't ignore the tail where y <<1:
-            yy = flatdata[:,2]
-            ysigma = abs(np.minimum(yy,1.0-yy))
-            if mode=='scndlorentz':
-                ysigma = ysigma**1.5 #Oddly sensitive here!!
-            #if mode=='scndgauss':
-            #    ysigma[flatdata[:,0] < 0.5] /=10000
-            return ysigma
-
-
-        ysigma = estimate_ysigma()
-
-        fit_flatdata, fit_ysigma = flatdata, ysigma
-
-        minx = None
-        if hasattr(fitter,'taylor_cutoff'):
-            minx = fitter.taylor_cutoff()
-        if minx is not None and minx>0:
-            mask = flatdata[:,0] >= minx
-            fit_flatdata = fit_flatdata[mask]
-            fit_ysigma = fit_ysigma[mask]
-
-        if False:#FIXME
-            mask = np.logical_and(flatdata[:,0] >= 0.05,flatdata[:,0] <= 5.0)
-            fit_flatdata = fit_flatdata[mask]
-            fit_ysigma = fit_ysigma[mask]
-
-        fitparams,fitcov = scipy.optimize.curve_fit( fitfct,
-                                                     fit_flatdata[:,:2].T,
-                                                     fit_flatdata[:,2],
-                                                     sigma=fit_ysigma,
-                                                     p0 = fitter.p0(),
-                                                     nan_policy='raise')
-        corrmat = np.corrcoef(fitcov)
-        corrlist = [ (abs(corrmat[i, j]),i,j)
-                     for i in range(len(corrmat))
-                     for j in range(len(corrmat))
-                     if i<j ]
-        corrlist.sort()
-        for _,i,j in corrlist[::-1][0:10]:
-            print( 'Correlation between parameters %i and %i : %.4g'%(i,j,corrmat[i,j]))
-        print(fitparams)
-        print(fitter.p0())
-        return fitparams
-
-    fitpars_classic = do_fit_by_fct( flatdata, FitClassic() )
-
-    from .json import save_json
-    def tostdlist_or_none( arr ):
-        return [float(e) for e in arr] if arr is not None else None
-    save_json(
-        output_filename,
-        dict( classic = tostdlist_or_none(fitpars_classic) ),
-        force = True
-    )

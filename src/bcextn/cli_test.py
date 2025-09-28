@@ -31,3 +31,7 @@ def main():
     test()
     test2()
     print("All ok")
+
+    #FIXME: Here are some ultra-high-res points for the scndfresnel model we should use in testing:
+    # (theta_degree, x) = ( 65, 63.0957344480193 )  -> y = 0.06707274624602953
+    # (theta_degree, x) =  (75, 54.954087385762485 ) -> y = 0.07307894404052193
