@@ -52,7 +52,7 @@ class ClassicCurve_Primary:
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
             setattr( self, '_fitparams',
-                     load_fitted_curve_parameters('primary')['classic'][:])
+                     load_refitted_curve_parameters('primary')['classic'][:])
         assert len(self._fitparams)==4
         return self._fitparams
 
@@ -63,6 +63,16 @@ class ClassicCurve_Primary:
         A = p[0]+p[1]*u
         B = p[2]+p[3]*((0.5-u)**2)
         return A, B
+
+    def params2latex( self ):
+        #FIXME: On other classes as well
+        A0, A1, B0, B1 = ['%g'%e for e in self._defaultparams]
+        if not A1.startswith('-'):
+            A1 = '+' + A1
+        if not B1.startswith('-'):
+            B1 = '+' + B1
+        return [ (r'A(\theta)',r'%s%s\cos(2\theta)'%(A0,A1)),
+                 (r'B(\theta)',r'%s%s(0.5-\cos(2\theta))^2'%(B0,B1)) ]
 
 class ClassicCurve_ScndGauss:
 
@@ -84,7 +94,7 @@ class ClassicCurve_ScndGauss:
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
             setattr( self, '_fitparams',
-                     load_fitted_curve_parameters('scndgauss')['classic'][:])
+                     load_refitted_curve_parameters('scndgauss')['classic'][:])
         assert len(self._fitparams)==5
         return self._fitparams
 
@@ -118,7 +128,7 @@ class ClassicCurve_ScndLorentz:
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
             setattr( self, '_fitparams',
-                     load_fitted_curve_parameters('scndlorentz')['classic'][:])
+                     load_refitted_curve_parameters('scndlorentz')['classic'][:])
         assert len(self._fitparams)==6
         return self._fitparams
 
@@ -153,7 +163,7 @@ class ClassicCurve_ScndFresnel:
     def bestfit_params( self ):
         if not hasattr(self,'_fitparams'):
             setattr( self, '_fitparams',
-                     load_fitted_curve_parameters('scndfresnel')['classic'][:])
+                     load_refitted_curve_parameters('scndfresnel')['classic'][:])
         assert len(self._fitparams)==5
         return self._fitparams
 
@@ -370,7 +380,7 @@ def safesqrt( x ):
     return math.sqrt(max( 0.0, x ))
 
 _cache_fcp = {}
-def load_fitted_curve_parameters(mode):
+def load_refitted_curve_parameters(mode):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
     key = mode
     if key in _cache_fcp:
@@ -386,9 +396,8 @@ def load_fitted_curve_parameters(mode):
     if mode != 'primary':
         fn = f'global_refitted_classic_curves_{mode}.json'
     data = load_json_data(fn)
+    assert set(data.keys()) == set(['classic'])
     for k in data.keys():
         data[k] = [ fmt(k,e) for e in data[k] ] if data[k] is not None else None
     _cache_fcp[key] = data
     return data
-
-

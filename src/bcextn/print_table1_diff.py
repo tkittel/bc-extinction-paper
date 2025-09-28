@@ -45,8 +45,12 @@ def write_updated_table1( table1_updated,
 def write_table1_diff_heatmap( table_orig,
                                table_new,
                                out_filename ,
-                               do_print = False ):
-    table_diff = (table_orig/table_new - 1.0)*100.0
+                               do_print = False,
+                               norm_is_min_y_1minusy = True ):
+    if not norm_is_min_y_1minusy:
+        table_diff = (table_orig/table_new - 1.0)*100.0
+    else:
+        table_diff = (table_orig-table_new)*100.0 / np.minimum(table_new.values, 1 - table_new.values)
     vmin, vmax = table_diff.min().min(), table_diff.max().max()
     fix_table_fmt(table_diff,out_filename)
     if do_print:
