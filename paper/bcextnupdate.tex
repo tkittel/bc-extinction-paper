@@ -25,6 +25,8 @@
 \usepackage{booktabs}
 \usepackage[table]{xcolor}
 %\usepackage[table]{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 %internal refs with macros, for consistency:
 \newcommand{\labsec}[1]{\label{sec:#1}}
@@ -192,6 +194,20 @@ Define yp integral, x, theta, f, phi0, phipi.
 %\caption{Caption \protect\cite{knuth84}} % NB \protect\cite{...} is required in floating figures
 %\end{figure}
 
+\subsection{Definition of model precision}
+
+Mention that we are not just doing $y/y_\text{ref}-1$, since at low $x$, $y$ is
+very near 1, and one would not consider $0.999\pm0.01$ to be a very precise
+result, since it could predict $y>1$. So instead we will define the precision
+as:
+\begin{align}
+  \text{precision}(y) \equiv \frac{|y-y_\text{ref}|}{\min(y_\text{ref},1-y_\text{ref})}
+\end{align}
+Naturally, for this definition to be useful in practice, this requires
+$y_\text{ref}$ to be available in a precision much higher than the precision on
+$y$. Bla mpmath.
+
+
 \subsection{Subsection title}
 
 Text text text text text text text text text text text text text text
@@ -238,7 +254,7 @@ text text text text text text text.
 \end{table}
 
 \begin{table}[ht]
-\caption{Bla bla.} % NB \protect\cite{...} is required in floating tables
+\caption{Bla bla FIXME: table location + use same precision def as in rest of paper?.} % NB \protect\cite{...} is required in floating tables
 \smallskip
 \tiny
 \begin{center}
@@ -272,7 +288,8 @@ NB: $\theta$ is the Bragg angle, defined by:
   \labeqn{braggequationREPEATEDFIXME}
 \end{align}
 
-And $x$ is defined by (fixme: is $l$ the sphere radius?):
+And $x$ is defined by (fixme: is $l$ the sphere radius or tbar..., also this is
+for primary):
 
 \begin{align}
   x = \frac{ 2l^2\lambda^2F^2}{3V^2}
@@ -280,7 +297,7 @@ And $x$ is defined by (fixme: is $l$ the sphere radius?):
 \end{align}
 
 \begin{align}
-  f(\eta) = \frac{\eta^2-\eta\sin(2\eta)+sin^2(\eta)}{\eta^4}
+  f_P(\eta) = \frac{\eta^2-\eta\sin(2\eta)+sin^2(\eta)}{\eta^4}
   \labeqn{fofeta}
 \end{align}
 
@@ -301,12 +318,41 @@ And $x$ is defined by (fixme: is $l$ the sphere radius?):
 \end{align}
 
 \begin{align}
-  y_p(\theta,x) = \frac{3}{4\pi}\int_{0}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta
-  \labeqn{ypintegral}
+  y_M(\theta,x) = N_M\int_{0}^{\infty} f_M(\eta)\varphi\left(\theta,C_Mxf_M(\eta)\right)d\eta
+  \labeqn{ypintegral}%fixme rename
 \end{align}
+
+$N_P=\frac{3}{4\pi}$, $C_m=1$.
+(FIXME: Don't focus first om primary, just do them all from the beginning,
+meaning that the previous equation has to have index $M$ and two constants
+depending on $M$ (the normalisation factors and the factor in front of x, the
+only real difference is for the Lorentzian model I think).
+
+Note that the definition of $x$ itself also depends on the model, but we will
+drop the index on $x$ for clarity.
+
 
 (note we have used that $f(\eta)$ is an even function to change the integration
 domain to $[0,\infty)$).
+
+Bla bla.. theta dep. By using \refeqn{phi} and standard rules of integrals, we can write
+\begin{align}
+  y_M(\theta,x) = y^0_M(x) + {\sin^{3/2}\theta}\,y^\delta_M(x\sqrt{\sin\theta})
+  \labeqn{yintegralbyy0ydelta}
+\end{align}
+where we have defined
+\begin{align}
+y^0_M(x)\equiv y_M(0,x)\\
+y^\pi_M(x)\equiv y_M(\pi,x)\\
+y^{\Delta}_M(x)\equiv y_M^\pi(x)-y_M^0(x)
+  \labeqn{y0pideltadef}
+\end{align}
+The advantage of this form is that reduces the numerical issue of having a
+recipe for a two dimensional surface to instead having two one-dimensional
+curves, which is significantly less challenging.
+
+Here the subscript $M$ is a placeholder for $P$ (primary), $G$ (secondary Gaussian), $L$
+(secondary Lorentzian), or $F$ (secondary Fresnellian).
 
 \subsection{Old recipe}
 
@@ -732,9 +778,134 @@ Mention OCR(tesseract)+human checking.
 % case? However integral of (sin(x)/x)^2 from -inf to +inf is pi, not 4pi/3
 
 
+\section{Taylor expansions}
+
+USAGE IN RECIPES: Always use Taylor expansions (5th order) for x below a
+threshold of 0.1 (std recipe) and 0.01 (lux recipe).
+
+\begin{align}
+  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
++ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
+ - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
+&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
+ - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5 \\
+%& + \tfrac{19564394058822418571}{855860038150930312500}(4+311\sin^{9/2}\theta)x^6\\
+%
+  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
+  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
+- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
+ &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
+ - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
+% +\tfrac{64\sqrt{7}}{6615}(4+311\sin^{9/2}\theta)x^6\\
+ %
+  y_L(x,\theta)\approx&\,  1-x
+  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
+- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
+&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
+- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
+% +\tfrac{2816}{32805}(4+311\sin^{9/2}\theta)x^6\\
+%
+  y_F(x,\theta)\approx&\, 1 - x
+  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
+  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
+  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
+   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
+%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
+\end{align}
+
+FIXME: How can we refer to these models? Both in this paper and in e.g. NCrystal
+where we use them? We can use ``BCK'' (Becker-Coppens-Kittelmann), if such
+self-reference is allowed? Or perhaps BC2025(lux|minimal|) vs. BC1974 ?
+
+For ease of reference the three updated recipes provided here, will be referred
+to as BCK-minimal, BCK, and BCKLux. The first is as the name implies a minimal,
+which only ..... Next, the BCK model aims to provide numerical evaluations at
+the $0.1\%$ level, while finally BCKLux provides an even more precise numerical
+evaluation at the $10^-8$ level of precision. (define precision!)
+
+
+NOTE: Mention that this should be evaluated using Horner's method!! (which is
+also the default in numpy's polyval and how it has always been done in
+NCrystal). (Although Motzkin's method or the Knuth-Eve algorithm is actually
+interesting as it can save additional multiplications!!)
+
+\begin{align}
+  y^\Delta_P(x)\equiv  y^\pi_P(x)-y^0_P(x)\approx&\, \tfrac{2369}{5775}x^2 - \tfrac{108240952}{91216125}x^3
++ \tfrac{350769113251}{148069498500}x^4 - \tfrac{11888573193613859}{2846107289025000}x^5 \\
+%
+ y^\pi_G(x)-y^0_G(x)\approx&\, \tfrac{4\sqrt{3}}{15}x^2
+- \tfrac{4}{3}x^3
+ + \tfrac{208\sqrt{5}}{175}x^4
+ - \tfrac{86\sqrt{6}}{45}x^5\\
+%
+  y^\pi_L(x)-y^0_L(x)\approx&\, \tfrac{8}{15}x^2
+- \tfrac{160}{81}x^3
++ \tfrac{416}{81}x^4
+- \tfrac{4816}{405}x^5\\
+%
+  y^\pi_F(x)-  y^0_F(x)\approx&\, \tfrac{11}{25}x^2
+  - \tfrac{1208}{945}x^3
+  + \tfrac{203047}{79380}x^4
+   - \tfrac{28172611}{6237000}x^5
+\end{align}
 
 
 
+%% def bc2025_y_primary( x, sintheta ):
+%%     if x < 0.1:
+%%         # Taylor expansion:
+%%         y0 = ( 1.0+x*(-0.94286+x*(0.82043+x*(-0.59332+x*(0.36445
+%%                +x*-0.19429)))) )
+%%     else:
+%%         if x > 1e3:
+%%             return bc2025_y_primary(1e3,sintheta)*(x*1e-3)**-0.5
+%%         xp = bc2025_xprime(x)
+%%         yp = yprime_primary_0(xp)
+%%         y0 = bc2025_unprime_y( xp, yp )
+%%     ss = sintheta**0.5
+%%     xs = x*ss
+%%     if xs < 0.1:
+%%         # Taylor expansion:
+%%         ydelta = ( xs*xs*(0.41022+xs*(-1.1866+xs*(2.3689+xs*-4.1771))) )
+%%     else:
+%%         xp = bc2025_xprime(xs)
+%%         yp0 = yprime_primary_0(xp)
+%%         yp90 = yprime_primary_90(xp)
+%%         ydelta = (xp+1.0)**2 * (1.0-xp) * (yp90 - yp0)
+%%     return y0 + sintheta*ss*ydelta
+%%
+
+\begin{algorithm}
+    \caption{Algorithm for calculating $y_P(x,\sin\theta)$.}
+    \begin{algorithmic}[1]
+        \Procedure{YP}{$x, \sin\theta$}
+            \If{$x < 0.1$}
+                \State $y_0 \gets (1+x\cdot(-0.94286+x\cdot(0.82043+x\cdot(-0.59332+x\cdot(0.36445 -x\cdot0.19429)))))$
+            \Else
+                \If{$x>1000$}
+                    \State \textbf{return} $\text{YP}(1000,\sin\theta)\cdot\sqrt{1000/x}$
+                \EndIf
+                \State $x_s \gets \sqrt{x} $
+                \State $x' \gets (x_s-1)/(x_s+1) $
+                \State $y_0'\gets(0.0182+x'\cdot(-0.1976+x'\cdot(0.3984+x'\cdot(0.2541+x'\cdot(-0.6802$\\
+                \hspace{5em} ${\hookrightarrow}+x'\cdot(-0.2808+x'\cdot(0.8987+x'\cdot(0.007438+x'\cdot(-0.6028+x'\cdot0.248)))))))))$
+                \State $y_0 \gets y_0'\cdot(1+x')^2\cdot(1-x')-(0.25{\cdot}x'\cdot(3-x'{\cdot}x')-0.5)$
+                \EndIf
+            \State $s \gets \sqrt{\sin\theta}$
+            \State $u \gets s{\cdot}x$
+            \If{$u < 0.1$}
+                \State $y_\Delta \gets u{\cdot}u{\cdot}(0.41022-u{\cdot}(1.1866-u{\cdot}(2.3689-u{\cdot}4.1771)))$
+            \Else
+                \State $u_s \gets \sqrt{u} $
+                \State $u' \gets (u_s-1)/(u_s+1) $
+                \State $y_\Delta \gets \ldots u'...$
+            \EndIf
+            \State \textbf{return} $y_0+y_\Delta{\cdot}s\cdot\sin\theta$
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+\input{../bla.tex}
 
 \appendix % if required
 \section{Appendix title}
