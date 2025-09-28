@@ -42,11 +42,11 @@ def _primeimpl_yscale( xp ):
     # the way the y(x) curves behavour near x=0.
     return  ( ( 1 + xp )**2 ) * ( 1 - xp )
 
-def y_unprime( xp, yp ):
-    y = yp.copy() if hasattr(yp,'copy') else yp
-    y *= _primeimpl_yscale(xp)
-    y -= _primeimpl_yshift(xp)
-    return y
+#def y_unprime( xp, yp ):
+#    y = yp.copy() if hasattr(yp,'copy') else yp
+#    y *= _primeimpl_yscale(xp)
+#    y -= _primeimpl_yshift(xp)
+#    return y
 
 def xy_unprime( xp, yp ):
     x = ( (xp+1)/(1-xp) )**2
