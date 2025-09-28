@@ -1,4 +1,26 @@
-def taylor_y0_coeffs( mode ):
+def taylor_y0_coeffs( mode, fpmode ):
+    assert fpmode in ('mpf','luxrecipe','stdrecipe')
+    p = _mpf_taylor_y0_coeffs( mode )
+    if fpmode=='mpf':
+        return p
+    return _chop_for_recipe( p, lux=(fpmode=='luxrecipe') )
+
+def taylor_ydelta_coeffs( mode, fpmode ):
+    assert fpmode in ('mpf','luxrecipe','stdrecipe')
+    p = _mpf_taylor_ydelta_coeffs( mode )
+    if fpmode=='mpf':
+        return p
+    return _chop_for_recipe( p, lux=(fpmode=='luxrecipe') )
+
+def _chop_for_recipe( p, lux ):
+    skip2mode = (float(p[0])==0 and float(p[1])==0)
+    def n(i):
+        if lux:
+            return 14
+        return [12,8,5,3,3,2][max(0,i-1) if skip2mode else i]
+    return [ float(f'%.{n(i)}g'%float(e)) for i,e in enumerate(p) ]
+
+def _mpf_taylor_y0_coeffs( mode ):
     from .mpmath import mp, mpf
     #5th order taylor coefficients for y(x,theta=0)
     if mode == 'primary':
@@ -31,7 +53,7 @@ def taylor_y0_coeffs( mode ):
                  mpf("-655177/3118500") ]
     assert False
 
-def taylor_ydelta_coeffs( mode ):
+def _mpf_taylor_ydelta_coeffs( mode ):
     from .mpmath import mp, mpf
     #5th order taylor coefficients for y(x,theta=pi)-y(x,theta=0):
     if mode == 'primary':
