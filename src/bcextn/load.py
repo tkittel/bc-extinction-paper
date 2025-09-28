@@ -153,6 +153,8 @@ def load_legendre( mode, is_lux = False ):
     key = ('leg',fn1, fn2, mode, is_lux )
     if key in _cache_leg:
         return _cache_leg[key]
+
+    #Open files:
     key_filedata = ('filedata',fn1,fn2)
     data = _cache_leg.get( key_filedata )
     if not data:
@@ -162,9 +164,11 @@ def load_legendre( mode, is_lux = False ):
         _cache_leg[ key_filedata] = (data1,data2)
     else:
         data1, data2 = data
-    p0 = data1[f'yprime_{mode}_0'][:]
-    p90 = data1[f'yprime_{mode}_90'][:]#fixme: obsolete?
+
+    #Extract relevant polynomial coefficients:
+    p0 = data1[f'polycoeff_xprime_to_y-{mode}_at_th0'][:]
     pdelta = data2[f'ydelta_{mode}'][:]
-    result = dict(p0=p0, p90=p90, pdelta=pdelta)
+
+    result = dict(p0=p0, pdelta=pdelta)
     _cache_leg[key] = result
     return result
