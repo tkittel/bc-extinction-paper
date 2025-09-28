@@ -1,7 +1,6 @@
 import numpy as np
 import math
 from .mpmath import mp, mpf
-from . import trf
 
 kDeg2Rad = np.pi/180
 
@@ -92,7 +91,7 @@ class ClassicCurve_ScndGauss:
     def calcThetaPars( self, theta, params ):
         assert len(params)==5
         p = params
-        u = math.cos( 2*float(theta)*kDeg2Rad )#fixme : mpf?
+        u = math.cos( 2*float(theta)*kDeg2Rad )
         A = p[0]   + p[1]*u  + p[2]*u**2
         B = p[3]   + p[4]*u
         return A, B
@@ -126,7 +125,7 @@ class ClassicCurve_ScndLorentz:
     def calcThetaPars( self, theta, params ):
         assert len(params)==6
         p = params
-        u = math.cos( 2*float(theta)*kDeg2Rad )#fixme : mpf?
+        u = math.cos( 2*float(theta)*kDeg2Rad )
         A = p[0]+p[1]*u
         B = ( (p[2]*u)
               if u <= 0
@@ -161,7 +160,7 @@ class ClassicCurve_ScndFresnel:
     def calcThetaPars( self, theta, params ):
         assert len(params)==5
         p = params
-        u = math.cos( 2*float(theta)*kDeg2Rad )#fixme : mpf?
+        u = math.cos( 2*float(theta)*kDeg2Rad )
         A = p[0]+p[1]*u
         B = p[2]+p[3]*((p[4]-u)**2)
         return A, B
@@ -192,20 +191,22 @@ class ProposedCurve_StdLegFit:
     def __call__( self, x, theta ):
         if not hasattr(self,'_fcts'):
             self.__do_init()
-        #sinth = math.sin( float(theta)*kDeg2Rad )
         sinth = float(mp.sin(mp.radians(mpf(theta))))
         return self.__fct(x,sinth)
 
     def __do_init(self):
-        assert not hasattr(self,'_fcts')
-        is_lux, mode = self._poly_coeff_src()
         from .load import load_legendre
-        data = load_legendre( mode = mode, is_lux = is_lux )
-        p0_fct  = np.polynomial.polynomial.Polynomial( data['p0'] )
-        pdelta_fct = np.polynomial.polynomial.Polynomial( data['pdelta'] )
         from .taylor_recipes import taylor_ydelta_coeffs, taylor_y0_coeffs
-        y0_taylor_fct = np.polynomial.polynomial.Polynomial(taylor_y0_coeffs( mode ))
-        ydelta_taylor_fct = np.polynomial.polynomial.Polynomial(taylor_ydelta_coeffs( mode ))
+        NpPoly = np.polynomial.polynomial.Polynomial
+
+        assert not hasattr(self,'_fcts')
+        is_lux, mode = self._lux_and_polycoeffsrc()
+        data = load_legendre( mode = mode, is_lux = is_lux )
+        p0_fct  = NpPoly( data['p0'] )
+        pdelta_fct = NpPoly( data['pdelta'] )
+        fpmode = 'luxrecipe' if is_lux else 'stdrecipe'
+        y0_taylor_fct = NpPoly(taylor_y0_coeffs( mode=mode, fpmode=fpmode ))
+        ydelta_taylor_fct = NpPoly(taylor_ydelta_coeffs( mode=mode, fpmode=fpmode ))
         setattr( self,'_fcts',( p0_fct, pdelta_fct, y0_taylor_fct, ydelta_taylor_fct ) )
         from .new_recipes import recipe_taylor_cutoff, recipe_taylor_order
         assert ydelta_taylor_fct.degree() == recipe_taylor_order()
@@ -214,6 +215,9 @@ class ProposedCurve_StdLegFit:
         highx_thr = recipe_highx_cutoff()
         highx_pow = recipe_highx_pow(mode=mode)
         taylor_thr = recipe_taylor_cutoff(lux=is_lux)
+        def bc2025_xprime( x ):
+            xs = x**0.5
+            return (xs-1.0) / (xs+1.0)
         @np.vectorize
         def f( x, sintheta ):
             ( fct_yp_theta0,
@@ -227,8 +231,8 @@ class ProposedCurve_StdLegFit:
                 if x > highx_thr:
                     return f(highx_thr,sintheta)*(highx_thr/x)**highx_pow
                 xp = bc2025_xprime( x )
-                y0 = trf.y_unprime( xp, fct_yp_theta0( xp ) )
-            #need ydelta at x=x*sqrt(sintheta):=u_x
+                y0 = fct_yp_theta0( xp )
+            #need ydelta at u_x = x*sqrt(sintheta):
             sqrt_sinth = math.sqrt(sintheta)
             u_x = x * sqrt_sinth
             if u_x < taylor_thr:
@@ -241,28 +245,28 @@ class ProposedCurve_StdLegFit:
         self.__fct = f
 
 class ProposedCurve_Primary(ProposedCurve_StdLegFit):
-    def _poly_coeff_src( self ):
+    def _lux_and_polycoeffsrc( self ):
         return False, 'primary'
 class ProposedLuxCurve_Primary(ProposedCurve_StdLegFit):
-    def _poly_coeff_src( self ):
+    def _lux_and_polycoeffsrc( self ):
         return True, 'primary'
 class ProposedCurve_ScndGauss(ProposedCurve_StdLegFit):
-    def _poly_coeff_src( self ):
+    def _lux_and_polycoeffsrc( self ):
         return False, 'scndgauss'
 class ProposedLuxCurve_ScndGauss(ProposedCurve_StdLegFit):
-    def _poly_coeff_src( self ):
+    def _lux_and_polycoeffsrc( self ):
         return True, 'scndgauss'
 class ProposedCurve_ScndLorentz(ProposedCurve_StdLegFit):
-    def _poly_coeff_src( self ):
+    def _lux_and_polycoeffsrc( self ):
         return False, 'scndlorentz'
 class ProposedLuxCurve_ScndLorentz(ProposedCurve_StdLegFit):
-    def _poly_coeff_src( self ):
+    def _lux_and_polycoeffsrc( self ):
         return True, 'scndlorentz'
 class ProposedCurve_ScndFresnel(ProposedCurve_StdLegFit):
-    def _poly_coeff_src( self ):
+    def _lux_and_polycoeffsrc( self ):
         return False, 'scndfresnel'
 class ProposedLuxCurve_ScndFresnel(ProposedCurve_StdLegFit):
-    def _poly_coeff_src( self ):
+    def _lux_and_polycoeffsrc( self ):
         return True, 'scndfresnel'
 
 ########################################################
@@ -375,12 +379,8 @@ def load_fitted_curve_parameters(mode):
     #Clip values for appearing nicer in the paper. But also make sure that we
     #actually use the clipped values in performance plots!
     def fmt( key, x ):
-        if 'orig' in key:
-            #FIXME: return float('%.3g'%x)
-            return float('%.5g'%x)
-        else:
-            #FIXME: return float('%.4g'%x)
-            return float('%.7g'%x)
+        #Fixme: revisit the fit code and only ever store the clipped values!
+        return float('%.7g'%x)
     from .data import load_json_data
     fn = 'global_refitted_classic_curves.json'
     if mode != 'primary':
@@ -391,10 +391,4 @@ def load_fitted_curve_parameters(mode):
     _cache_fcp[key] = data
     return data
 
-@np.vectorize
-def np_fsum3( a, b, c ):
-    return math.fsum([a,b,c])
 
-def bc2025_xprime( x ):
-  xs = x**0.5
-  return (xs-1.0) / (xs+1.0)
