@@ -5,8 +5,8 @@ import pathlib
 import numpy as np
 
 def is_html( out_filename ):
-    is_html = out_filename.endswith('.html')
-    is_tex = out_filename.endswith('.tex')
+    is_html = pathlib.Path(out_filename).name.endswith('.html')
+    is_tex = pathlib.Path(out_filename).name.endswith('.tex')
     assert int(is_html) + int(is_tex) == 1
     return is_html
 

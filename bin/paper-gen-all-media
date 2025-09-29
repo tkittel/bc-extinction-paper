@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+
+import pathlib
+import subprocess
+import shlex
+import sys
+import multiprocessing
+import tqdm
+import random
+
+cmds = """
+printcode latex <DESTDIR>/recipes.tex
+plot table1 updated destdir=<DESTDIR>
+plot table1 diff destdir=<DESTDIR>
+plot table3 updated destdir=<DESTDIR>
+plot table3 diff destdir=<DESTDIR>
+plot table4 updated destdir=<DESTDIR>
+plot table4 diff destdir=<DESTDIR>
+"""
+
+def parse_cmds():
+    bindir = pathlib.Path(__file__).parent.absolute()
+    destdir = bindir.parent.joinpath('paper','generated').absolute()
+    assert destdir.is_dir()
+    for c in cmds.splitlines():
+        if not c.strip() or c.strip().startswith('#'):
+            continue
+        c = shlex.split(c.strip())
+        prog = bindir.joinpath(c[0])
+        assert prog.is_file()
+        c[0] = prog
+        for i in range(1,len(c)):
+            if '<DESTDIR>' in c[i]:
+                c[i] = c[i].replace('<DESTDIR>',str(destdir))
+        yield [str(e) for e in c]
+
+def worker( cmd ):
+    res = subprocess.run([sys.executable] + cmd,check=True, capture_output=True)
+    assert res.returncode==0
+    return 'success'
+
+def main():
+    do_mp = ( 'nomp' not in sys.argv[1:] )
+    cmdlist = list( parse_cmds() )
+
+    if do_mp:
+        worklist = cmdlist[:]
+        random.shuffle(worklist)#more reliable progress bar
+        with multiprocessing.Pool() as pool:
+            results = list(tqdm.tqdm( pool.imap_unordered(worker, worklist,chunksize=1),
+                                      total=len(worklist) ))
+    else:
+        results = []
+        for cmd in cmdlist:
+            print()
+            print("Launching: %s"%shlex.join(cmd))
+            print()
+            results.append( worker(cmd) )
+
+    if len(results) != len(cmdlist) or set(results) != set(['success']):
+        raise SystemExit('ERROR: Errors detected during some jobs.')
+
+    print("All done")
+
+if __name__ == '__main__':
+    main()
