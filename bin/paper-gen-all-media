@@ -25,6 +25,10 @@ plot cmprecipes lux primary outfile=<DESTDIR>/cmprecipes_primary_lux.pdf
 plot cmprecipes lux scndgauss outfile=<DESTDIR>/cmprecipes_scndgauss_lux.pdf
 plot cmprecipes lux scndlorentz outfile=<DESTDIR>/cmprecipes_scndlorentz_lux.pdf split45
 plot cmprecipes lux scndfresnel outfile=<DESTDIR>/cmprecipes_scndfresnel_lux.pdf
+plot breakdown primary outfile=<DESTDIR>/prec_classicrecipe_2d_primary.pdf
+plot breakdown scndgauss outfile=<DESTDIR>/prec_classicrecipe_2d_scndgauss.pdf
+plot breakdown scndlorentz outfile=<DESTDIR>/prec_classicrecipe_2d_scndlorentz.pdf
+plot breakdown scndfresnel outfile=<DESTDIR>/prec_classicrecipe_2d_scndfresnel.pdf
 """
 
 def parse_cmds():

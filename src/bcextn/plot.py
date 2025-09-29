@@ -688,7 +688,8 @@ def main_spread( args ):
     plt.ylabel('Max relative spread in y values for different theta')
     plt.show()
 
-def plot_breakdown( mode, curve, ref ):
+def plot_breakdown( mode, curve, ref, precision_norm, outfile=None,forpaper=True ):
+    assert precision_norm in ('y','min_y_1minusy')
     assert curve in ('classic','updatedclassic','proposed','proposedlux')
     assert ref in ('numint','proposedlux')
     assert curve != ref
@@ -711,7 +712,7 @@ def plot_breakdown( mode, curve, ref ):
         print("Skipping plot breakdown of proposed curve since it is not yet ready")
         return
     if curve=='proposedlux' and ProposedLuxCurve is None:
-        print("Skipping plot breakdown of proposed curve since it is not yet ready")
+        print("Skipping plot breakdown of proposed lux curve since it is not yet ready")
         return
 
     from .load import load_xscan as dataload
@@ -720,7 +721,7 @@ def plot_breakdown( mode, curve, ref ):
         refdata = dataload(mode)
         x = refdata['xvals']
         th = array(sorted(float(e) for e in refdata['th_keys']))
-        _last_lookup = [None,None]
+        _last_lookup = [None,None]#cache (thval,ypvals)
         def find_nearest_idx( arr, val):
             assert isinstance(arr, np.ndarray)
             idx = (np.abs(arr - val)).argmin()
@@ -733,13 +734,17 @@ def plot_breakdown( mode, curve, ref ):
                         _last_lookup[0] = thval
                         _last_lookup[1] = _yp
             assert _last_lookup[0] == thval
-            return _last_lookup[1][find_nearest_idx(x,xval)]
+            idx = find_nearest_idx(x,xval)
+            assert abs(x[idx]-xval)<1e-12
+            return _last_lookup[1][idx]
     else:
         assert ref == 'proposedlux'
         #Fixme: higher res for paper:
         #Adjust the range and resolution as needed:
-        x = np.geomspace(0.1, 100.0, 400)
-        th = np.linspace(0.1, 100.0, 400)#NB: Might need even higher due to fine feature near 45degree for scndlorentz
+        x = np.geomspace(1e-3, 100.0, 400 if forpaper else 100 )
+        #NB: Need very high resolution to show fine feature near 45degree for
+        #scndlorentz:
+        th = np.linspace(0.0, 90.0, 800 if forpaper else 100 )
         ref_curve = ProposedLuxCurve()
         def lookup_ref(xval, thval):
             return ref_curve(xval,thval)
@@ -755,13 +760,27 @@ def plot_breakdown( mode, curve, ref ):
         assert curve=='proposedlux'
         curvefct = ProposedLuxCurve()
 
+    if precision_norm=='min_y_1minusy':
+        def normcalc(_y):
+            return min(abs(_y),abs(1.0-_y))
+    else:
+        assert precision_norm=='y'
+        def normcalc(_y):
+            return _y
+
     @np.vectorize
     def z_calc( xval, thval ):
         if hasattr(curve,'breakdown') and curvefct.breakdown(xval, thval):
             return 1.0
         y = curvefct(xval, thval)
         yref = lookup_ref(xval,thval)
-        return max(0.0,min(1.0,float(abs((y-yref)/yref))))#FIXME: DIFFERENT PRECISION DEFINITION
+        norm = normcalc(yref)
+        if not norm:
+            if y==yref:
+                return 0.0
+            else:
+                assert False, "bad z_calc"
+        return max(0.0,min(1.0,float(abs(y-yref)/(norm))))
 
     map_top = ( 25, 30 )
     @np.vectorize
@@ -823,21 +842,57 @@ def plot_breakdown( mode, curve, ref ):
     plt.xlim(x[0],x[-1])
     plt.xlabel(r'$x$')
     plt.ylabel(r'$\theta$')
-    plt_savefig_pdf(plt,'%s_vs_%s.pdf'%(curve,ref))
-    plt.show()
+    if outfile:
+        plt_savefig_pdf(plt,outfile)
+    else:
+        plt.show()
 
 def main_breakdown( args ):
+    raw_norm = False
+    precision_norm = 'min_y_1minusy'
+    while 'abs' in args:
+        args.remove('abs')
+        precision_norm = 'y'
+
+    highres = False
+    while 'highres' in args:
+        args.remove('highres')
+        highres = True
+
+    outfile = None
+    for a in args:
+        if a.startswith('outfile='):
+            outfile=pathlib.Path(a[len('outfile='):])
+    assert (outfile is None) or outfile.parent.is_dir()
+    args = [a for a in args if not a.startswith('outfile=')]
+
     mode = args[0] if args else 'missing'
     modes=['primary','scndfresnel','scndlorentz','scndgauss']
     if len(args)>1 or mode not in modes:
         raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
 
-    plot_breakdown( mode, 'proposedlux', ref='numint')
-    plot_breakdown( mode, 'classic', ref='proposedlux')
-    plot_breakdown( mode, 'updatedclassic', ref='proposedlux')
-    plot_breakdown( mode, 'proposed', ref='proposedlux')
-    #plot_breakdown( mode, 'classic', ref='numint')
-    #plot_breakdown( mode, 'updatedclassic', ref='numint')
+    def doit( _curve, _ref, **kw ):
+        plot_breakdown(mode=mode,
+                       curve=_curve,
+                       ref=_ref,
+                       precision_norm=precision_norm,
+                       **kw )
+
+    if outfile:
+        #For paper:
+        assert precision_norm == 'min_y_1minusy'
+        assert not highres, "highres does nothing when using forpaper mode"
+        doit('classic','proposedlux',outfile=outfile,forpaper=True)
+        return
+
+    if highres:
+        ref = 'proposedlux'
+    else:
+        ref = 'numint'
+    doit( 'classic', ref)
+    doit( 'updatedclassic', ref)
+    doit( 'proposed', ref)
+    doit( 'proposedlux', 'numint')
 
 def main_highx( args ):
     mode = args[0] if args else 'missing'
