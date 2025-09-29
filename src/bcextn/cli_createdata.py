@@ -35,7 +35,7 @@ def worker2( args ):
     res = worker( args )
     return fcttype, res
 
-def find_output_fn( quick, table1_points, thetascan, xscan090,
+def find_output_fn( quick, table1_points, thetascan, xscan090, xscannear45,
                     is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel, is_user_test_data ):
     assert sum(int(bool(e)) for e in [is_scnd_gauss,is_scnd_lorentz,is_scnd_fresnel]) in (0,1)
     assert not (table1_points and thetascan)
@@ -52,6 +52,8 @@ def find_output_fn( quick, table1_points, thetascan, xscan090,
         bn += '_thetascan'
     if xscan090:
         bn += '_xscan090'
+    if xscannear45:
+        bn += '_xscannear45'
     if is_user_test_data:
         #Override
         bn = 'bc2025_reference_x_sintheta_yp'
@@ -87,7 +89,7 @@ def main():
     import multiprocessing
     subjobs = []
     for m in [None,'--scnd-gauss','--scnd-lorentz','--scnd-fresnel']:
-        for t in [None,'--table1','--thetascan','--xscan090']:
+        for t in [None,'--table1','--thetascan','--xscan090','--xscannear45']:
             j = []
             if m is not None:
                 j.append(m)
@@ -128,12 +130,13 @@ def doit( args ):
     table1_points = '--table1' in args
     thetascan = '--thetascan' in args
     xscan090 = '--xscan090' in args
-    xscan = not( xscan090 or thetascan or table1_points or is_user_test_data )
+    xscannear45 = '--xscannear45' in args
+    xscan = not( xscannear45 or xscan090 or thetascan or table1_points or is_user_test_data )
     is_scnd_gauss = '--scnd-gauss' in args
     is_scnd_lorentz = '--scnd-lorentz' in args
     is_scnd_fresnel = '--scnd-fresnel' in args
 
-    assert sum(int(bool(e)) for e in (xscan,table1_points,thetascan,xscan090,is_user_test_data))==1
+    assert sum(int(bool(e)) for e in (xscan,table1_points,thetascan,xscan090,xscannear45,is_user_test_data))==1
     assert not (is_scnd_gauss and is_scnd_lorentz)
     assert not (is_scnd_gauss and is_scnd_fresnel)
     assert not (is_scnd_fresnel and is_scnd_lorentz)
@@ -195,8 +198,13 @@ def doit( args ):
         xvals = np.geomspace( *x_range, nx )
         theta_vals = np.asarray([0.0, 90.0],dtype=float)
 
+    if xscannear45:
+        #For providing xscan points also at (45-eps,45+eps), since the classic
+        #scndlorentz recipe has a breakdown at 45<th<45+eps.
+        theta_vals = np.asarray([44.99, 45.01],dtype=float)
+
     def find_outname():
-        return find_output_fn( quick, table1_points, thetascan, xscan090,
+        return find_output_fn( quick, table1_points, thetascan, xscan090, xscannear45,
                                is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel,
                                is_user_test_data = is_user_test_data )
 

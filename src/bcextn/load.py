@@ -1,14 +1,18 @@
 
 # Load data previously created with the createdata script
 
-def load_xscan( mode = 'primary' ):
+def load_xscan( mode = 'primary', split45 = False ):
     if mode.startswith('curve::'):
         return load_curves( mode[len('curve::'):], 'xscan' )
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
     if mode == 'primary':
-        return _loadcache('bcdata.json')
+        fn ='bcdata.json'
     else:
-        return _loadcache(f'bcdata_{mode}.json')
+        fn = f'bcdata_{mode}.json'
+    fn_split45 = None
+    if split45:
+        fn_split45 = fn.replace('.json','_xscannear45.json')
+    return _loadcache(fn, fn_split45=fn_split45)
 
 def load_xscan090( mode = 'primary' ):
     if mode.startswith('curve::'):
@@ -87,12 +91,17 @@ def load_table4scan_allpts():
     return _loadcache('bcdata_scndlorentz_table1pts.json')
 
 _cache={}
-def _loadcache( fn ):
+def _loadcache( fn, fn_split45 = None ):
     from .data import load_json_data as _load
-    d = _cache.get(fn)
+    key = (fn,fn_split45)
+    d = _cache.get(key)
     if not d:
-        d = _prepdata(_load(fn))
-        _cache[fn] = d
+        rawdata = _load(fn)
+        if fn_split45 is not None:
+            rawdata45 = _load(fn_split45)
+            rawdata = _apply_split45( rawdata, rawdata45 )
+        d = _prepdata(rawdata)
+        _cache[key] = d
     return d
 
 def _prepdata( data ):
@@ -172,3 +181,18 @@ def load_legendre( mode, is_lux = False ):
     result = dict(p0=p0, pdelta=pdelta)
     _cache_leg[key] = result
     return result
+
+def _apply_split45( rawdata, rawdata45 ):
+    import copy
+    assert all( abs(a-b)/(abs(a)+abs(b))<1e-14
+                for a,b in zip(rawdata['xvals'],rawdata45['xvals']))
+    assert set(rawdata.keys()) == set(rawdata45.keys())
+    assert set(rawdata.keys()) == set(['theta_2_calctime', 'theta_2_ypvals', 'theta_2_ypvals_maxerr', 'xvals'])
+    res = { 'xvals' : [e for e in rawdata['xvals']] }
+    for k in ['theta_2_calctime', 'theta_2_ypvals', 'theta_2_ypvals_maxerr']:
+        d = dict( (th, yvals) for th,yvals in rawdata[k].items()
+                  if abs(float(th)-45)>1e-9 )
+        for th,yvals in rawdata45[k].items():
+            d[th] = yvals
+        res[k] = dict( sorted(d.items()) )
+    return copy.deepcopy(res)
