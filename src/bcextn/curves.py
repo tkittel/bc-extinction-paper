@@ -419,7 +419,6 @@ def _wrap_pyrecipe_as_proposed_curves(mode):
         import pathlib
         f = pathlib.Path(__file__).parent.parent.parent.joinpath('recipes',
                                                                  'bc2025.py')
-        print(f)
         assert f.is_file()
         _cache_wrappyrecipe['<recipefile>'] = import_file_as_module(f,'bc2025')
     recipe = _cache_wrappyrecipe['<recipefile>']
