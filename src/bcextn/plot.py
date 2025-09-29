@@ -441,8 +441,8 @@ def do_cmprecipes( *,
     if not outfile:
         plt.show()
         return
-    plt.savefig(outfile,dpi=300)
-    print("Wrote: %s"%outfile)
+
+    plt_savefig_pdf(plt,outfile)
 
 def main_recipevstaylor( args ):
     from .eq36_lowx_taylor import mode_taylorfct
@@ -812,7 +812,7 @@ def plot_breakdown( mode, curve, ref ):
     plt.xlim(x[0],x[-1])
     plt.xlabel(r'$x$')
     plt.ylabel(r'$\theta$')
-    plt.savefig('%s_vs_%s.pdf'%(curve,ref),format='pdf',dpi=300)
+    plt_savefig_pdf(plt,'%s_vs_%s.pdf'%(curve,ref))
     plt.show()
 
 def main_breakdown( args ):
@@ -1000,3 +1000,21 @@ def main_investigatefcts( args ):
     axdiff.grid()
     ax.set_xlim(0.05)
     plt.show()
+
+def plt_savefig_pdf( plt, outfile, title = None ):
+    import datetime
+    bn = pathlib.Path(outfile).name
+    assert bn.endswith('.pdf')
+    if title is None:
+        title = bn[:-4].strip()
+        assert title
+    #Important to override CreationDate to avoid constantly changing pdf files.
+    pdfdate = datetime.datetime.strptime("2025-10-01","%Y-%m-%d")
+    plt.savefig( outfile,
+                 format='pdf',
+                 dpi=300,
+                 metadata = {'Title': 'BC2025 Plot (%s)'%title,
+                             'Author': 'Thomas Kittelmann',
+                             'CreationDate': pdfdate
+                             } )
+    print("Wrote: %s"%outfile)
