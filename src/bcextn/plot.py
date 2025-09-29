@@ -225,6 +225,11 @@ def main_table4( args ):
                 orig_table )
 
 def main_cmprecipes( args ):
+    use_final_recipes = True
+    while 'nofinal' in args:
+        args.remove('nofinal')
+        use_final_recipes = False
+
     do_strict = True
     while 'nostrict' in args:
         args.remove('nostrict')
@@ -259,18 +264,23 @@ def main_cmprecipes( args ):
                    mode = mode,
                    do_strict = do_strict,
                    do_lux = do_lux,
-                   do_xscan090 = do_xscan090 )
+                   do_xscan090 = do_xscan090,
+                   use_final_recipes = use_final_recipes )
 
-def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux, do_xscan090  ):
+def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux, do_xscan090,
+                   use_final_recipes ):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
     from . import curves
     ( ClassicCurve,
       UpdatedClassicCurve,
       ProposedCurve,
-      ProposedLuxCurve ) = curves.mode_curves(mode)
+      ProposedLuxCurve ) = curves.mode_curves( mode,
+                                               use_actual_proposed_pyrecipe
+                                               = use_final_recipes )
     if do_lux:
       ProposedCurve = ProposedLuxCurve
     del ProposedLuxCurve
+
 
     from .load import load_xscan090, load_xscan
 
@@ -689,8 +699,9 @@ def plot_breakdown( mode, curve, ref ):
     else:
         assert ref == 'proposedlux'
         #Fixme: higher res for paper:
-        x = np.geomspace(0.1, 100.0, 400)  # Adjust the range and resolution as needed
-        th = np.linspace(0.1, 100.0, 400)
+        #Adjust the range and resolution as needed:
+        x = np.geomspace(0.1, 100.0, 400)
+        th = np.linspace(0.1, 100.0, 400)#NB: Might need even higher due to fine feature near 45degree for scndlorentz
         ref_curve = ProposedLuxCurve()
         def lookup_ref(xval, thval):
             return ref_curve(xval,thval)
@@ -785,10 +796,10 @@ def main_breakdown( args ):
 
     plot_breakdown( mode, 'proposedlux', ref='numint')
     plot_breakdown( mode, 'classic', ref='proposedlux')
-    #plot_breakdown( mode, 'classic', ref='numint')
-    #plot_breakdown( mode, 'updatedclassic', ref='numint')
     plot_breakdown( mode, 'updatedclassic', ref='proposedlux')
     plot_breakdown( mode, 'proposed', ref='proposedlux')
+    #plot_breakdown( mode, 'classic', ref='numint')
+    #plot_breakdown( mode, 'updatedclassic', ref='numint')
 
 def main_highx( args ):
     mode = args[0] if args else 'missing'
