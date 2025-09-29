@@ -3,16 +3,18 @@
 import NCrystalDev as NC
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 print("""NOTE: As of Aug26 this script must be run from an environment with a
 development version of NCrystal. Once a version of NCrystal is released with
 extinction support (likely during Fall 2025), this will be possible with the
-standard NCrystal.  """)
+standard NCrystal.""")
 
-mode = 'be'
+do_pdf = False
+mode = 'beo'
 if mode == 'be':
-    base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'
-    wlmax = 6
+    base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'#;dcutoffup=0.4'
+    wlmax = 5
     domainsize_mu_list = [ 3, 5, 10, 20 ]
 elif mode == 'bi':
     base_cfgstr = 'stdlib::Bi_sg166.ncmat;comp=bragg'
@@ -31,6 +33,10 @@ else:
 
 wls = np.linspace(0.0,wlmax,2000)
 
+xsect_max = [0.0]
+def new_plot():
+    xsect_max[0] = 0.0
+
 def calc_xs( domainsize_mu, mdl, wls ):
     if '/' not in mdl:
         mdlpars = None
@@ -47,7 +53,9 @@ def calc_xs( domainsize_mu, mdl, wls ):
             cfgstr += f'/{mdlpars}'
     print(cfgstr)
     sc = NC.createScatter(cfgstr)
-    return sc.xsect(wl=wls)
+    xs = sc.xsect(wl=wls)
+    xsect_max[0] = max(xsect_max[0],xs.max())
+    return xs
 
 #colors inspired by http://www.mulinblog.com/a-color-palette-optimized-for-data-visualization/
 cols = dict(
@@ -71,16 +79,29 @@ def plot_noextn():
               label='No extinction',
               ls=':',color=cols['gray'],**common
              )
-def plot_wrapup():
+def plot_wrapup(fn):
     plt.xlabel('Neutron Wavelength ($\\AA$)')
-    plt.ylabel('Bragg diffraction cross section per atom (barn)')
-    plt.ylim(0)
+    plt.ylabel(r'$\sigma_\text{Bragg}$ per atom (barn)')
+    ymax = None
+    if xsect_max[0] > 1:
+        ymax = math.ceil(xsect_max[0]) + 1
+        if ymax > 6 and int(ymax)%2:
+            ymax += 1
+    plt.ylim(0,ymax)
+    xsect_max[0] = 0.0
     plt.xlim(0,wlmax)
     plt.legend()
     plt.grid()
-    plt.show()
+    if do_pdf:
+        fnpdf = f'ncrystal_{fn}_{mode}.pdf'
+        plt.savefig( fnpdf, format='pdf' )
+        print(f"Wrote: {fnpdf}")
+        plt.cla()
+    else:
+        plt.show()
 
 
+new_plot()
 plot_noextn()
 for domainsize_mu, linecol in [ (2,cols['green']),
                                 (10,cols['blue']),
@@ -89,13 +110,14 @@ for domainsize_mu, linecol in [ (2,cols['green']),
               calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/yp:cls'),
               label=f'Becker-Coppens 1974 (l=${domainsize_mu}\\mu$m)',
               **common, color=linecol )
-plot_wrapup()
+plot_wrapup('bc_yp_breakdown')
 
 mdl2pars = { 'sabine' : dict(color=cols['orange'],ls='-.'),
              'bc/yp:cls' : dict(color=cols['blue'],ls='-'),
              'bc/yp:lux' : dict(color=cols['green'],ls='-'),
              'bc/yp:ucls' : dict(color=cols['purple'],ls='-'),
             }
+new_plot()
 plot_noextn()
 for domainsize_mu in domainsize_mu_list:
     for mdl, mdlname in [ ('sabine','Sabine 2006'),
@@ -107,4 +129,4 @@ for domainsize_mu in domainsize_mu_list:
                   calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl=mdl),
                   label=f'{mdlname} (l=${domainsize_mu}\\mu$m)',
                   **common, **mdl2pars[mdl] )
-plot_wrapup()
+plot_wrapup('yp_cmp')
