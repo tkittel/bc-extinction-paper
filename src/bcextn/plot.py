@@ -240,10 +240,8 @@ def main_cmprecipes( args ):
     for a in args:
         if a.startswith('outfile='):
             outfile=pathlib.Path(a[len('outfile='):])
-    assert outfile.parent.is_dir()
+    assert (outfile is None) or outfile.parent.is_dir()
     args = [a for a in args if not a.startswith('outfile=')]
-
-
 
     use_final_recipes = True
     while 'nofinal' in args:
@@ -254,6 +252,12 @@ def main_cmprecipes( args ):
     while 'nostrict' in args:
         args.remove('nostrict')
         do_strict = False
+
+    do_split45 = False
+    while 'split45' in args:
+        args.remove('split45')
+        do_split45 = True
+
     do_lux = False
     while 'lux' in args:
         args.remove('lux')
@@ -285,12 +289,14 @@ def main_cmprecipes( args ):
                    do_strict = do_strict,
                    do_lux = do_lux,
                    do_xscan090 = do_xscan090,
+                   do_split45 = do_split45,
                    use_final_recipes = use_final_recipes,
                    outfile = outfile )
 
 def do_cmprecipes( *,
                    do_reldiff, do_vs_old, mode,
                    do_strict, do_lux, do_xscan090,
+                   do_split45,
                    use_final_recipes, outfile ):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
     from . import curves
@@ -304,12 +310,17 @@ def do_cmprecipes( *,
       ProposedCurve = ProposedLuxCurve
     del ProposedLuxCurve
 
-
+    assert not (do_split45 and do_xscan090), "incompatible"
     from .load import load_xscan090, load_xscan
 
     if do_vs_old:
         assert do_reldiff, "vsold only for reldiff"
-    data = (load_xscan090 if do_xscan090 else load_xscan)(mode=mode)
+    if do_xscan090:
+        data = load_xscan090(mode=mode)
+    else:
+        data = load_xscan(mode=mode,split45=do_split45)
+
+
     xvals = data['xvals']
 
     def fleq( a, b, eps=1e-12 ):
