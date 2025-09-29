@@ -16,6 +16,14 @@ plot table3 updated destdir=<DESTDIR>
 plot table3 diff destdir=<DESTDIR>
 plot table4 updated destdir=<DESTDIR>
 plot table4 diff destdir=<DESTDIR>
+plot cmprecipes primary outfile=<DESTDIR>/cmprecipes_primary.pdf
+plot cmprecipes scndgauss outfile=<DESTDIR>/cmprecipes_scndgauss.pdf
+plot cmprecipes scndlorentz outfile=<DESTDIR>/cmprecipes_scndlorentz.pdf
+plot cmprecipes scndfresnel outfile=<DESTDIR>/cmprecipes_scndfresnel.pdf
+plot cmprecipes lux primary outfile=<DESTDIR>/cmprecipes_primary_lux.pdf
+plot cmprecipes lux scndgauss outfile=<DESTDIR>/cmprecipes_scndgauss_lux.pdf
+plot cmprecipes lux scndlorentz outfile=<DESTDIR>/cmprecipes_scndlorentz_lux.pdf
+plot cmprecipes lux scndfresnel outfile=<DESTDIR>/cmprecipes_scndfresnel_lux.pdf
 """
 
 def parse_cmds():
