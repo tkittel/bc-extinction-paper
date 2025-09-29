@@ -20,9 +20,11 @@ def fix_table_fmt( table, out_filename ):
         table.columns.name = r'$\sin(\theta)$'
         table.index.name = '$x$'
 
-def table_output( styled_table, out_filename ):
+def table_output( styled_table, out_filename, table_id ):
+    assert '"' not in table_id
+    #styled_table = styled_table.set_table_attributes('id="%s"'%table_id)
     if is_html(out_filename):
-        output = styled_table.to_html()
+        output = styled_table.to_html(uuid=table_id)
     else:
         output = styled_table.to_latex(convert_css=True)
     with pathlib.Path(out_filename).open('wt') as fh:
@@ -31,6 +33,8 @@ def table_output( styled_table, out_filename ):
 
 def write_updated_table1( table1_updated,
                           out_filename,
+                          *,
+                          tablename,
                           do_print = False,
                           ndigits = 4 ):
     t = table1_updated
@@ -40,11 +44,16 @@ def write_updated_table1( table1_updated,
     t = table1_updated.style.format("{:0%i.0f}"%ndigits)
     if do_print:
         print(t)#fixme does not work
-    table_output(t,out_filename)
+    table_id = 'Upd'+tablename.capitalize()
+    if ndigits!=4:
+        table_id+='Digits%i'%ndigits
+    table_output(t,out_filename,table_id=table_id)
 
 def write_table1_diff_heatmap( table_orig,
                                table_new,
-                               out_filename ,
+                               out_filename,
+                               *,
+                               tablename,
                                do_print = False,
                                norm_is_min_y_1minusy = True ):
     if not norm_is_min_y_1minusy:
@@ -67,7 +76,10 @@ def write_table1_diff_heatmap( table_orig,
                                orig_name = 'custom' )
     td = table_diff.style.background_gradient(cmap=cmap,vmin = vmin,vmax = vmax)
     td = td.format("{:.2f}")
-    table_output(td,out_filename)
+    table_id = 'Diff'+tablename.capitalize()
+    if not norm_is_min_y_1minusy:
+        table_id+='RawNorm'
+    table_output(td,out_filename,table_id =table_id)
 
 def create_custom_cmap( table,
                         scale_fct,

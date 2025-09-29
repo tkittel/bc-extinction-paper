@@ -159,19 +159,30 @@ def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct )
             as_table(df_orig), as_table(df),
             outdir.joinpath(f'{tablename}_diff.html'),
             do_print = True,
-            norm_is_min_y_1minusy = norm_is_min_y_1minusy
+            norm_is_min_y_1minusy = norm_is_min_y_1minusy,
+            tablename = tablename
            )
         ft(
             as_table(df_orig), as_table(df),
             outdir.joinpath(f'{tablename}_diff.tex'),
-            norm_is_min_y_1minusy = norm_is_min_y_1minusy
+            norm_is_min_y_1minusy = norm_is_min_y_1minusy,
+            tablename = tablename
         )
 
     if mode in ('all','updated'):
         df = _tableN_as_dataframe(data_all)
         from .print_table1_diff import write_updated_table1 as ft
-        ft( as_table(df), outdir.joinpath(f'{tablename}_updated.html'),do_print = True )
-        ft( as_table(df), outdir.joinpath(f'{tablename}_updated.tex') )
+        ft(
+            as_table(df),
+            outdir.joinpath(f'{tablename}_updated.html'),
+            tablename = tablename,
+            do_print = True
+        )
+        ft(
+            as_table(df),
+            outdir.joinpath(f'{tablename}_updated.tex'),
+            tablename = tablename,
+        )
 
 
 def main_bc1974tables( args ):
