@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+
+import pathlib
+import subprocess
+import shlex
+import shutil
+import sys
+import tempfile
+import os
+
+cmds = """
+printcode c <DESTDIR>/bc2025.c
+printcode cpp <DESTDIR>/bc2025.cpp
+printcode py <DESTDIR>/bc2025.py
+"""
+
+bindir = pathlib.Path(__file__).parent.absolute()
+destdir = bindir.parent.joinpath('recipes').absolute()
+assert destdir.is_dir()
+
+def parse_cmds():
+    for c in cmds.splitlines():
+        if not c.strip() or c.strip().startswith('#'):
+            continue
+        c = shlex.split(c.strip())
+        prog = bindir.joinpath(c[0])
+        assert prog.is_file()
+        c[0] = prog
+        for i in range(1,len(c)):
+            if '<DESTDIR>' in c[i]:
+                c[i] = c[i].replace('<DESTDIR>',str(destdir))
+        yield [str(e) for e in c]
+
+def worker( cmd ):
+    res = subprocess.run([sys.executable] + cmd,check=True, capture_output=True)
+    assert res.returncode==0
+    return 'success'
+
+def main():
+    generate()
+    print("Generation done.")
+    verify()
+    print("Verification done.")
+
+def generate():
+    cmdlist = list( parse_cmds() )
+
+    results = []
+    for cmd in cmdlist:
+        print()
+        print("Launching: %s"%shlex.join(cmd))
+        print()
+        results.append( worker(cmd) )
+
+    if len(results) != len(cmdlist) or set(results) != set(['success']):
+        raise SystemExit('ERROR: Errors detected during some jobs.')
+
+def compile_commands( srcfile, lang ):
+    assert lang in ('c','cpp')
+    is_cpp = lang=='cpp'
+    prog = shutil.which('g++') if is_cpp else shutil.which('gcc')
+    if not prog:
+        prog = shutil.which('clang++') if is_cpp else shutil.which('clang')
+    assert prog, "Only gcc or clang supported by this mini testing framework"
+    stds = ( [None, 'c++11','c++14','c++17','c++20' ]
+             if is_cpp else
+             [None, 'c99','c11' ] )
+    base= (
+        [],
+        ['-pedantic','-Wall', '-Wextra', '-Wextra' ],
+        ['-pedantic','-Wall', '-Wextra', '-Wextra','-O3' ],
+        ['-pedantic','-Wall', '-Wextra', '-Wextra','-O2' ],
+        ['-pedantic','-Wall', '-Wextra', '-Wextra','-Os' ],
+        ['-pedantic','-Wall', '-Wextra', '-Wextra','-O0','-g' ],
+    )
+    for b in base:
+        for std in stds:
+            stdl = ['-std=%s'%std] if std else []
+            cc = [prog] + stdl + ['-lm'] + b + [srcfile,'-o','testapp']
+            yield cc
+
+def verify():
+    src_cpp = destdir.joinpath('bc2025.cpp')
+    src_c = destdir.joinpath('bc2025.c')
+    src_py = destdir.joinpath('bc2025.py')
+    print(f"Checking {src_py}")
+    subprocess.run( [sys.executable,src_py], check = True )
+    compile_cmds = []
+    compile_cmds += list( compile_commands( src_cpp, 'cpp' ) )
+    compile_cmds += list( compile_commands( src_c, 'c' ) )
+    for cc in compile_cmds:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            print("Checking %s %s && ./testapp"%(
+                os.path.basename(cc[0]),
+                shlex.join(str(e) for e in cc[1:])
+            ))
+            subprocess.run( cc, cwd = temp_dir, check = True )
+            subprocess.run( './testapp', cwd = temp_dir, check = True )
+
+if __name__ == '__main__':
+    main()
