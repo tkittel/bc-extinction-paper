@@ -178,14 +178,17 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 o.append(f'  const double val = {fctname}(x,sinth);')
                 o.append(f'  const double val_lux = {fctname}_lux(x,sinth);')
                 o.append(f'  if (!(fabs(val-refval) <= {eps_std}*fmin(refval,1.0-refval))) '+'{')
-                o.append(f'    printf("bc2015_test_implementation: Failure in {fctname}(%g,%g)\\n",x,sinth);')
+                o.append(f'    printf("bc2015_test_implementation: "')
+                o.append(f'           "Failure in {fctname}(%g,%g)\\n",x,sinth);')
                 o.append( '    exit(1);')
                 o.append( '  }')
                 o.append(f'  if (!(fabs(val_lux-refval) <= {eps_lux}*fmin(refval,1.0-refval))) '+'{')
-                o.append(f'    printf("bc2015_test_implementation: Failure in {fctname_lux}(%g,%g)\\n",x,sinth);')
+                o.append(f'    printf("bc2015_test_implementation: ");')
+                o.append(f'           "Failure in {fctname_lux}(%g,%g)\\n",x,sinth);')
                 o.append( '    exit(1);')
                 o.append( '  }')
                 o.append( '}')
+                o.append( '')
 
         if lang=='py':
             o.append('def bc2015_test_implementation():')
@@ -228,10 +231,11 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
             o.append('  std::cout<<"All tests completed"<<std::endl;')
 
         if lang=='c':
-            for mode in modes:
+            for imode,mode in enumerate(modes):
                 fctname = f'bc2025_y_{mode}'
                 fctname_lux = f'{fctname}_lux'
-                o.append('')
+                if imode:
+                    o.append('')
                 o.append(f'  printf("Testing {fctname} + {fctname_lux}\\n");')
                 for x,sinth,y in refdata[mode]:
                     o.append(f'  bc2015_test_impl_{mode}(%.14g,%.14g,%.18g);'%(x,sinth,y))
@@ -246,9 +250,15 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 o.append(f'        val = {fctname}(x,sinth)')
                 o.append(f'        val_lux = {fctname}_lux(x,sinth)')
                 o.append(f'        if not ( abs(val-refval) <= {eps_std}*min(refval,1.0-refval) ):')
-                o.append(f'            raise RuntimeError("bc2015_test_implementation: Failure in {fctname}(%g,%g)"%(x,sinth))')
+                o.append(f'            raise RuntimeError(')
+                o.append(f'                "bc2015_test_implementation: "')
+                o.append(f'                "Failure in {fctname}(%g,%g)"%(x,sinth)')
+                o.append(f'            )')
                 o.append(f'        if not (abs(val_lux-refval) <= {eps_lux}*min(refval,1.0-refval)):')
-                o.append(f'            raise RuntimeError("bc2015_test_implementation: Failure in {fctname_lux}(%g,%g)"%(x,sinth))')
+                o.append(f'            raise RuntimeError(')
+                o.append(f'                "bc2015_test_implementation: "')
+                o.append(f'                "Failure in {fctname_lux}(%g,%g)"%(x,sinth)')
+                o.append(f'            )')
                 o.append(f'    print("Testing {fctname} + {fctname_lux}")')
                 for x,sinth,y in refdata[mode]:
                     o.append( '    t(%.14g,%.14g,%.18g)'%(x,sinth,y))
@@ -262,7 +272,7 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
     if include_main:
         for e in textbox(lang,'Hook for executing file as test application'):
             o.append(e)
-        o.append('')
+        #o.append('')
         if lang=='py':
             o.append('if __name__== "__main__":')
             o.append('    bc2015_test_implementation()')
