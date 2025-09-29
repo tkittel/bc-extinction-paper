@@ -225,6 +225,15 @@ def main_table4( args ):
                 orig_table )
 
 def main_cmprecipes( args ):
+    outfile = None
+    for a in args:
+        if a.startswith('outfile='):
+            outfile=pathlib.Path(a[len('outfile='):])
+    assert outfile.parent.is_dir()
+    args = [a for a in args if not a.startswith('outfile=')]
+
+
+
     use_final_recipes = True
     while 'nofinal' in args:
         args.remove('nofinal')
@@ -265,10 +274,13 @@ def main_cmprecipes( args ):
                    do_strict = do_strict,
                    do_lux = do_lux,
                    do_xscan090 = do_xscan090,
-                   use_final_recipes = use_final_recipes )
+                   use_final_recipes = use_final_recipes,
+                   outfile = outfile )
 
-def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux, do_xscan090,
-                   use_final_recipes ):
+def do_cmprecipes( *,
+                   do_reldiff, do_vs_old, mode,
+                   do_strict, do_lux, do_xscan090,
+                   use_final_recipes, outfile ):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
     from . import curves
     ( ClassicCurve,
@@ -415,7 +427,11 @@ def do_cmprecipes( do_reldiff, do_vs_old, mode, do_strict, do_lux, do_xscan090,
             continue
         print('%20s at x=1e6 and theta=0,45,90: %g   %g   %g'
               %(cn, curve()(1e6,0), curve()(1e6,45), curve()(1e6,90) ) )
-    plt.show()
+    if not outfile:
+        plt.show()
+        return
+    plt.savefig(outfile,dpi=300)
+    print("Wrote: %s"%outfile)
 
 def main_recipevstaylor( args ):
     from .eq36_lowx_taylor import mode_taylorfct
