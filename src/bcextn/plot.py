@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import scipy
 import math
+import pathlib
 
 kDeg2Rad = np.pi/180
 std_modemap = { 'yp':'theta_2_ypvals',
@@ -128,6 +129,12 @@ def _tableN_df_as_table( df ):
 def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct ):
     norm_is_min_y_1minusy = True
     modes = ['all','plot','diff','updated']
+    outdir = pathlib.Path('.')
+    for a in args:
+        if a.startswith('destdir='):
+            outdir=pathlib.Path(a[len('destdir='):])
+    assert outdir.is_dir()
+    args = [a for a in args if not a.startswith('destdir=')]
     mode = args[0] if (len(args)==1 and args[0] in modes) else None
     if not mode:
         raise SystemExit(f'Please provide {tablename} sub-mode, one of: %s'%(' '.join(modes)))
@@ -149,20 +156,22 @@ def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct )
         df = _tableN_as_dataframe(data)
         from .print_table1_diff import write_table1_diff_heatmap as ft
         ft(
-            as_table(df_orig), as_table(df), f'{tablename}_diff.html',
+            as_table(df_orig), as_table(df),
+            outdir.joinpath(f'{tablename}_diff.html'),
             do_print = True,
             norm_is_min_y_1minusy = norm_is_min_y_1minusy
            )
         ft(
-            as_table(df_orig), as_table(df), f'{tablename}_diff.tex',
+            as_table(df_orig), as_table(df),
+            outdir.joinpath(f'{tablename}_diff.tex'),
             norm_is_min_y_1minusy = norm_is_min_y_1minusy
         )
 
     if mode in ('all','updated'):
         df = _tableN_as_dataframe(data_all)
         from .print_table1_diff import write_updated_table1 as ft
-        ft( as_table(df), f'{tablename}_updated.html',do_print = True )
-        ft( as_table(df), f'{tablename}_updated.tex' )
+        ft( as_table(df), outdir.joinpath(f'{tablename}_updated.html'),do_print = True )
+        ft( as_table(df), outdir.joinpath(f'{tablename}_updated.tex') )
 
 
 def main_bc1974tables( args ):
