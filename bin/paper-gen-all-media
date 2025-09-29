@@ -25,19 +25,25 @@ plot cmprecipes lux primary outfile=<DESTDIR>/cmprecipes_primary_lux.pdf
 plot cmprecipes lux scndgauss outfile=<DESTDIR>/cmprecipes_scndgauss_lux.pdf
 plot cmprecipes lux scndlorentz outfile=<DESTDIR>/cmprecipes_scndlorentz_lux.pdf split45
 plot cmprecipes lux scndfresnel outfile=<DESTDIR>/cmprecipes_scndfresnel_lux.pdf
-plot breakdown primary outfile=<DESTDIR>/prec_classicrecipe_2d_primary.pdf
-plot breakdown scndgauss outfile=<DESTDIR>/prec_classicrecipe_2d_scndgauss.pdf
-plot breakdown scndlorentz outfile=<DESTDIR>/prec_classicrecipe_2d_scndlorentz.pdf
-plot breakdown scndfresnel outfile=<DESTDIR>/prec_classicrecipe_2d_scndfresnel.pdf
+HEAVY::plot breakdown primary outfile=<DESTDIR>/prec_classicrecipe_2d_primary.pdf
+HEAVY::plot breakdown scndgauss outfile=<DESTDIR>/prec_classicrecipe_2d_scndgauss.pdf
+HEAVY::plot breakdown scndlorentz outfile=<DESTDIR>/prec_classicrecipe_2d_scndlorentz.pdf
+HEAVY::plot breakdown scndfresnel outfile=<DESTDIR>/prec_classicrecipe_2d_scndfresnel.pdf
 """
 
-def parse_cmds():
+def parse_cmds( skip_heavy ):
     bindir = pathlib.Path(__file__).parent.absolute()
     destdir = bindir.parent.joinpath('paper','generated').absolute()
     assert destdir.is_dir()
     for c in cmds.splitlines():
-        if not c.strip() or c.strip().startswith('#'):
+        c = c.strip()
+        if not c or c.startswith('#'):
             continue
+        if c.startswith('HEAVY::'):
+            c = c[len('HEAVY::'):]
+            if skip_heavy:
+                print("SKIPPING HEAVY COMMAND: %s"%c)
+                continue
         c = shlex.split(c.strip())
         prog = bindir.joinpath(c[0])
         assert prog.is_file()
@@ -54,7 +60,8 @@ def worker( cmd ):
 
 def main():
     do_mp = ( 'nomp' not in sys.argv[1:] )
-    cmdlist = list( parse_cmds() )
+    skip_heavy = ( 'quick' in sys.argv[1:] )
+    cmdlist = list( parse_cmds(skip_heavy) )
 
     if do_mp:
         worklist = cmdlist[:]
