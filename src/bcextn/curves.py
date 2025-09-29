@@ -4,28 +4,12 @@ from .mpmath import mp, mpf
 
 kDeg2Rad = np.pi/180
 
-def mode_curves( mode ):
+def mode_curves( mode, use_actual_proposed_pyrecipe = True ):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
-    if mode=='primary':
-        return ( ClassicCurve_Primary,
-                 UpdatedClassicCurve_Primary,
-                 ProposedCurve_Primary,
-                 ProposedLuxCurve_Primary)
-    if mode=='scndgauss':
-        return ( ClassicCurve_ScndGauss,
-                 UpdatedClassicCurve_ScndGauss,
-                 ProposedCurve_ScndGauss,
-                 ProposedLuxCurve_ScndGauss )
-    if mode=='scndlorentz':
-        return ( ClassicCurve_ScndLorentz,
-                 UpdatedClassicCurve_ScndLorentz,
-                 ProposedCurve_ScndLorentz,
-                 ProposedLuxCurve_ScndLorentz )
-    assert mode=='scndfresnel'
-    return ( ClassicCurve_ScndFresnel,
-             UpdatedClassicCurve_ScndFresnel,
-             ProposedCurve_ScndFresnel,
-             ProposedLuxCurve_ScndFresnel)
+    Classic, UpdClassic, Proposed, ProposedLux = _mode_curves_raw(mode)
+    if use_actual_proposed_pyrecipe:
+        Proposed, ProposedLux = _wrap_pyrecipe_as_proposed_curves(mode)
+    return Classic, UpdClassic, Proposed, ProposedLux
 
 #####################################################
 ############# ACTUAL CURVE OBJECTS ##################
@@ -194,7 +178,7 @@ class UpdatedClassicCurve_ScndFresnel( ClassicCurve_ScndFresnel ):
         super().__init__()
         self._defaultparams = self.bestfit_params()
 
-#Proposed curves:
+#Proposed curves (dynamic versions for use_actual_proposed_pyrecipe=False):
 
 class ProposedCurve_StdLegFit:
 
@@ -401,3 +385,60 @@ def load_refitted_curve_parameters(mode):
         data[k] = [ fmt(k,e) for e in data[k] ] if data[k] is not None else None
     _cache_fcp[key] = data
     return data
+
+def _mode_curves_raw( mode ):
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode=='primary':
+        return ( ClassicCurve_Primary,
+                 UpdatedClassicCurve_Primary,
+                 ProposedCurve_Primary,
+                 ProposedLuxCurve_Primary)
+    if mode=='scndgauss':
+        return ( ClassicCurve_ScndGauss,
+                 UpdatedClassicCurve_ScndGauss,
+                 ProposedCurve_ScndGauss,
+                 ProposedLuxCurve_ScndGauss )
+    if mode=='scndlorentz':
+        return ( ClassicCurve_ScndLorentz,
+                 UpdatedClassicCurve_ScndLorentz,
+                 ProposedCurve_ScndLorentz,
+                 ProposedLuxCurve_ScndLorentz )
+    assert mode=='scndfresnel'
+    return ( ClassicCurve_ScndFresnel,
+             UpdatedClassicCurve_ScndFresnel,
+             ProposedCurve_ScndFresnel,
+             ProposedLuxCurve_ScndFresnel)
+
+_cache_wrappyrecipe = {}
+def _wrap_pyrecipe_as_proposed_curves(mode):
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode in _cache_wrappyrecipe:
+        return _cache_wrappyrecipe[mode]
+    if '<recipefile>' not in _cache_wrappyrecipe:
+        from .importfile import import_file_as_module
+        import pathlib
+        f = pathlib.Path(__file__).parent.parent.parent.joinpath('recipes',
+                                                                 'bc2025.py')
+        print(f)
+        assert f.is_file()
+        _cache_wrappyrecipe['<recipefile>'] = import_file_as_module(f,'bc2025')
+    recipe = _cache_wrappyrecipe['<recipefile>']
+
+    def sinth( theta ):
+        return float(mp.sin(mp.radians(mpf(theta))))
+
+    f = getattr(recipe,f'bc2025_y_{mode}')
+    flux = getattr(recipe,f'bc2025_y_{mode}_lux')
+    assert f and flux
+    f = np.vectorize(f)
+    flux = np.vectorize(flux)
+
+    class ActualRecipe:
+        def __call__( self, x, theta ):
+            return f( x, sinth(theta) )
+
+    class ActualRecipeLux:
+        def __call__( self, x, theta ):
+            return flux( x, sinth(theta) )
+
+    return ActualRecipe, ActualRecipeLux
