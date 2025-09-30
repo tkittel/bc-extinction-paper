@@ -193,7 +193,7 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 o.append( '    exit(1);')
                 o.append( '  }')
                 o.append(f'  if (!(fabs(val_lux-refval) <= {eps_lux}*fmin(refval,1.0-refval))) '+'{')
-                o.append( '    printf("bc2015_test_implementation: ");')
+                o.append( '    printf("bc2015_test_implementation: "')
                 o.append(f'           "Failure in {fctname_lux}(%g,%g)\\n",x,sinth);')
                 o.append( '    exit(1);')
                 o.append( '  }')
