@@ -7,7 +7,7 @@ def recipe_highx_cutoff():
     return 1000.0
 
 def recipe_highx_pow( mode ):
-    return 0.93 if mode == 'scndgauss' else 0.5
+    return 0.933 if mode == 'scndgauss' else 0.5
 
 def recipe_taylor_order():
     return 5

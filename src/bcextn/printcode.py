@@ -6,7 +6,7 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
     from .data import load_json_data
     from .taylor_recipes import taylor_ydelta_coeffs, taylor_y0_coeffs
     from .load import load_legendre
-    from .new_recipes import recipe_target_prec
+    from .new_recipes import recipe_target_prec, recipe_highx_pow
     import pathlib
 
     if lang=='latex':
@@ -36,7 +36,7 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
         ndigits_recipe = round(ndigits_recipe)
         for e in textbox(lang,
                          'BC2025 %s Recipes'%('Luxury' if lux else 'Standard'),
-                         f'Precision guarantee for x<1000: {ndigits_recipe} significant digits',
+                         f'Precision guarantee for x<1000: Error less than 1e-{ndigits_recipe}*min(y,1-y)',
                          'Reference: T. Kittelmann 2025 (publication in preparation)'):
             o.append(e)
         for mode in modes:
@@ -63,7 +63,7 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 #needs multiline parens:
                 return fmt_horner(**kw, enclose_in_parens = True)
 
-
+            highx_pow = recipe_highx_pow(mode)
             if lang=='py':
                 o.append(f'def {fctname}( x, sintheta ):' )
                 o.append( '    if x < %s:'%taylorthr)
@@ -71,8 +71,10 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 o.append( '    else:')
                 o.append( '        if x > 1e3:')
                 if mode == 'scndgauss':
-                    o.append(f'            return {fctname}(1e3,sintheta)*(x*1e-3)**-0.93')
+                    assert 0.92 < highx_pow < 0.94
+                    o.append(f'            return {fctname}(1e3,sintheta)*(x*1e-3)**-{highx_pow:.13g}')
                 else:
+                    assert highx_pow == 0.5
                     o.append(f'            return {fctname}(1e3,sintheta)*(x*1e-3)**-0.5')
                 o.append( '        xs = x**0.5')
                 o.append( '        xp = (xs-1.0)/(xs+1.0)')
@@ -95,8 +97,10 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 o.append( '  } else {')
                 o.append( '    if ( x > 1e3 )')
                 if mode == 'scndgauss':
-                    o.append(f'      return {fctname}(1e3,sintheta)*{ns}pow(x*1e-3,-0.93);')
+                    assert 0.92 < highx_pow < 0.94
+                    o.append(f'      return {fctname}(1e3,sintheta)*{ns}pow(x*1e-3,-{highx_pow:.13g});')
                 else:
+                    assert highx_pow == 0.5
                     o.append(f'      return {fctname}(1e3,sintheta)*{ns}sqrt(1e3/x);')
                 o.append(f'    const double xs = {ns}sqrt(x);')
                 o.append( '    const double xp = (xs-1.0)/(xs+1.0);')
@@ -129,7 +133,12 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 o += fmt_horner_for_latex(py0_taylor,'x',resvarname='y_0')
                 o.append(r'            \Else')
                 o.append(r'                \If{$x>1000$}')
-                tmppow = r'(0.001{\cdot}x)^{-0.93}' if mode == 'scndgauss' else r'\sqrt{1000/x}'
+                if mode == 'scndgauss':
+                    assert 0.92 < highx_pow < 0.94
+                    tmppow = r'(0.001{\cdot}x)^{-%.13g}'%highx_pow
+                else:
+                    assert highx_pow == 0.5
+                    tmppow = r'\sqrt{1000/x}'
                 o.append(r'                    \State \textbf{return} $\text{%s}(1000,\sin\theta)\cdot%s$'%(fctname,tmppow))
                 o.append(r'                \EndIf')
                 o.append(r'                \State $x_s \gets \sqrt{x} $')
