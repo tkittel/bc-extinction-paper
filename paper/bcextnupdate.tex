@@ -89,8 +89,8 @@
 
 \author[a]{Thomas Kittelmann\IUCrCemaillink{thomas.kittelmann@ess.eu}\IUCrOrcidlink{0000-0002-7396-4922}}%
 \author[b]{Secundus Segunda\IUCrEmaillink{coauthor@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}\IUCrAufn{Unique note.}}%
-\author[a,b]{Trinity Terzi\IUCrCemaillink{anothercorrauthor@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}\IUCrAufn{Shared note.}}%
-\author[a,b]{Clover Dufour\IUCrEmaillink{anothercoauthor@org.org}\IUCrAufn[2]{}}
+\author[a,b]{Trinity Terzi\IUCrEmaillink{anothercoauthor1@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}\IUCrAufn{Shared note.}}%
+\author[a,b]{Clover Dufour\IUCrEmaillink{anothercoauthor2@org.org}\IUCrAufn[2]{}}
 
 \affil[a]{ESS DMSC, European Spallation Source ERIC, Denmark}
 \affil[b]{Different Department, Different Organization, ..., Country }
@@ -100,88 +100,163 @@
 
 \begin{synopsis}
 A technical correction and enhancement of the Becker-Coppens (1974) recipe for
-estimating extinction factors in spherical crystallites is provided,
-addressing limitations in scenarios with higher Bragg angles. The work utilises
-modern computing capabilities and updated recipes are provided for easy
-community adoption.
+estimating extinction factors in spherical crystallites is provided, addressing
+limitations in scenarios with higher Bragg angles as well as providing improved
+precision in general. The work utilises modern computing capabilities and
+improved recipes are provided for easy community adoption.
 \end{synopsis}
 
 \begin{abstract}
-We present a technical correction and update of the widely used recipe by
-Becker-Coppens (1974), for the estimation of extinction factors in a perfect
-spherical crystallite. In the original publication, these extinction factors
-were evaluated numerically from a complicated integral, and simplified
-analytical approximations to these numerical evaluations constituted the
-provided recipes. However, in case of significant level of extinction, the
-original recipes for primary extinction suffers from numerical break-down in
+We present a technical correction and update of the widely used recipes by
+Becker-Coppens (1974), for the estimation of primary and secondary extinction
+factors in perfect spherical domains or particles. In the original publication,
+these extinction factors were evaluated numerically from a complicated integral,
+and simplified analytical approximations to these numerical evaluations
+constituted the provided recipes. However, the original recipes are plagued by
+issues of numerical precision in general, and even suffer from complete
+numerical break-down in case of strong primary extinction effects in
 back-scattering scenarios ($\theta_\texttt{Bragg}\gtrsim50^\circ$). Using modern
 computing capabilities, the numerical evaluations of the integrals are
-revisited, and updated recipes are provided which can be used also for
-back-scattering and strong extinction scenarios. In order to facilitate easy
-adoption by the community, the new recipes are compared to the old, and two new
-recipes are provided: a minimalistic update of the 4 free parameters in the old
-recipes, and a more complicated and precise analytical form with 21 free
-parameters. Both new recipes solve the issues of numerical break-down. For
-consistency, secondary extinction recipes are updated as well.
+revisited, and improved recipes are provided with precision guarantees for all
+Bragg angles and levels of extinction. The new recipes are provided both in a
+``standard'' version, believed to be of suitable precision for any actual
+analysis of diffraction or transmission data, and a ``luxury'' reference version
+with even higher precision.
+
+The performance of the new recipes is naturally compared to those of the
+original work, and in order to facilitate easy adoption by the community,
+reference implementations are provided for \texttt{C}, \texttt{C++}, and
+\texttt{Python} language.
 \end{abstract}
 
-\keywords{extinction; bragg diffraction; neutron scattering; X-ray diffraction}
+\keywords{extinction; Bragg diffraction; neutron scattering; X-ray diffraction; }
 
-\section{The Becker-Coppens recipe for primary extinction}
-
-Iobs = y*Ikin
+\section{The Becker-Coppens recipes for extinction}
 
 Extinction in the context of diffraction refers to the phenomenon where the
 intensity of a diffracted wave is reduced or diminished due to interference
-effects.
-
-important point, BC in their paper explicitly mentions and deals with 2theta=pi,
-so they are NOT working on the assumption of small theta only. However, pg 21
-bottom of first column, they discuss that they do assume small extinction only
-at 2theta=pi, so perhaps we should not be surprised in case of issues.
-
-
-but we should:
-
-%1/sin2th = 1/(2*sinth*costh) = (d/wl) / sqrt(1-(wl/2d)^2) = 1/(2*s*sqrt(1-s^2))
-
-sinth = wl/2d
-
-multiple scattering
-
-Extinction  is the phenomen... Primary extinction is...
-
-NB: $\theta$ is the Bragg angle, defined by:
+effects. The exact nature of these interference effects might be complicated,
+but at least for the case of {{\em} secondary} extinction effects, this can
+usually be explained by the particle undergoing multiple Bragg scattering's on
+the same reflection plane. Each scattering event will alternate the neutron's
+orientation between the diffracted and undiffracted directions, with the net
+effect being that the diffracted flux is diminished compared to what one would
+expect  if multiple scattering effects were not possible. The extinction factor,
+$y$, is defined as the difference between the diffracted flux predicted by the
+kinematical model ($I_\text{kin}$) with no multiple scattering or other dynamic
+effects, and the diffracted flux which is actually observed once these effects
+are accounted for ($I_\text{obs}$):
 \begin{align}
-  \sin\theta = \frac{\lambda}{2d_{hkl}}
-  \labeqn{braggequation}
+y \equiv \frac{I_\text{obs}}{I_\text{kin}}
 \end{align}
+The extinction factor $y$, is a real number in the unit interval which in
+general will depend on both the state of the particle undergoing diffraction as
+well as of the details of the material in which the process takes place. (TODO:
+Mention/ref a bunch of other models here, from Zachariasen to Sabine). In the
+work by Becker-Coppens \cite{BC1974}, four specific models and recipes are
+provided for the determination of $y$. In all cases, $y$ is expressed as a
+function of both the Bragg angle $\theta$ as well as a parameter $x$ which
+capture the general strength of extinction effects in the material. The exact
+definition of $x$ depends to some degree on the specific model, but in general
+it will be proportional to $(FL\lambda/V)^2$ where $F$ is the structure factor
+of the crystal reflection in question, $V$ the volume of the crystal unit cell,
+$\lambda$ the wavelength of the particle being scattered, and $L$ some relevant
+length scale of the coherent domains, crystallites, or grains in which the
+diffraction is taking place. In the case where the extinction is governed by a
+mosaic distribution, the definition of $x$ will usually also depend on the width
+of the mosaic distribution.
 
-And $x$ is defined by (fixme: here $l$ is actually tbar which is 3/2 times
-sphere radius):
-\begin{align}
-  x = \frac{ 2l^2\lambda^2F^2}{3V^2}
-  \labeqn{xdef}
-\end{align}
+TODO: Mention y is monotonically decreasing function of x, and increases for
+higher thetabragg. Mention limits y=1 at x=0, y=0 and x=inf. This is also
+important when discussing the precision definition to use.
 
-Introduction, mention how bragg diffraction and how $y_p(\theta,d_{hkl},F^2)$
-will depend on the geometrical layout of the crystallites. Mention Bragg angle,
-and x-value, and show the original recipe, and how it is used with $l$, $x$,
-$F^2$, $\theta$, $d_{hkl}$.
+NEXT: One paragraph with a few details of the BC models, spherical particles,
+primary+secondary, for different secondary mosaic distributions, etc. Then start
+introducing equations for phi/phi0/phipi/f/y eq36/... and then introduce the
+four models PGLF. Then mention the issues, show the NCrystal plot and the 2d
+precision plots.
 
-Also show the break-down!
+%$
+%$
+%$
+%$
+%$
+%$\begin{itemize}
+%$\item[Bla] bhejsa
+%$\item[Bla2] bhejsa
+%$\end{itemize}
+%$
+%$In
+%$Becker-Coppens
+%$
+%$, which always fulfils ,
+%$
+%$The extinction factor $y$ will always be
+%$observed
+%$
+%$Iobs = y*Ikin
+%$
+%$Introduce y, x, theta, and the 4 models.
+%$
+%
+%$
+%$
+%$For instance, assume a particle fulfils the condition for
+%$scattering on a reflection plane with d-spacing $d$ and Bragg angle $\theta$
+%$({\em}Bragg's Law):
+%$\begin{align}
+%$  \lambda=2d\sin\theta
+%$\end{align}
+%$If the particle undergoes a scattering event, Braggs law will still be fulfilled
+%$for the outgoing particle as well, and it is possible that a second scattering.
+%$
+%$
+%$  for scattering on a plane with d-spacing $d$, will
+%$and undergoing a Bragg diffraction scattering, will still fulfil the Bragg
+%$condition for scattering
+%$
+%$ , will always have a non-zero
+%$
+%$
+%$Iobs = y*Ikin
+%$
+%$important point, BC in their paper explicitly mentions and deals with 2theta=pi,
+%$so they are NOT working on the assumption of small theta only. However, pg 21
+%$bottom of first column, they discuss that they do assume small extinction only
+%$at 2theta=pi, so perhaps we should not be surprised in case of issues.
+%$
+%$
+%$but we should:
+%$%1/sin2th = 1/(2*sinth*costh) = (d/wl) / sqrt(1-(wl/2d)^2) = 1/(2*s*sqrt(1-s^2))
+%
+%$sinth = wl/2d
+%$
+%$multiple scattering
+%$
+%$Extinction  is the phenomen... Primary extinction is...
+%$
+%$NB: $\theta$ is the Bragg angle, defined by:
+%$\begin{align}
+%$  \sin\theta = \frac{\lambda}{2d_{hkl}}
+%$  \labeqn{braggequation}
+%$\end{align}
+%$
+%$And $x$ is defined by (fixme: here $l$ is actually tbar which is 3/2 times
+%$sphere radius):
+%$\begin{align}
+%$  x = \frac{ 2l^2\lambda^2F^2}{3V^2}
+%$  \labeqn{xdef}
+%$\end{align}
+%$
+%$Introduction, mention how bragg diffraction and how $y_p(\theta,d_{hkl},F^2)$
+%$will depend on the geometrical layout of the crystallites. Mention Bragg angle,
+%$and x-value, and show the original recipe, and how it is used with $l$, $x$,
+%$$F^2$, $\theta$, $d_{hkl}$.
+%$
+%Also show the break-down!
 
-\reffig{ypbreakdownorigrecipe} shows the original motivation (bla. NCrystal\cite{ncrystalmain,ncrystalelastic}.):
+\reffig{ypbreakdownorigrecipe} shows the original motivation (bla. NCrystal \cite{ncrystalmain,ncrystalelastic}.):
 
-\begin{figure}[ht] %
-\labfig{ypbreakdownorigrecipe}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{../data/ncrystal_bc_yp_breakdown_be.pdf} % NB use pdflatex for non-postscript
-\end{center}
-\caption{Bla. Beryllium.} % NB \protect\cite{...} is required in floating figures
-\end{figure}
-
-Define yp integral, x, theta, f, phi0, phipi.
 
 %Text text text text text text text text text text text text text text
 %text text text text text text text \cite{knuth84,lamport86}.
@@ -194,7 +269,7 @@ Define yp integral, x, theta, f, phi0, phipi.
 %\caption{Caption \protect\cite{knuth84}} % NB \protect\cite{...} is required in floating figures
 %\end{figure}
 
-\subsection{Definition of model precision}
+\subsection{Precision of Becker-Coppens recipes}
 
 Mention that we are not just doing $y/y_\text{ref}-1$, since at low $x$, $y$ is
 very near 1, and one would not consider $0.999\pm0.01$ to be a very precise
@@ -207,6 +282,51 @@ Naturally, for this definition to be useful in practice, this requires
 $y_\text{ref}$ to be available in a precision much higher than the precision on
 $y$. Bla mpmath.
 
+\begin{figure}[ht] %
+\labfig{ypbreakdownorigrecipe}%fixme
+\begin{center}
+\includegraphics[width=0.5\textwidth]{../data/ncrystal_bc_yp_breakdown_be.pdf} % NB use pdflatex for non-postscript
+\end{center}
+\caption{Bla. Beryllium.} % NB \protect\cite{...} is required in floating figures
+\end{figure}
+
+
+\begin{figure}[ht] %
+\labfig{prec2dplot:primary}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
+\end{center}
+\caption{precision 2d classic recipe (vs. new lux recipe). This is primary.}
+\end{figure}
+
+\begin{figure}[ht] %
+\labfig{prec2dplot:scndgauss}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
+\end{center}
+\caption{precision 2d classic recipe (vs. new lux recipe). This is scndgauss.}
+\end{figure}
+
+\begin{figure}[ht] %
+\labfig{prec2dplot:scndlorentz}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
+\end{center}
+\caption{precision 2d classic recipe (vs. new lux recipe). This is scndlorentz.}
+\end{figure}
+
+\begin{figure}[ht] %
+\labfig{prec2dplot:scndfresnel}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
+\end{center}
+\caption{precision 2d classic recipe (vs. new lux recipe). This is scndfresnel.}
+\end{figure}
+
+\section{New recipes}
+
+bla talk about the new recipes. Two parts to the work: high res integrations +
+finding reliable alg or parameterisation to produce results consistent with that.
 
 \subsection{Subsection title}
 
@@ -946,38 +1066,6 @@ interesting as it can save additional multiplications!!)
 \caption{cmprecipes scndfresnel lux.}
 \end{figure}
 
-
-\begin{figure}[ht] %
-\labfig{prec2dplot:primary}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
-\end{center}
-\caption{precision 2d classic recipe (vs. new lux recipe). This is primary.}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{prec2dplot:scndgauss}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
-\end{center}
-\caption{precision 2d classic recipe (vs. new lux recipe). This is scndgauss.}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{prec2dplot:scndlorentz}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
-\end{center}
-\caption{precision 2d classic recipe (vs. new lux recipe). This is scndlorentz.}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{prec2dplot:scndfresnel}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
-\end{center}
-\caption{precision 2d classic recipe (vs. new lux recipe). This is scndfresnel.}
-\end{figure}
 
 
 \subsection{Extrapolation to extremely high $x$ values}
