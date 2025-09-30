@@ -3,7 +3,7 @@
 /******************************************************************************/
 /******************************************************************************/
 /*                          BC2025 Standard Recipes                           */
-/*            Precision guarantee for x<1000: 3 significant digits            */
+/*      Precision guarantee for x<1000: Error less than 1e-3*min(y,1-y)       */
 /*         Reference: T. Kittelmann 2025 (publication in preparation)         */
 /******************************************************************************/
 /******************************************************************************/
@@ -44,7 +44,7 @@ double bc2025_y_scndgauss( double x, double sintheta )
     y0 = 1.0-x*(1.0606602-x*(0.92376-x*(0.667-x*(0.409-0.22*x))));
   } else {
     if ( x > 1e3 )
-      return bc2025_y_scndgauss(1e3,sintheta)*pow(x*1e-3,-0.93);
+      return bc2025_y_scndgauss(1e3,sintheta)*pow(x*1e-3,-0.933);
     const double xs = sqrt(x);
     const double xp = (xs-1.0)/(xs+1.0);
     y0 = ( 0.4588909-xp*(1.038687-xp*(0.2401003+xp*(1.288282-xp*(0.7641972
@@ -130,7 +130,7 @@ double bc2025_y_scndfresnel( double x, double sintheta )
 /******************************************************************************/
 /******************************************************************************/
 /*                           BC2025 Luxury Recipes                            */
-/*            Precision guarantee for x<1000: 6 significant digits            */
+/*      Precision guarantee for x<1000: Error less than 1e-6*min(y,1-y)       */
 /*         Reference: T. Kittelmann 2025 (publication in preparation)         */
 /******************************************************************************/
 /******************************************************************************/
@@ -192,7 +192,7 @@ double bc2025_y_scndgauss_lux( double x, double sintheta )
            -x*(0.40888100159996-0.21773242158073*x)))) );
   } else {
     if ( x > 1e3 )
-      return bc2025_y_scndgauss_lux(1e3,sintheta)*pow(x*1e-3,-0.93);
+      return bc2025_y_scndgauss_lux(1e3,sintheta)*pow(x*1e-3,-0.933);
     const double xs = sqrt(x);
     const double xp = (xs-1.0)/(xs+1.0);
     y0 = ( 0.458984305748-xp*(1.03988766848-xp*(0.233481493625
@@ -342,7 +342,7 @@ void bc2015_test_impl_primary( double x, double sinth, double refval)
     exit(1);
   }
   if (!(fabs(val_lux-refval) <= 1e-06*fmin(refval,1.0-refval))) {
-    printf("bc2015_test_implementation: ");
+    printf("bc2015_test_implementation: "
            "Failure in bc2025_y_primary_lux(%g,%g)\n",x,sinth);
     exit(1);
   }
@@ -358,7 +358,7 @@ void bc2015_test_impl_scndgauss( double x, double sinth, double refval)
     exit(1);
   }
   if (!(fabs(val_lux-refval) <= 1e-06*fmin(refval,1.0-refval))) {
-    printf("bc2015_test_implementation: ");
+    printf("bc2015_test_implementation: "
            "Failure in bc2025_y_scndgauss_lux(%g,%g)\n",x,sinth);
     exit(1);
   }
@@ -374,7 +374,7 @@ void bc2015_test_impl_scndlorentz( double x, double sinth, double refval)
     exit(1);
   }
   if (!(fabs(val_lux-refval) <= 1e-06*fmin(refval,1.0-refval))) {
-    printf("bc2015_test_implementation: ");
+    printf("bc2015_test_implementation: "
            "Failure in bc2025_y_scndlorentz_lux(%g,%g)\n",x,sinth);
     exit(1);
   }
@@ -390,7 +390,7 @@ void bc2015_test_impl_scndfresnel( double x, double sinth, double refval)
     exit(1);
   }
   if (!(fabs(val_lux-refval) <= 1e-06*fmin(refval,1.0-refval))) {
-    printf("bc2015_test_implementation: ");
+    printf("bc2015_test_implementation: "
            "Failure in bc2025_y_scndfresnel_lux(%g,%g)\n",x,sinth);
     exit(1);
   }
@@ -466,17 +466,17 @@ void bc2015_test_implementation()
   bc2015_test_impl_primary(1.5,1,0.491318844971881885);
   bc2015_test_impl_primary(4,0,0.256478305440050736);
   bc2015_test_impl_primary(4,0.37,0.271450489435057285);
-  bc2015_test_impl_primary(4,0.7071,0.294058279041176596);
+  bc2015_test_impl_primary(4,0.7071,0.294058279041176651);
   bc2015_test_impl_primary(4,0.93,0.311164652224688087);
   bc2015_test_impl_primary(4,1,0.316803783227092128);
   bc2015_test_impl_primary(10,0,0.160692615730259891);
   bc2015_test_impl_primary(10,0.37,0.172334879934710278);
-  bc2015_test_impl_primary(10,0.7071,0.187275015600959216);
+  bc2015_test_impl_primary(10,0.7071,0.187275015600959244);
   bc2015_test_impl_primary(10,0.93,0.19822718194603256);
   bc2015_test_impl_primary(10,1,0.201806603479064706);
   bc2015_test_impl_primary(30,0,0.0927496567337003086);
   bc2015_test_impl_primary(30,0.37,0.0995863832091555823);
-  bc2015_test_impl_primary(30,0.7071,0.108079350860056753);
+  bc2015_test_impl_primary(30,0.7071,0.108079350860056767);
   bc2015_test_impl_primary(30,0.93,0.114326427593817989);
   bc2015_test_impl_primary(30,1,0.116371315352427424);
   bc2015_test_impl_primary(999,0,0.0160653610398071058);
@@ -573,7 +573,7 @@ void bc2015_test_implementation()
   bc2015_test_impl_scndgauss(0.11,1,0.897813774121218655);
   bc2015_test_impl_scndgauss(0.5,0,0.637345276720855503);
   bc2015_test_impl_scndgauss(0.5,0.37,0.641830710434428853);
-  bc2015_test_impl_scndgauss(0.5,0.7071,0.655054692256161308);
+  bc2015_test_impl_scndgauss(0.5,0.7071,0.655054692256161419);
   bc2015_test_impl_scndgauss(0.5,0.93,0.668416681710815808);
   bc2015_test_impl_scndgauss(0.5,1,0.673332496976859263);
   bc2015_test_impl_scndgauss(1.5,0,0.357597444689184474);
@@ -583,12 +583,12 @@ void bc2015_test_implementation()
   bc2015_test_impl_scndgauss(1.5,1,0.430245061090626379);
   bc2015_test_impl_scndgauss(4,0,0.17297395239130367);
   bc2015_test_impl_scndgauss(4,0.37,0.189879012656458984);
-  bc2015_test_impl_scndgauss(4,0.7071,0.215258501298703275);
+  bc2015_test_impl_scndgauss(4,0.7071,0.215258501298703303);
   bc2015_test_impl_scndgauss(4,0.93,0.234348559295702613);
   bc2015_test_impl_scndgauss(4,1,0.240621677545467538);
   bc2015_test_impl_scndgauss(10,0,0.0807180267555285547);
   bc2015_test_impl_scndgauss(10,0.37,0.0935745735759661579);
-  bc2015_test_impl_scndgauss(10,0.7071,0.109430399854542254);
+  bc2015_test_impl_scndgauss(10,0.7071,0.109430399854542268);
   bc2015_test_impl_scndgauss(10,0.93,0.120737870379589413);
   bc2015_test_impl_scndgauss(10,1,0.12438630443554409);
   bc2015_test_impl_scndgauss(30,0,0.0308030026998234036);
@@ -603,34 +603,34 @@ void bc2015_test_implementation()
   bc2015_test_impl_scndgauss(999,1,0.00223476218498307828);
   bc2015_test_impl_scndgauss(1000,0,0.00122028414965030048);
   bc2015_test_impl_scndgauss(1000,0.37,0.00157781375102613859);
-  bc2015_test_impl_scndgauss(1000,0.7071,0.00192497830984177023);
+  bc2015_test_impl_scndgauss(1000,0.7071,0.00192497830984177045);
   bc2015_test_impl_scndgauss(1000,0.93,0.00215876529765583443);
   bc2015_test_impl_scndgauss(1000,1,0.00223269181037356315);
-  bc2015_test_impl_scndgauss(1000.1,0,0.00122017067417475359);
-  bc2015_test_impl_scndgauss(1000.1,0.37,0.00157766702850599991);
-  bc2015_test_impl_scndgauss(1000.1,0.7071,0.00192479930413298576);
-  bc2015_test_impl_scndgauss(1000.1,0.93,0.00215856455185509978);
-  bc2015_test_impl_scndgauss(1000.1,1,0.00223248419007053426);
-  bc2015_test_impl_scndgauss(10000,0,0.000143370886375560085);
-  bc2015_test_impl_scndgauss(10000,0.37,0.000185376951823057744);
-  bc2015_test_impl_scndgauss(10000,0.7071,0.000226165230954472358);
-  bc2015_test_impl_scndgauss(10000,0.93,0.000253632806990414543);
-  bc2015_test_impl_scndgauss(10000,1,0.000262318414894141061);
-  bc2015_test_impl_scndgauss(1000000000000,0,5.20548225359035345e-12);
-  bc2015_test_impl_scndgauss(1000000000000,0.37,6.73063030671265482e-12);
-  bc2015_test_impl_scndgauss(1000000000000,0.7071,8.21156321115804692e-12);
-  bc2015_test_impl_scndgauss(1000000000000,0.93,9.20885061879601883e-12);
-  bc2015_test_impl_scndgauss(1000000000000,1,9.52420598101410425e-12);
-  bc2015_test_impl_scndgauss(1e+99,0,6.40414225361020766e-93);
-  bc2015_test_impl_scndgauss(1e+99,0.37,8.28048427423185897e-93);
-  bc2015_test_impl_scndgauss(1e+99,0.7071,1.01024297782394836e-92);
-  bc2015_test_impl_scndgauss(1e+99,0.93,1.13293613313809065e-92);
-  bc2015_test_impl_scndgauss(1e+99,1,1.17173331852260392e-92);
-  bc2015_test_impl_scndgauss(1e+200,0,7.52421107525147639e-187);
-  bc2015_test_impl_scndgauss(1e+200,0.37,9.728720727510127e-187);
-  bc2015_test_impl_scndgauss(1e+200,0.7071,1.1869320045401729e-186);
-  bc2015_test_impl_scndgauss(1e+200,0.93,1.33108389272657304e-186);
-  bc2015_test_impl_scndgauss(1e+200,1,1.37666661097337275e-186);
+  bc2015_test_impl_scndgauss(1000.1,0,0.00122017030814190763);
+  bc2015_test_impl_scndgauss(1000.1,0.37,0.00157766655522962587);
+  bc2015_test_impl_scndgauss(1000.1,0.7071,0.00192479872672215134);
+  bc2015_test_impl_scndgauss(1000.1,0.93,0.00215856390431820762);
+  bc2015_test_impl_scndgauss(1000.1,1,0.00223248352035886272);
+  bc2015_test_impl_scndgauss(10000,0,0.000142383928135902927);
+  bc2015_test_impl_scndgauss(10000,0.37,0.00018410082586283293);
+  bc2015_test_impl_scndgauss(10000,0.7071,0.00022460832045571348);
+  bc2015_test_impl_scndgauss(10000,0.93,0.000251886811028229865);
+  bc2015_test_impl_scndgauss(10000,1,0.000260512627627712404);
+  bc2015_test_impl_scndgauss(1000000000000,0,4.8917130164293988e-12);
+  bc2015_test_impl_scndgauss(1000000000000,0.37,6.32493019401069932e-12);
+  bc2015_test_impl_scndgauss(1000000000000,0.7071,7.71659736570022946e-12);
+  bc2015_test_impl_scndgauss(1000000000000,0.93,8.65377158999020815e-12);
+  bc2015_test_impl_scndgauss(1000000000000,1,8.95011837497809759e-12);
+  bc2015_test_impl_scndgauss(1e+99,0,3.29959753303634066e-93);
+  bc2015_test_impl_scndgauss(1e+99,0.37,4.26634268909302845e-93);
+  bc2015_test_impl_scndgauss(1e+99,0.7071,5.2050612016247022e-93);
+  bc2015_test_impl_scndgauss(1e+99,0.93,5.83721148274434557e-93);
+  bc2015_test_impl_scndgauss(1e+99,1,6.03710569513684424e-93);
+  bc2015_test_impl_scndgauss(1e+200,0,1.92957191898721976e-187);
+  bc2015_test_impl_scndgauss(1e+200,0.37,2.49491490014387209e-187);
+  bc2015_test_impl_scndgauss(1e+200,0.7071,3.04386817807524513e-187);
+  bc2015_test_impl_scndgauss(1e+200,0.93,3.4135433941631538e-187);
+  bc2015_test_impl_scndgauss(1e+200,1,3.53043954744815707e-187);
 
   printf("Testing bc2025_y_scndlorentz + bc2025_y_scndlorentz_lux\n");
   bc2015_test_impl_scndlorentz(1e-20,0,1);
@@ -812,12 +812,12 @@ void bc2015_test_implementation()
   bc2015_test_impl_scndfresnel(0.5,1,0.69340829954302019);
   bc2015_test_impl_scndfresnel(1.5,0,0.399391537851936262);
   bc2015_test_impl_scndfresnel(1.5,0.37,0.411881935845156089);
-  bc2015_test_impl_scndfresnel(1.5,0.7071,0.437771759058126986);
+  bc2015_test_impl_scndfresnel(1.5,0.7071,0.437771759058127041);
   bc2015_test_impl_scndfresnel(1.5,0.93,0.459644997052124471);
   bc2015_test_impl_scndfresnel(1.5,1,0.467132755649424358);
   bc2015_test_impl_scndfresnel(4,0,0.228676356271608677);
   bc2015_test_impl_scndfresnel(4,0.37,0.244302243726306212);
-  bc2015_test_impl_scndfresnel(4,0.7071,0.267528831926639454);
+  bc2015_test_impl_scndfresnel(4,0.7071,0.26752883192663951);
   bc2015_test_impl_scndfresnel(4,0.93,0.284943660965013057);
   bc2015_test_impl_scndfresnel(4,1,0.290661423460214396);
   bc2015_test_impl_scndfresnel(10,0,0.13889515089169982);
@@ -827,7 +827,7 @@ void bc2015_test_implementation()
   bc2015_test_impl_scndfresnel(10,1,0.179149979699797152);
   bc2015_test_impl_scndfresnel(30,0,0.0791555029478179517);
   bc2015_test_impl_scndfresnel(30,0.37,0.085571907221417845);
-  bc2015_test_impl_scndfresnel(30,0.7071,0.0932357491582653242);
+  bc2015_test_impl_scndfresnel(30,0.7071,0.093235749158265338);
   bc2015_test_impl_scndfresnel(30,0.93,0.0988114821782814789);
   bc2015_test_impl_scndfresnel(30,1,0.100629854949566708);
   bc2015_test_impl_scndfresnel(999,0,0.0136388653535980068);
@@ -837,32 +837,32 @@ void bc2015_test_implementation()
   bc2015_test_impl_scndfresnel(999,1,0.017102530942043951);
   bc2015_test_impl_scndfresnel(1000,0,0.0136320418730609214);
   bc2015_test_impl_scndfresnel(1000,0.37,0.0146327712142333838);
-  bc2015_test_impl_scndfresnel(1000,0.7071,0.0158779327680368954);
+  bc2015_test_impl_scndfresnel(1000,0.7071,0.0158779327680368988);
   bc2015_test_impl_scndfresnel(1000,0.93,0.0167940591461938557);
   bc2015_test_impl_scndfresnel(1000,1,0.0170939659039612904);
   bc2015_test_impl_scndfresnel(1000.1,0,0.013631360322083166);
   bc2015_test_impl_scndfresnel(1000.1,0.37,0.0146320396305409921);
-  bc2015_test_impl_scndfresnel(1000.1,0.7071,0.0158771389309357823);
+  bc2015_test_impl_scndfresnel(1000.1,0.7071,0.0158771389309357858);
   bc2015_test_impl_scndfresnel(1000.1,0.93,0.0167932195062090207);
   bc2015_test_impl_scndfresnel(1000.1,1,0.0170931112697631227);
   bc2015_test_impl_scndfresnel(10000,0,0.00431083014776604666);
   bc2015_test_impl_scndfresnel(10000,0.37,0.00462728855171251618);
-  bc2015_test_impl_scndfresnel(10000,0.7071,0.00502104320820185527);
+  bc2015_test_impl_scndfresnel(10000,0.7071,0.00502104320820185614);
   bc2015_test_impl_scndfresnel(10000,0.93,0.00531074780615552796);
   bc2015_test_impl_scndfresnel(10000,1,0.00540558665017767687);
   bc2015_test_impl_scndfresnel(1000000000000,0,4.3108301477660464e-07);
   bc2015_test_impl_scndfresnel(1000000000000,0.37,4.6272885517125163e-07);
-  bc2015_test_impl_scndfresnel(1000000000000,0.7071,5.02104320820185527e-07);
+  bc2015_test_impl_scndfresnel(1000000000000,0.7071,5.02104320820185633e-07);
   bc2015_test_impl_scndfresnel(1000000000000,0.93,5.31074780615552798e-07);
   bc2015_test_impl_scndfresnel(1000000000000,1,5.40558665017767726e-07);
   bc2015_test_impl_scndfresnel(1e+99,0,1.36320418730609202e-50);
   bc2015_test_impl_scndfresnel(1e+99,0.37,1.46327712142333832e-50);
-  bc2015_test_impl_scndfresnel(1e+99,0.7071,1.58779327680368946e-50);
+  bc2015_test_impl_scndfresnel(1e+99,0.7071,1.58779327680368993e-50);
   bc2015_test_impl_scndfresnel(1e+99,0.93,1.67940591461938551e-50);
   bc2015_test_impl_scndfresnel(1e+99,1,1.70939659039612907e-50);
   bc2015_test_impl_scndfresnel(1e+200,0,4.31083014776604605e-101);
   bc2015_test_impl_scndfresnel(1e+200,0.37,4.62728855171251623e-101);
-  bc2015_test_impl_scndfresnel(1e+200,0.7071,5.02104320820185548e-101);
+  bc2015_test_impl_scndfresnel(1e+200,0.7071,5.02104320820185612e-101);
   bc2015_test_impl_scndfresnel(1e+200,0.93,5.31074780615552798e-101);
   bc2015_test_impl_scndfresnel(1e+200,1,5.40558665017767687e-101);
   printf("All tests completed\n");

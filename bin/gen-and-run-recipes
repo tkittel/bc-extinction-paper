@@ -7,6 +7,7 @@ import shutil
 import sys
 import tempfile
 import os
+import random
 
 cmds = """
 printcode c <DESTDIR>/bc2025.c
@@ -88,6 +89,7 @@ def verify():
     compile_cmds = []
     compile_cmds += list( compile_commands( src_cpp, 'cpp' ) )
     compile_cmds += list( compile_commands( src_c, 'c' ) )
+    random.shuffle(compile_cmds)#avoid failures hiding at the end
     for cc in compile_cmds:
         with tempfile.TemporaryDirectory() as temp_dir:
             print("Checking %s %s && ./testapp"%(
