@@ -29,6 +29,9 @@ HEAVY::plot breakdown primary outfile=<DESTDIR>/prec_classicrecipe_2d_primary.pd
 HEAVY::plot breakdown scndgauss outfile=<DESTDIR>/prec_classicrecipe_2d_scndgauss.pdf
 HEAVY::plot breakdown scndlorentz outfile=<DESTDIR>/prec_classicrecipe_2d_scndlorentz.pdf
 HEAVY::plot breakdown scndfresnel outfile=<DESTDIR>/prec_classicrecipe_2d_scndfresnel.pdf
+
+plot highx outfile=<DESTDIR>/highx.pdf
+
 """
 
 def parse_cmds( skip_heavy ):

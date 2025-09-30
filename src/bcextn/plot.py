@@ -449,11 +449,10 @@ def do_cmprecipes( *,
             continue
         print('%20s at x=1e6 and theta=0,45,90: %g   %g   %g'
               %(cn, curve()(1e6,0), curve()(1e6,45), curve()(1e6,90) ) )
-    if not outfile:
+    if outfile:
+        plt_savefig_pdf(plt,outfile)
+    else:
         plt.show()
-        return
-
-    plt_savefig_pdf(plt,outfile)
 
 def main_recipevstaylor( args ):
     from .eq36_lowx_taylor import mode_taylorfct
@@ -894,61 +893,37 @@ def main_breakdown( args ):
     doit( 'proposed', ref)
     doit( 'proposedlux', 'numint')
 
+def mode2color(mode,th=0):
+    assert th in [0,90]
+    return { 'primary' : ('tab:red','tab:orange'),
+             'scndgauss':('tab:purple','tab:pink'),
+             'scndlorentz':('tab:blue','tab:cyan'),
+             'scndfresnel':('tab:brown','tab:olive'),
+            }[mode][ 0 if th==0 else 1 ]
+
+def lighten_color(color, amount=0.2):
+    import matplotlib.colors as mcolors
+    # Convert the color to RGB if it's not already
+    rgb = mcolors.to_rgb(color)
+    # Lighten the color by increasing the RGB values
+    lightened_rgb = [min(1, c + amount) for c in rgb]
+    return lightened_rgb
+
 def main_highx( args ):
-    mode = args[0] if args else 'missing'
-    modes=['primary','scndfresnel','scndlorentz','scndgauss']
-    if mode not in modes:
-        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
-    if len(args)!=1:
-        raise SystemExit('Please only provide a single (mode) argument')
-    do_highx(mode)
+    show_diff = False
+    while 'diff' in args:
+        args.remove('diff')
+        show_diff = True
 
-def do_highx( mode ):
-    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
-
-    from .load import load_xscan as load
-    data = load(mode)
-    xvals = data['xvals']
-    mask = xvals>=870# FIXME??
-    xvals = xvals[mask]
-
-    def fpow(x,norm,power):
-        return norm * (x**power)
-
-    for thstr in data['th_keys']:
-        thval = float(thstr)
-        color = th2color(thstr)
-        yvals = data['theta_2_ypvals'][thstr][mask]
-        plt.plot( xvals,
-                  yvals,
-                  label = f'$\\theta={thval:g}\\degree$',
-                  color = color )
-        do_fit = any(abs(thval-e)<1e-3 for e in [0,45,90])
-        if do_fit:
-            res,_ = scipy.optimize.curve_fit( fpow,
-                                              xvals, yvals,
-                                              p0 = [1,-0.5], nan_policy='raise')
-            print(res[1])
-            plt.plot(xvals,fpow(xvals,*res),ls=':',lw=3,color=color)
-
-    plt.ylabel(mode)
-    plt.xlabel('x')
-    plt.legend()
-    plt.grid()
-    plt.loglog()
-    plt.show()
-
-def mode2color(mode):
-    return { 'primary' : 'orange',
-             'scndgauss':'blue',
-             'scndlorentz':'green',
-             'scndfresnel':'magenta' }[mode]
-
-
-def main_highxNEW( args ):
+    outfile = None
+    for a in args:
+        if a.startswith('outfile='):
+            outfile=pathlib.Path(a[len('outfile='):])
+    assert (outfile is None) or outfile.parent.is_dir()
+    args = [a for a in args if not a.startswith('outfile=')]
     assert not args
     modes = ['primary','scndfresnel','scndlorentz','scndgauss']
-    xmin = 1e-3
+    xmin = 1e-1
     fit_xmin = 967.#0.9e3
     from .load import load_highx, load_xscan090
     from .printcode import mode2letter
@@ -969,8 +944,18 @@ def main_highxNEW( args ):
         y2 = find( th, x2 )
         return -np.log(y2/y1)/np.log(x2/x1)
 
+    if show_diff:
+        fig, axs = plt.subplots(2, 1, sharex=True)
+        fig.subplots_adjust(hspace=0)
+        ax, axdiff = axs
+    else:
+        fig, axs = plt.subplots(1, 1)
+        ax = axs
+        axdiff = None
 
     xmaxvals=[]
+    th2ls = { 0 : '-', 90: '-' }
+
     for mode in modes:
 
         data = load_xscan090(mode)
@@ -979,15 +964,17 @@ def main_highxNEW( args ):
         xmaxvals.append(xvals[-1])
         y0 = data['theta_2_ypvals']['0.0'][mask]
         y90 = data['theta_2_ypvals']['90.0'][mask]
-        color = mode2color(mode)
         ml = mode2letter(mode)
-        plt.plot( xvals, y0,
-                  label = f'$y_{ml}(\\theta=0,x)$',
-                  color = mode2color(mode))
-        plt.plot( xvals, y90,
-                  label = f'$y_{ml}(\\theta=\\pi,x)$',
-                  color = mode2color(mode),
-                  ls = '-.')
+        ax.plot( xvals, y0,
+                 #label = f'$y_{ml}(\\theta=0,x)$',
+                 label = f'$y_{ml}^0$',
+                 color = mode2color(mode,0),
+                 ls = th2ls[0] )
+        ax.plot( xvals, y90,
+                 #label = f'$y_{ml}(\\theta=\\pi,x)$',
+                 label = f'$y_{ml}^\\pi$',
+                 color = mode2color(mode,90),
+                 ls = th2ls[90] )
 
         a0 = calcpowfromhighx(mode,0)
         a90 = calcpowfromhighx(mode,90)
@@ -996,34 +983,45 @@ def main_highxNEW( args ):
         print(f"{mode} th=90 Last two points power: %g"%a90)
         print(f"{mode}   => power = %.3g +- %.3g"%( 0.5*(a0+a90), 0.5*abs(a0-a90)))
         fitted_new_value = float('%.3g'%(0.5*(a0+a90)))
-
-        x2 = xvals[-1]
-        x1 = max(xmin,x2*0.1)
-        #x1 = fit_xmin
         recipe_powval = recipe_highx_pow(mode)
         assert fitted_new_value==recipe_powval, "must update recipe power value"
 
+        xpow = np.geomspace(200.0,xvals[-1],3000)
+        for th,yy in [(0,y0),(90,y90)]:
+            def fpow(_x):
+                return yy[-1] * ((xpow[-1]/_x)**recipe_powval)
+            ax.plot( xpow,
+                     fpow(xpow),
+                     color = 'black',
+                     #alpha=0.3,
+                     zorder=99,
+                    # ls='--',lw=1,
+                     ls = ':',lw=2,
+                    )
 
-        xpow = np.geomspace(x1,x2,3000)
-        for yy in [y0,y90]:
-
-            def fpow(_x,power):
-                return yy[-1] * ((x2/_x)**power)
-            plt.plot( xpow,
-                      fpow(xpow,recipe_powval),
-                      color = 'black',
-                      ls = ':',
-                      lw=3)
+            def reldiff( y, yref ):
+                return abs(y-yref)/(np.minimum(yref,1.0-yref))
+            if show_diff:
+                axdiff.plot( xvals, reldiff(fpow(xvals),yy),
+                             color = mode2color(mode),
+                             ls=th2ls[th] )
 
     assert len(set(xmaxvals))==1
-    plt.xlim(xmin,xmaxvals[0])
-    #plt.ylabel(mode)
-    plt.xlabel('x')
-    plt.legend()
-    plt.grid()
-    plt.loglog()
-    #plt.semilogx()
-    plt.show()
+    ax.set_xlim(xmin,xmaxvals[0])
+    ax.set_ylabel('$y$')
+    ax.set_xlabel('$x$')
+    ax.legend()
+    ax.grid()
+    ax.semilogx()
+    ax.semilogy()
+    if show_diff:
+        axdiff.semilogy()
+        axdiff.set_ylim(None,1.0)
+        axdiff.grid()
+    if outfile:
+        plt_savefig_pdf(plt,outfile)
+    else:
+        plt.show()
 
 def main_investigatefcts( args ):
     print("FIXME: This mode might be outdated")
