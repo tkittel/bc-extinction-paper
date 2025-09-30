@@ -36,7 +36,8 @@ def worker2( args ):
     return fcttype, res
 
 def find_output_fn( quick, table1_points, thetascan, xscan090, xscannear45,
-                    is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel, is_user_test_data ):
+                    is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel,
+                    is_user_test_data, is_highx ):
     assert sum(int(bool(e)) for e in [is_scnd_gauss,is_scnd_lorentz,is_scnd_fresnel]) in (0,1)
     assert not (table1_points and thetascan)
     bn = 'bcdata'
@@ -57,6 +58,9 @@ def find_output_fn( quick, table1_points, thetascan, xscan090, xscannear45,
     if is_user_test_data:
         #Override
         bn = 'bc2025_reference_x_sintheta_yp'
+    if is_highx:
+        #Override
+        bn = 'bcdata_special_highx'
     if quick:
         bn += '_quick'
 
@@ -101,8 +105,13 @@ def main():
     j = ['--usertestdata']
     if is_quick:
         j.append('--quick')
-
     subjobs.append(j)
+
+    j = ['--highx']
+    if is_quick:
+        j.append('--quick')
+    subjobs.append(j)
+
     for i,jobargs in enumerate(subjobs):
         print()
         print( '-'*80 )
@@ -125,18 +134,19 @@ def main():
 
 def doit( args ):
     is_user_test_data = '--usertestdata' in args
+    is_highx = '--highx' in args
 
     quick = '--quick' in args
     table1_points = '--table1' in args
     thetascan = '--thetascan' in args
     xscan090 = '--xscan090' in args
     xscannear45 = '--xscannear45' in args
-    xscan = not( xscannear45 or xscan090 or thetascan or table1_points or is_user_test_data )
+    xscan = not( xscannear45 or xscan090 or thetascan or table1_points or is_user_test_data or is_highx )
     is_scnd_gauss = '--scnd-gauss' in args
     is_scnd_lorentz = '--scnd-lorentz' in args
     is_scnd_fresnel = '--scnd-fresnel' in args
 
-    assert sum(int(bool(e)) for e in (xscan,table1_points,thetascan,xscan090,xscannear45,is_user_test_data))==1
+    assert sum(int(bool(e)) for e in (xscan,table1_points,thetascan,xscan090,xscannear45,is_user_test_data,is_highx))==1
     assert not (is_scnd_gauss and is_scnd_lorentz)
     assert not (is_scnd_gauss and is_scnd_fresnel)
     assert not (is_scnd_fresnel and is_scnd_lorentz)
@@ -150,6 +160,9 @@ def doit( args ):
 
     if is_user_test_data and fcttype!='primary':
         raise SystemExit('Do not put a mode keyword with --usertestdata')
+
+    if is_highx and fcttype!='primary':
+        raise SystemExit('Do not put a mode keyword with --highx')
 
     x_range = ( 1e-3, 1e3 )
     nx = 3 if quick else 100
@@ -206,13 +219,50 @@ def doit( args ):
     def find_outname():
         return find_output_fn( quick, table1_points, thetascan, xscan090, xscannear45,
                                is_scnd_gauss, is_scnd_lorentz, is_scnd_fresnel,
-                               is_user_test_data = is_user_test_data )
+                               is_user_test_data = is_user_test_data,
+                               is_highx = is_highx )
 
     outfile = find_outname()
     print(f"Target file: {outfile}")
 
 
     worklist = []
+    if is_highx:
+        del theta_vals
+        del xvals
+        xvals = [ 999.0, 1000.0 ]
+        theta_vals = [ 0, 90 ]
+        if quick:
+            #No change!
+            pass
+        fcttypes = ['primary','scndgauss','scndlorentz','scndfresnel']
+
+        worklist = []
+
+        for fcttype in fcttypes:
+            for thdeg in theta_vals:
+                for x in xvals:
+                    worklist.append( (fcttype, thdeg, x) )
+        results = multiproc_run_worklist( worklist, workfct = worker2 )
+        data = {}
+        for fcttype, (th, x, yp, yp_maxerr, t) in results:
+            assert int(round(th)) == th
+            th = int(round(th))
+            assert th in [0,90]
+            if fcttype not in data:
+                data[fcttype] = []
+            assert yp_maxerr < 1e-9
+            assert yp+yp_maxerr <= 1.0
+            assert yp-yp_maxerr >= 0.0
+            data[fcttype].append( ( th, float(x), float(yp) ) )
+
+        assert set(data.keys()) == set(fcttypes)
+        for f in fcttypes:
+            data[f] = sorted(data[f][:])
+        from .json import save_json
+        save_json( outfile,data )
+        raise SystemExit
+
     if is_user_test_data:
         del theta_vals
         del xvals
@@ -257,7 +307,8 @@ def doit( args ):
             data[fcttype].append( ( float(x), sinth, float(yp) ) )
             if abs(x-xvals_extrapolation_threshold)<1e-9:
                 #Fire off extrapolation values:
-                epower = 0.93 if fcttype=='scndgauss' else 0.5
+                from .new_recipes import recipe_highx_pow
+                epower = recipe_highx_pow(fcttype)
                 for xe in xvals_extrapolated:
                     yp_e = yp*( xe/xvals_extrapolation_threshold) ** (-epower)
                     data[fcttype].append( ( float(xe), sinth, float(yp_e) ) )

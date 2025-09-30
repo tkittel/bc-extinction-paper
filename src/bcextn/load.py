@@ -196,3 +196,13 @@ def _apply_split45( rawdata, rawdata45 ):
             d[th] = yvals
         res[k] = dict( sorted(d.items()) )
     return copy.deepcopy(res)
+
+_cache_highx = {}
+def load_highx( mode ):
+    if mode in _cache_highx:
+        return _cache_highx[mode]
+    if '<raw>' not in _cache_highx:
+        from .data import load_json_data
+        _cache_highx['<raw>'] = load_json_data('bcdata_special_highx.json')
+    _cache_highx[mode] = _cache_highx['<raw>'][mode]
+    return _cache_highx[mode]

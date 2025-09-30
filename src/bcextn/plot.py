@@ -938,6 +938,93 @@ def do_highx( mode ):
     plt.loglog()
     plt.show()
 
+def mode2color(mode):
+    return { 'primary' : 'orange',
+             'scndgauss':'blue',
+             'scndlorentz':'green',
+             'scndfresnel':'magenta' }[mode]
+
+
+def main_highxNEW( args ):
+    assert not args
+    modes = ['primary','scndfresnel','scndlorentz','scndgauss']
+    xmin = 1e-3
+    fit_xmin = 967.#0.9e3
+    from .load import load_highx, load_xscan090
+    from .printcode import mode2letter
+    from .new_recipes import recipe_highx_pow
+    #data = load(mode)
+
+    def calcpowfromhighx( mode, th ):
+        assert th in [0,90]
+        data = load_highx( mode )
+        assert len(data)==4
+        def find(th,x):
+            d = [ y for _th,_x,y in data if (th,x)==(_th,_x) ]
+            assert len(d)==1
+            return d[0]
+        x1 = 999.0
+        x2 = 1000.0
+        y1 = find( th, x1 )
+        y2 = find( th, x2 )
+        return -np.log(y2/y1)/np.log(x2/x1)
+
+
+    xmaxvals=[]
+    for mode in modes:
+
+        data = load_xscan090(mode)
+        mask = data['xvals']>=xmin*0.9#a bit below so curve will go all the way to xmin
+        xvals = data['xvals'][mask]
+        xmaxvals.append(xvals[-1])
+        y0 = data['theta_2_ypvals']['0.0'][mask]
+        y90 = data['theta_2_ypvals']['90.0'][mask]
+        color = mode2color(mode)
+        ml = mode2letter(mode)
+        plt.plot( xvals, y0,
+                  label = f'$y_{ml}(\\theta=0,x)$',
+                  color = mode2color(mode))
+        plt.plot( xvals, y90,
+                  label = f'$y_{ml}(\\theta=\\pi,x)$',
+                  color = mode2color(mode),
+                  ls = '-.')
+
+        a0 = calcpowfromhighx(mode,0)
+        a90 = calcpowfromhighx(mode,90)
+
+        print(f"{mode} th=0 Last two points power: %g"%a0)
+        print(f"{mode} th=90 Last two points power: %g"%a90)
+        print(f"{mode}   => power = %.3g +- %.3g"%( 0.5*(a0+a90), 0.5*abs(a0-a90)))
+        fitted_new_value = float('%.3g'%(0.5*(a0+a90)))
+
+        x2 = xvals[-1]
+        x1 = max(xmin,x2*0.1)
+        #x1 = fit_xmin
+        recipe_powval = recipe_highx_pow(mode)
+        assert fitted_new_value==recipe_powval, "must update recipe power value"
+
+
+        xpow = np.geomspace(x1,x2,3000)
+        for yy in [y0,y90]:
+
+            def fpow(_x,power):
+                return yy[-1] * ((x2/_x)**power)
+            plt.plot( xpow,
+                      fpow(xpow,recipe_powval),
+                      color = 'black',
+                      ls = ':',
+                      lw=3)
+
+    assert len(set(xmaxvals))==1
+    plt.xlim(xmin,xmaxvals[0])
+    #plt.ylabel(mode)
+    plt.xlabel('x')
+    plt.legend()
+    plt.grid()
+    plt.loglog()
+    #plt.semilogx()
+    plt.show()
+
 def main_investigatefcts( args ):
     print("FIXME: This mode might be outdated")
     mode = args[0] if args else 'missing'
