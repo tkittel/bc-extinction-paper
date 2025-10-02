@@ -236,12 +236,7 @@ def main_table4( args ):
                 orig_table )
 
 def main_cmprecipes( args ):
-    outfile = None
-    for a in args:
-        if a.startswith('outfile='):
-            outfile=pathlib.Path(a[len('outfile='):])
-    assert (outfile is None) or outfile.parent.is_dir()
-    args = [a for a in args if not a.startswith('outfile=')]
+    args, outfile = parse_outfile(args)
 
     use_final_recipes = True
     while 'nofinal' in args:
@@ -449,10 +444,7 @@ def do_cmprecipes( *,
             continue
         print('%20s at x=1e6 and theta=0,45,90: %g   %g   %g'
               %(cn, curve()(1e6,0), curve()(1e6,45), curve()(1e6,90) ) )
-    if outfile:
-        plt_savefig_pdf(plt,outfile)
-    else:
-        plt.show()
+    plt_savefig_pdf_or_show(plt,outfile)
 
 def main_recipevstaylor( args ):
     from .eq36_lowx_taylor import mode_taylorfct
@@ -841,13 +833,10 @@ def plot_breakdown( mode, curve, ref, precision_norm, outfile=None,forpaper=True
     plt.xlim(x[0],x[-1])
     plt.xlabel(r'$x$')
     plt.ylabel(r'$\theta$')
-    if outfile:
-        plt_savefig_pdf(plt,outfile)
-    else:
-        plt.show()
+    plt_savefig_pdf_or_show(plt,outfile)
 
 def main_breakdown( args ):
-    raw_norm = False
+    #raw_norm = False
     precision_norm = 'min_y_1minusy'
     while 'abs' in args:
         args.remove('abs')
@@ -858,12 +847,7 @@ def main_breakdown( args ):
         args.remove('highres')
         highres = True
 
-    outfile = None
-    for a in args:
-        if a.startswith('outfile='):
-            outfile=pathlib.Path(a[len('outfile='):])
-    assert (outfile is None) or outfile.parent.is_dir()
-    args = [a for a in args if not a.startswith('outfile=')]
+    args, outfile = parse_outfile(args)
 
     mode = args[0] if args else 'missing'
     modes=['primary','scndfresnel','scndlorentz','scndgauss']
@@ -909,22 +893,30 @@ def lighten_color(color, amount=0.2):
     lightened_rgb = [min(1, c + amount) for c in rgb]
     return lightened_rgb
 
+def parse_outfile( args ):
+    outfile = None
+    for a in args:
+        if a.startswith('outfile='):
+            outfile=pathlib.Path(a[len('outfile='):])
+    assert (outfile is None) or outfile.parent.is_dir()
+    return ( [a for a in args if not a.startswith('outfile=')],
+             outfile )
+
+def parse_flag( args, flag ):
+    args2 = [ a for a in args if a!=flag ]
+    return ( args2, len(args2) < len(args) )
+
 def main_highx( args ):
     show_diff = False
     while 'diff' in args:
         args.remove('diff')
         show_diff = True
 
-    outfile = None
-    for a in args:
-        if a.startswith('outfile='):
-            outfile=pathlib.Path(a[len('outfile='):])
-    assert (outfile is None) or outfile.parent.is_dir()
-    args = [a for a in args if not a.startswith('outfile=')]
+    args, outfile = parse_outfile(args)
     assert not args
     modes = ['primary','scndfresnel','scndlorentz','scndgauss']
     xmin = 1e-1
-    fit_xmin = 967.#0.9e3
+    #fit_xmin = 967.#0.9e3
     from .load import load_highx, load_xscan090
     from .printcode import mode2letter
     from .new_recipes import recipe_highx_pow
@@ -1018,10 +1010,7 @@ def main_highx( args ):
         axdiff.semilogy()
         axdiff.set_ylim(None,1.0)
         axdiff.grid()
-    if outfile:
-        plt_savefig_pdf(plt,outfile)
-    else:
-        plt.show()
+    plt_savefig_pdf_or_show(plt,outfile)
 
 def main_investigatefcts( args ):
     print("FIXME: This mode might be outdated")
@@ -1152,7 +1141,10 @@ def main_investigatefcts( args ):
     ax.set_xlim(0.05)
     plt.show()
 
-def plt_savefig_pdf( plt, outfile, title = None ):
+def plt_savefig_pdf_or_show( plt, outfile, title = None ):
+    if not outfile:
+        plt.show()
+        return
     import datetime
     bn = pathlib.Path(outfile).name
     assert bn.endswith('.pdf')
@@ -1169,3 +1161,192 @@ def plt_savefig_pdf( plt, outfile, title = None ):
                              'CreationDate': pdfdate
                              } )
     print("Wrote: %s"%outfile)
+
+def mode_2_f_of_eta( mode):
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    if mode=='primary':
+        from .eval_fofeta import F_of_Eta as fP
+        return fP
+    elif mode=='scndgauss':
+        from .eval_fofeta_scnd_gauss import F_of_Eta as fG
+        return fG
+    elif mode=='scndlorentz':
+        from .eval_fofeta_scnd_lorentz import F_of_Eta as fL
+        return fL
+    else:
+        assert mode=='scndfresnel'
+        from .eval_fofeta_scnd_fresnel import F_of_Eta as fF
+        return fF
+
+def main_feta( args ):
+    args, outfile = parse_outfile(args)
+    args, do_log =  parse_flag(args,'log')
+    args, do_lin =  parse_flag(args,'lin')
+    assert not (do_log and do_lin)
+    do_std = not (do_log or do_lin)
+    assert not args
+
+    fcts = [
+        ( 'primary', 'P', 'tab:orange', 100 ),
+        ( 'scndlorentz', 'L', 'tab:green', 99),
+        ( 'scndgauss', 'G', 'tab:blue', 98),
+        ( 'scndfresnel', 'F', 'tab:brown', 97 ),
+        ]
+
+    if do_log:
+        eta = np.geomspace(0.1,40,5000)
+    elif do_std:
+        eta = np.linspace(-15,15,5000)
+    elif do_lin:
+        eta = np.linspace(-12,12,5000)
+    for mode, m, color, z in fcts:
+        Fobj = mode_2_f_of_eta(mode)
+        plt.plot( eta,
+                  np.vectorize(Fobj())(eta),
+                  zorder=z,
+                  color=color,
+                  label='$f_{%s}$'%m)
+
+    if do_std:
+        plt.ylim(1e-4,1)
+        plt.semilogy()
+    if do_log:
+        plt.ylim(1e-5,1.0)
+        plt.loglog()
+    if do_lin:
+        plt.ylim(0,1)
+    plt.xlim(eta[0],eta[-1])
+    plt.grid()
+    plt.legend()
+    plt.xlabel('$\\eta$')
+    plt_savefig_pdf_or_show(plt,outfile)
+
+def main_phi( args ):
+    args, outfile = parse_outfile(args)
+    args, do_log =  parse_flag(args,'log')
+    args, do_lin =  parse_flag(args,'lin')
+    assert not (do_log and do_lin)
+    do_std = not (do_log or do_lin)
+    assert not args
+
+    from .eval_phi0 import Phi0
+    from .eval_phipi import PhiPi
+    fcts = [
+        ( '0', Phi0, 'tab:orange', 100 ),
+        ( r'\pi', PhiPi, 'tab:blue', 98),
+        ]
+
+    if do_log:
+        s = np.geomspace(1e-2,1e2,5000)
+    elif do_std:
+        s = np.geomspace(1e-3,1e2,5000)
+    elif do_lin:
+        s = np.linspace(-12,12,5000)
+    for thpt, Phiobj, color, z in fcts:
+        plt.plot( s,
+                  np.vectorize(Phiobj())(abs(s)),
+                  zorder=z,
+                  color=color,
+                  label=r'$\varphi^{%s}$'%thpt)
+
+    if do_std:
+        plt.ylim(0,1)
+        plt.semilogx()
+    if do_log:
+        plt.ylim(1e-2,1.0)
+        plt.loglog()
+    if do_lin:
+        plt.ylim(0,1)
+    plt.xlim(s[0],s[-1])
+    plt.grid()
+    plt.legend()
+    plt.xlabel('$s$' if do_lin else '$|s|$')
+    plt_savefig_pdf_or_show(plt,outfile)
+
+
+
+def _create_integrand_fct(mode,theta,x):
+    assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    from .integrand import create_integrand_fct_eq36
+    from .mpmath import mpf, mp
+
+    if mode=='scndlorentz':
+        xscale = mpf('4/3')
+        k_norm = mpf(1)/mp.pi
+    else:
+        k_norm = mpf(3) / (mpf(4)*mp.pi)
+        xscale = mpf('1')
+
+    F = mode_2_f_of_eta( mode)
+    rawg = create_integrand_fct_eq36( f_of_eta_fct = F(),
+                                      theta_degree = theta,
+                                      x = x,
+                                      xscale = xscale )
+    return np.vectorize( lambda eta : float(k_norm * rawg(mpf(eta))) )
+
+def main_integrand( args ):
+    args, outfile = parse_outfile(args)
+    args, do_log =  parse_flag(args,'log')
+    args, do_lin =  parse_flag(args,'lin')
+    args, do_quick =  parse_flag(args,'quick')
+    assert not (do_log and do_lin)
+    do_std = not (do_log or do_lin)
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    mode='all'
+    if args and args[0] in modes:
+        mode = args[0]
+        args = args[1:]
+    if args:
+        raise SystemExit('Unknown argument: %s'%args[0])
+
+    fcts = [
+        ( 'primary', 'P', 'tab:orange', 100 ),
+        ( 'scndlorentz', 'L', 'tab:green', 99),
+        ( 'scndgauss', 'G', 'tab:blue', 98),
+        ( 'scndfresnel', 'F', 'tab:brown', 97 ),
+        ]
+
+    n=200 if do_quick else 4000
+    if do_log:
+        eta = np.geomspace(0.1,40,n)
+    elif do_std:
+        eta = np.linspace(-15,15,n)
+    elif do_lin:
+        eta = np.linspace(-12,12,n)
+
+    xvals = [0.3, 3, 30.0] if mode!='all' else [1.0]
+    for ix, x in enumerate(xvals):
+        for _mode, m, color, z in fcts:
+            if mode != 'all' and mode != _mode:
+                continue
+            if mode != 'all':
+                color = ['tab:green','tab:orange','tab:blue'][ix]
+            #if mode != 'scndlorentz':
+            #    continue
+            lbl = None
+            if ix==0 or mode!='all':
+                lbl = '$g_{%s}$'%m
+                if mode!='all':
+                    lbl += ' for $x=%g$, $\\theta=THETA$'%x
+            def do_plot( theta, _lbl, ls = None ):
+                g = _create_integrand_fct(_mode,theta=theta,x=x)
+                plt.plot( eta,g(eta),zorder=z+0.01*ix,color=color,label=_lbl, ls=ls  )
+            if mode == 'all':
+                do_plot( 45, lbl )
+            else:
+                do_plot( 0, lbl.replace('THETA','0') )
+                do_plot( 90, lbl.replace('THETA',r'\pi/2'), ls=':' )
+
+    if do_std:
+        plt.ylim(1e-4,None)
+        plt.semilogy()
+    if do_log:
+#        plt.ylim(1e-5,1.0)
+        plt.loglog()
+#    if do_lin:
+#        plt.ylim(0,1)
+    plt.xlim(eta[0],eta[-1])
+    plt.grid()
+    plt.legend()
+    plt.xlabel('$\\eta$')
+    plt_savefig_pdf_or_show(plt,outfile)
