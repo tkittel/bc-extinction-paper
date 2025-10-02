@@ -31,7 +31,11 @@ HEAVY::plot breakdown scndlorentz outfile=<DESTDIR>/prec_classicrecipe_2d_scndlo
 HEAVY::plot breakdown scndfresnel outfile=<DESTDIR>/prec_classicrecipe_2d_scndfresnel.pdf
 
 plot highx outfile=<DESTDIR>/highx.pdf
+plot feta outfile=<DESTDIR>/f_of_eta.pdf
+plot phi outfile=<DESTDIR>/phi_of_s.pdf
 
+plot integrand primary outfile=<DESTDIR>/integrand_gP_of_eta_g.pdf
+plot integrand outfile=<DESTDIR>/integrand_gPgGgLgF_of_eta_g.pdf
 """
 
 def parse_cmds( skip_heavy ):
