@@ -346,9 +346,9 @@ def do_cmprecipes( *,
             yref = yp_classic
 
         common = dict( alpha = 0.4,
-                       lw = 2 )
+                       lw = 1 )
         if abs(th-0.0)<1e-7 or abs(th-90.0)<1e-7:
-            common['lw'] = 5
+            common['lw'] = 3
             common['alpha'] = 0.8
 
         def lbltrf(curve_type, split_theta = None):
@@ -373,7 +373,7 @@ def do_cmprecipes( *,
                       color=color,
                       label = lbltrf('') )
         #color='red'
-        color = 'blue'#th2color(th*0.3,'Reds')
+        color = 'tab:blue'#th2color(th*0.3,'Reds')
         split_th = 60 if allow_split_th else None
         if split_th is not None and th > split_th:
             color='green'
@@ -397,7 +397,7 @@ def do_cmprecipes( *,
 
 
         #color='blue'
-        color = 'black'#th2color(th*0.2,'Blues')
+        color = 'tab:red'#th2color(th*0.2,'Blues')
         if do_vs_old and th > split_th:
             color='gray'
         #color = th2color(th)
@@ -410,7 +410,7 @@ def do_cmprecipes( *,
                                      split_theta = split_th if do_vs_old else None) )
         if yp_proposedlux is not None:
             if yp_proposed is not None:
-                color='purple'
+                color='tab:orange'
             plt.plot( xvals, ytrf(yp_proposedlux,yref,worst_reldiff_proposedlux),
                       **common,
                       color=color,
