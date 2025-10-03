@@ -732,7 +732,7 @@ def plot_breakdown( mode, curve, ref, precision_norm, outfile=None,forpaper=True
         assert ref == 'proposedlux'
         #Fixme: higher res for paper:
         #Adjust the range and resolution as needed:
-        x = np.geomspace(1e-3, 100.0, 400 if forpaper else 100 )
+        x = np.geomspace(1e-3, 1e3, 400 if forpaper else 100 )
         #NB: Need very high resolution to show fine feature near 45degree for
         #scndlorentz:
         th = np.linspace(0.0, 90.0, 800 if forpaper else 100 )
@@ -833,19 +833,15 @@ def plot_breakdown( mode, curve, ref, precision_norm, outfile=None,forpaper=True
     plt.xlim(x[0],x[-1])
     plt.xlabel(r'$x$')
     plt.ylabel(r'$\theta$')
+    #plt.tight_layout()
     plt_savefig_pdf_or_show(plt,outfile)
 
 def main_breakdown( args ):
     #raw_norm = False
-    precision_norm = 'min_y_1minusy'
-    while 'abs' in args:
-        args.remove('abs')
-        precision_norm = 'y'
-
-    highres = False
-    while 'highres' in args:
-        args.remove('highres')
-        highres = True
+    args, highres =  parse_flag(args,'highres')
+    args, do_abs =  parse_flag(args,'abs')
+    precision_norm = 'y' if do_abs else 'min_y_1minusy'
+    del do_abs
 
     args, outfile = parse_outfile(args)
 
@@ -1141,7 +1137,9 @@ def main_investigatefcts( args ):
     ax.set_xlim(0.05)
     plt.show()
 
-def plt_savefig_pdf_or_show( plt, outfile, title = None ):
+def plt_savefig_pdf_or_show( plt, outfile, title = None, tight=True ):
+    if tight:
+        plt.tight_layout()
     if not outfile:
         plt.show()
         return
@@ -1289,6 +1287,8 @@ def main_integrand( args ):
     args, do_log =  parse_flag(args,'log')
     args, do_lin =  parse_flag(args,'lin')
     args, do_quick =  parse_flag(args,'quick')
+    args, do_showneg =  parse_flag(args,'showneg')
+
     assert not (do_log and do_lin)
     do_std = not (do_log or do_lin)
     modes=['primary','scndfresnel','scndlorentz','scndgauss']
@@ -1310,9 +1310,9 @@ def main_integrand( args ):
     if do_log:
         eta = np.geomspace(0.1,40,n)
     elif do_std:
-        eta = np.linspace(-15,15,n)
+        eta = np.linspace(-15 if do_showneg else 0,20,n)
     elif do_lin:
-        eta = np.linspace(-12,12,n)
+        eta = np.linspace(-12 if do_showneg else 0,12,n)
 
     xvals = [0.3, 3, 30.0] if mode!='all' else [1.0]
     for ix, x in enumerate(xvals):
@@ -1325,20 +1325,22 @@ def main_integrand( args ):
             #    continue
             lbl = None
             if ix==0 or mode!='all':
-                lbl = '$g_{%s}$'%m
+                lbl = '$M={%s}$'%m
                 if mode!='all':
                     lbl += ' for $x=%g$, $\\theta=THETA$'%x
             def do_plot( theta, _lbl, ls = None ):
                 g = _create_integrand_fct(_mode,theta=theta,x=x)
                 plt.plot( eta,g(eta),zorder=z+0.01*ix,color=color,label=_lbl, ls=ls  )
             if mode == 'all':
-                do_plot( 45, lbl )
+                do_plot( 45, lbl )#.replace('THETA',r'{45^\circ}') )
             else:
                 do_plot( 0, lbl.replace('THETA','0') )
                 do_plot( 90, lbl.replace('THETA',r'\pi/2'), ls=':' )
 
     if do_std:
-        plt.ylim(1e-4,None)
+        #plt.ylim(1e-4,None)
+        if mode=='all' or mode=='scndfresnel':
+            plt.ylim(5e-4,None)
         plt.semilogy()
     if do_log:
 #        plt.ylim(1e-5,1.0)
