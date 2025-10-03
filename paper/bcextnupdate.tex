@@ -320,15 +320,6 @@ Original recipes and their problems:
 tables: Mention OCR(tesseract)+human checking.
 
 \begin{table}[ht]
-\caption{Updated BC Table 1 with a few extra columns and rows.}
-\smallskip
-\tiny
-\begin{center}
-\input{generated/table1_updated.tex}
-\end{center}
-\end{table}
-
-\begin{table}[ht]
 \caption{Precision of original BC Table 1 compared to updated values (NB: MENTION PRECISION DEF USED).}
 \smallskip
 \tiny
@@ -338,29 +329,11 @@ tables: Mention OCR(tesseract)+human checking.
 \end{table}
 
 \begin{table}[ht]
-\caption{Updated BC Table 3 with a few extra columns and rows.}
-\smallskip
-\tiny
-\begin{center}
-\input{generated/table3_updated.tex}
-\end{center}
-\end{table}
-
-\begin{table}[ht]
 \caption{Precision of original BC Table 3 compared to updated values (NB: MENTION PRECISION DEF USED).}
 \smallskip
 \tiny
 \begin{center}
 \input{generated/table3_diff.tex}
-\end{center}
-\end{table}
-
-\begin{table}[ht]
-\caption{Updated BC Table 4 with a few extra columns and rows.}
-\smallskip
-\tiny
-\begin{center}
-\input{generated/table4_updated.tex}
 \end{center}
 \end{table}
 
@@ -548,8 +521,6 @@ the provided recipes at these extreme values, but that the solution with a
 simple power law is both simple and trivially ensures well behaved numerical
 results not matter the size of x.
 
-\input{generated/recipes.tex}
-
 \section{Conclusions}
 show cmprecipes plots
 
@@ -578,7 +549,7 @@ show cmprecipes plots
         \includegraphics[width=\textwidth]{generated/cmprecipes_scndfresnel.pdf}
         \caption{$M=F$}\labfig{cmprecipes:subfig:F}
     \end{subfigure}
-    \caption{Bla bla cmprecipes std. Note: breakdown near 45degrees in $M=L$ plot (we have split
+    \caption{Bla bla cmprecipes. Note: breakdown near 45degrees in $M=L$ plot (we have split
       that line into $\pm45^\circ$ to show it) }
     \labfig{cmprecipes}
 \end{figure}
@@ -1407,6 +1378,44 @@ interesting as it can save additional multiplications!!)
 
 
 \appendix % if required
+
+\section{Updated tables}
+
+FIXME: Perhaps we should also make one for the fresnel model?
+
+\begin{table}[ht]
+\caption{Updated BC Table 1 with a few extra columns and rows.}
+\smallskip
+\tiny
+\begin{center}
+\input{generated/table1_updated.tex}
+\end{center}
+\end{table}
+
+\begin{table}[ht]
+\caption{Updated BC Table 3 with a few extra columns and rows.}
+\smallskip
+\tiny
+\begin{center}
+\input{generated/table3_updated.tex}
+\end{center}
+\end{table}
+
+\begin{table}[ht]
+\caption{Updated BC Table 4 with a few extra columns and rows.}
+\smallskip
+\tiny
+\begin{center}
+\input{generated/table4_updated.tex}
+\end{center}
+\end{table}
+
+
+\section{The recipes}
+
+\input{generated/recipes.tex}
+
+
 \section{Appendix title}
 
 Text text text text text text text text text text text text text text
@@ -1442,32 +1451,6 @@ List funding organizations, recipients, grant numbers, etc.
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-% Sagemath timings: Unclear, but lowx_taylor was very long, perhaps >10 hours.
-
-% createdata Timings: (total 15.5 hours with ~14 processes):
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Wrote bcdata.json ("1919/1919 [6:58:50<00:00, 13.10s/it]")
-%
-% real  418m51.385s
-% user  5734m52.315s
-% sys  0m58.339s
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Wrote bcdata_table1pts.json ("364/364 [1:27:30<00:00, 14.42s/it]")
-%
-% real  87m30.635s
-% user  1168m6.251s
-% sys  0m28.893s
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Wrote bcdata_thetascan.json ("2534/2534 [6:42:33<00:00,  9.53s/it]")
-%
-% real  402m34.514s
-% user  5603m21.985s
-% sys  0m22.534s
-%
 
 
 %BC x:

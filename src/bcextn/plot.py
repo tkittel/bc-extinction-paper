@@ -422,7 +422,7 @@ def do_cmprecipes( *,
         plt.semilogy()
         plt.ylim(1e-10,1.0)
         if do_strict:
-            plt.ylabel(f'max(y/yref-1,(1-y)/(1-yref)-1)')
+            plt.ylabel( r'$|y-y_{ref}|\,/\,\min(y_{ref},1-y_{ref})$' )
         else:
             plt.ylabel(f'y/yref-1')
     else:
@@ -433,7 +433,7 @@ def do_cmprecipes( *,
     plt.grid()
     plt.semilogx()
     plt.legend()
-    plt.xlabel('x')
+    plt.xlabel('$x$')
     print("Worst reldiff (CLASSIC)    : %g"%worst_reldiff_classic[0])
     print("Worst reldiff (UpdCLASSIC) : %g"%worst_reldiff_updatedclassic[0])
     if ProposedCurve:
@@ -1267,7 +1267,7 @@ def main_phi( args ):
     plt.xlim(s[0],s[-1])
     plt.grid()
     plt.legend()
-    plt.xlabel('$s$' if do_lin else '$|s|$')
+    plt.xlabel('$s$' if s[0]>=0 else '$|s|$')
     plt_savefig_pdf_or_show(plt,outfile)
 
 
