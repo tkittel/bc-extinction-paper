@@ -27,6 +27,8 @@
 %\usepackage[table]{xcolor}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{subcaption}
+\usepackage{caption}
 
 %internal refs with macros, for consistency:
 \newcommand{\labsec}[1]{\label{sec:#1}}
@@ -178,11 +180,11 @@ appears to suffer from an obvious breakdown at large Bragg angles, as can be
 seen in \reffig{ypbreakdownorigrecipe}.
 
 \begin{figure}[ht] %
-\labfig{ypbreakdownorigrecipe}
 \begin{center}
-\includegraphics[width=0.5\textwidth]{../data/ncrystal_bc_yp_breakdown_be.pdf}
+\includegraphics[width=0.6\textwidth]{../data/ncrystal_bc_yp_breakdown_be.pdf}
 \end{center}
 \caption{Bla. Beryllium.} % NB \protect\cite{...} is required in floating figures
+\labfig{ypbreakdownorigrecipe}
 \end{figure}
 
 As will be shown in the present work, this breakdown does not constitute a
@@ -244,11 +246,11 @@ All the $\varphi$--functions are even functions of $s$, and as can be seen in
 \reffig{phiofs}, monotonically decreasing functions of $|s|$, attaining
 values $1$ at $s=0$ and $0$ at $s=\pm\infty$.
 \begin{figure}[ht] %
-\labfig{phiofs}
 \begin{center}
-\includegraphics[width=0.5\textwidth]{generated/phi_of_s.pdf}
+\includegraphics[width=0.6\textwidth]{generated/phi_of_s.pdf}
 \end{center}
 \caption{Bla.} % NB \protect\cite{...} is required in floating figures
+\labfig{phiofs}
 \end{figure}
 
 The $f_M(\eta)$ functions, are essentially unit-less functions capturing the
@@ -263,11 +265,11 @@ finite size. Additionally, the exact final form of the $f_M(\eta)$ functions are
 given based on spherical geometries for the crystallites or particles. The exact
 form of these functions, plotted in \reffig{fofeta}, are as follows:
 \begin{figure}[ht] %
-\labfig{fofeta}
 \begin{center}
-\includegraphics[width=0.5\textwidth]{generated/f_of_eta.pdf}
+\includegraphics[width=0.6\textwidth]{generated/f_of_eta.pdf}
 \end{center}
 \caption{Bla.} % NB \protect\cite{...} is required in floating figures
+\labfig{fofeta}
 \end{figure}
 \begin{align}
   f_P(\eta) &= \frac{\eta^2-\eta\sin(2\eta)+sin^2(\eta)}{\eta^4} \\
@@ -372,59 +374,130 @@ tables: Mention OCR(tesseract)+human checking.
 \end{table}
 
 
-\begin{figure}[ht] %
-\labfig{prec2dplot:primary}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
-\end{center}
-\caption{precision 2d classic recipe (vs. new lux recipe). This is primary.}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{prec2dplot:scndgauss}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
-\end{center}
-\caption{precision 2d classic recipe (vs. new lux recipe). This is scndgauss.}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{prec2dplot:scndlorentz}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
-\end{center}
-\caption{precision 2d classic recipe (vs. new lux recipe). This is scndlorentz.}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{prec2dplot:scndfresnel}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
-\end{center}
-\caption{precision 2d classic recipe (vs. new lux recipe). This is scndfresnel.}
-\end{figure}
-
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
+%%\end{center}
+%%\caption{precision 2d classic recipe (vs. new lux recipe). This is primary.}
+%%\labfig{prec2dplot:primary}
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
+%%\end{center}
+%%\caption{precision 2d classic recipe (vs. new lux recipe). This is scndgauss.}
+%%\labfig{prec2dplot:scndgauss}
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
+%%\end{center}
+%%\caption{precision 2d classic recipe (vs. new lux recipe). This is scndlorentz.}
+%%\labfig{prec2dplot:scndlorentz}
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
+%%\end{center}
+%%\caption{precision 2d classic recipe (vs. new lux recipe). This is scndfresnel.}
+%%\labfig{prec2dplot:scndfresnel}
+%%\end{figure}
+%%
 
 \section{Evaluating the integrals}
  The integrals (only general ideas for all 4 models, more stuff in appendix?).
 
  plot integrands
 
- \begin{figure}[ht] %
-\labfig{integrandgP}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/integrand_gP_of_eta_g.pdf}
-\end{center}
-\caption{Bla.} % NB \protect\cite{...} is required in floating figures
+\begin{figure}[htp]
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
+        \caption{$M=P$}\labfig{prec2dplotNEW:subfig:P}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
+        \caption{$M=G$}\labfig{prec2dplotNEW:subfig:G}
+    \end{subfigure}
+    \vspace{0.5cm}
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
+        \caption{$M=L$}\labfig{prec2dplotNEW:subfig:L}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
+        \caption{$M=F$}\labfig{prec2dplotNEW:subfig:F}
+    \end{subfigure}
+    \caption{Bla. precision 2d classic recipe (vs. new lux recipe)}
+    \labfig{prec2dplotNEW}
 \end{figure}
 
-\begin{figure}[ht] %
-\labfig{integrandgPGLF}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
-\end{center}
-\caption{Bla. x=1, theta=45degree.} % NB \protect\cite{...} is required in floating figures
+%\begin{figure}[ht]
+%    \centering
+%    \begin{subfigure}{0.45\textwidth}
+%        \centering
+%        \includegraphics[width=\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
+%        \caption{}\labfig{integrandfcts:subfig:gPGLF}
+%    \end{subfigure}
+%    \hfill
+%    \begin{subfigure}{0.45\textwidth}
+%        \centering
+%        \includegraphics[width=\textwidth]{generated/integrand_gP_of_eta_g.pdf}
+%        \caption{}\labfig{integrandfcts:subfig:gP}
+%    \end{subfigure}
+%    \caption{Bla..}
+%    \labfig{prec2dplot}
+%\end{figure}
+%
+
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
+        \caption{}\labfig{integrandfcts:subfig:gPGLF}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/integrand_gP_of_eta_g.pdf}
+        \caption{}\labfig{integrandfcts:subfig:gP}
+    \end{subfigure}
+    \caption{\Refsubfigfrommaincaption{integrandfcts:subfig:gPGLF} shows the
+      integrand of \refeqn{yintegral} for the four different models at
+      $x=1$ and $\theta45^\circ$. \Refsubfigfrommaincaption{integrandfcts:subfig:gP}
+      shows the integrand for the primary extinction model ($M=P$) at various values of
+      $x$ and $\theta$.}
+    \labfig{integrandfcts}
 \end{figure}
+
+ARGH see \reffig{integrandfcts:subfig:gP} and \reffig{integrandfcts:subfig:gPGLF} and \reffig{integrandfcts}.
+
+% \begin{figure}[ht] %
+%\begin{center}
+%\includegraphics[width=0.6\textwidth]{generated/integrand_gP_of_eta_g.pdf}
+%\end{center}
+%\caption{Bla.} % NB \protect\cite{...} is required in floating figures
+%\labfig{integrandgP}
+%\end{figure}
+%
+%\begin{figure}[ht] %
+%\begin{center}
+%\includegraphics[width=0.6\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
+%\end{center}
+%\caption{Bla. x=1, theta=45degree.} % NB \protect\cite{...} is required in floating figures
+%\labfig{integrandgPGLF}
+%\end{figure}
 
  mention how we evaluate the integrand (mpmath, taylor, etc.)
 
@@ -462,11 +535,11 @@ recipe for a two dimensional surface to instead having two one-dimensional
 curves, which is significantly less challenging.
 
 \begin{figure}[ht] %
-\labfig{highx}
 \begin{center}
-\includegraphics[width=0.5\textwidth]{generated/highx.pdf}
+\includegraphics[width=0.6\textwidth]{generated/highx.pdf}
 \end{center}
 \caption{Bla highx 0.5 0.933.}
+\labfig{highx}
 \end{figure}
 
 Extrapolation to extremely high $x$ values: Bla bla power law. Show scaling plot
@@ -480,71 +553,132 @@ results not matter the size of x.
 \section{Conclusions}
 show cmprecipes plots
 
-\begin{figure}[ht] %
-\labfig{cmprecipes:primary}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/cmprecipes_primary.pdf}
-\end{center}
-\caption{cmprecipes primary.}
+\begin{figure}[htp]
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/cmprecipes_primary.pdf}
+        \caption{$M=P$}\labfig{cmprecipes:subfig:P}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/cmprecipes_scndgauss.pdf}
+        \caption{$M=G$}\labfig{cmprecipes:subfig:G}
+    \end{subfigure}
+    \vspace{0.5cm}
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/cmprecipes_scndlorentz.pdf}
+        \caption{$M=L$}\labfig{cmprecipes:subfig:L}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/cmprecipes_scndfresnel.pdf}
+        \caption{$M=F$}\labfig{cmprecipes:subfig:F}
+    \end{subfigure}
+    \caption{Bla bla cmprecipes std. Note: breakdown near 45degrees in $M=L$ plot (we have split
+      that line into $\pm45^\circ$ to show it) }
+    \labfig{cmprecipes}
 \end{figure}
 
-\begin{figure}[ht] %
-\labfig{cmprecipes:primary:lux}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/cmprecipes_primary_lux.pdf}
-\end{center}
-\caption{cmprecipes primary lux.}
+\begin{figure}[htp]
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/cmprecipes_primary_lux.pdf}
+        \caption{$M=P$}\labfig{cmprecipeslux:subfig:P}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/cmprecipes_scndgauss_lux.pdf}
+        \caption{$M=G$}\labfig{cmprecipeslux:subfig:G}
+    \end{subfigure}
+    \vspace{0.5cm}
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/cmprecipes_scndlorentz_lux.pdf}
+        \caption{$M=L$}\labfig{cmprecipeslux:subfig:L}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/cmprecipes_scndfresnel_lux.pdf}
+        \caption{$M=F$}\labfig{cmprecipeslux:subfig:F}
+    \end{subfigure}
+    \caption{Bla bla cmprecipes lux. Note: breakdown near 45degrees in $M=L$ plot (we have split
+      that line into $\pm45^\circ$ to show it) }
+    \labfig{cmprecipeslux}
 \end{figure}
 
-\begin{figure}[ht] %
-\labfig{cmprecipes:scndgauss}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/cmprecipes_scndgauss.pdf}
-\end{center}
-\caption{cmprecipes scndgauss.}
-\end{figure}
 
-\begin{figure}[ht] %
-\labfig{cmprecipes:scndgauss:lux}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/cmprecipes_scndgauss_lux.pdf}
-\end{center}
-\caption{cmprecipes scndgauss lux.}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{cmprecipes:scndlorentz}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/cmprecipes_scndlorentz.pdf}
-\end{center}
-\caption{cmprecipes scndlorentz. NOTE BREAKDOWN NEAR 45degrees (we have split
-  that line into $\pm45^\circ$ to show it).}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{cmprecipes:scndlorentz:lux}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/cmprecipes_scndlorentz_lux.pdf}
-\end{center}
-\caption{cmprecipes scndlorentz lux. NOTE BREAKDOWN NEAR 45degrees (we have split
-  that line into $\pm45^\circ$ to show it).}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{cmprecipes:scndfresnel}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/cmprecipes_scndfresnel.pdf}
-\end{center}
-\caption{cmprecipes scndfresnel.}
-\end{figure}
-
-\begin{figure}[ht] %
-\labfig{cmprecipes:scndfresnel:lux}%fixme
-\begin{center}
-\includegraphics[width=0.5\textwidth]{generated/cmprecipes_scndfresnel_lux.pdf}
-\end{center}
-\caption{cmprecipes scndfresnel lux.}
-\end{figure}
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_primary.pdf}
+%%\end{center}
+%%\caption{cmprecipes primary.}
+%%\labfig{cmprecipes:primary}
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_primary_lux.pdf}
+%%\end{center}
+%%\caption{cmprecipes primary lux.}
+%%\labfig{cmprecipes:primary:lux}
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndgauss.pdf}
+%%\end{center}
+%%\caption{cmprecipes scndgauss.}
+%%\labfig{cmprecipes:scndgauss}%fixme
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndgauss_lux.pdf}
+%%\end{center}
+%%\caption{cmprecipes scndgauss lux.}
+%%\labfig{cmprecipes:scndgauss:lux}%fixme
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndlorentz.pdf}
+%%\end{center}
+%%\caption{cmprecipes scndlorentz. NOTE BREAKDOWN NEAR 45degrees (we have split
+%%  that line into $\pm45^\circ$ to show it).}
+%%\labfig{cmprecipes:scndlorentz}%fixme
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndlorentz_lux.pdf}
+%%\end{center}
+%%\caption{cmprecipes scndlorentz lux. NOTE BREAKDOWN NEAR 45degrees (we have split
+%%  that line into $\pm45^\circ$ to show it).}
+%%\labfig{cmprecipes:scndlorentz:lux}%fixme
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndfresnel.pdf}
+%%\end{center}
+%%\caption{cmprecipes scndfresnel.}
+%%\labfig{cmprecipes:scndfresnel}%fixme
+%%\end{figure}
+%%
+%%\begin{figure}[ht] %
+%%\begin{center}
+%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndfresnel_lux.pdf}
+%%\end{center}
+%%\caption{cmprecipes scndfresnel lux.}
+%%\labfig{cmprecipes:scndfresnel:lux}%fixme
+%%\end{figure}
 
 %%\begin{align}
 %%  \labeqn{fofetaL}
@@ -689,7 +823,7 @@ show cmprecipes plots
 %\begin{figure}[ht] %
 %\label{fig:figure1}
 %\begin{center}
-%\includegraphics[width=0.5\textwidth]{fig1.png} % NB use pdflatex for non-postscript
+%\includegraphics[width=0.6\textwidth]{fig1.png} % NB use pdflatex for non-postscript
 %\end{center}
 %\caption{Caption \protect\cite{knuth84}} % NB \protect\cite{...} is required in floating figures
 %\end{figure}
