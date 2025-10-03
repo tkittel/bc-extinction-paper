@@ -238,30 +238,13 @@ def main_table4( args ):
 def main_cmprecipes( args ):
     args, outfile = parse_outfile(args)
 
-    use_final_recipes = True
-    while 'nofinal' in args:
-        args.remove('nofinal')
-        use_final_recipes = False
-
-    do_strict = True
-    while 'nostrict' in args:
-        args.remove('nostrict')
-        do_strict = False
-
-    do_split45 = False
-    while 'split45' in args:
-        args.remove('split45')
-        do_split45 = True
-
-    do_lux = False
-    while 'lux' in args:
-        args.remove('lux')
-        do_lux = True
-
-    do_xscan090 = False
-    while 'xscan090' in args:
-        args.remove('xscan090')
-        do_xscan090 = True
+    args, use_final_recipes =  parse_flag(args,'nofinal',invert=True)
+    args, do_both =  parse_flag(args,'noboth',invert=True)
+    args, do_updated =  parse_flag(args,'includeupdated')
+    args, do_strict =  parse_flag(args,'nostrict',invert=True)
+    args, do_split45 =  parse_flag(args,'split45')
+    args, do_lux =  parse_flag(args,'lux')
+    args, do_xscan090 =  parse_flag(args,'xscan090')
 
     mode = args[0] if args else 'missing'
     modes=['primary','scndfresnel','scndlorentz','scndgauss']
@@ -283,6 +266,8 @@ def main_cmprecipes( args ):
                    mode = mode,
                    do_strict = do_strict,
                    do_lux = do_lux,
+                   do_both = do_both,
+                   do_updated = do_updated,
                    do_xscan090 = do_xscan090,
                    do_split45 = do_split45,
                    use_final_recipes = use_final_recipes,
@@ -290,10 +275,12 @@ def main_cmprecipes( args ):
 
 def do_cmprecipes( *,
                    do_reldiff, do_vs_old, mode,
-                   do_strict, do_lux, do_xscan090,
-                   do_split45,
+                   do_strict, do_lux, do_both, do_updated,
+                   do_xscan090, do_split45,
                    use_final_recipes, outfile ):
     assert mode in ['primary','scndfresnel','scndlorentz','scndgauss']
+    allow_split_th = False
+
     from . import curves
     ( ClassicCurve,
       UpdatedClassicCurve,
@@ -301,9 +288,13 @@ def do_cmprecipes( *,
       ProposedLuxCurve ) = curves.mode_curves( mode,
                                                use_actual_proposed_pyrecipe
                                                = use_final_recipes )
-    if do_lux:
-      ProposedCurve = ProposedLuxCurve
-    del ProposedLuxCurve
+    if not do_updated:
+        UpdatedClassicCurve = None
+    if not do_both:
+        if do_lux:
+            ProposedCurve = None
+        else:
+            ProposedLuxCurve = None
 
     assert not (do_split45 and do_xscan090), "incompatible"
     from .load import load_xscan090, load_xscan
@@ -326,6 +317,7 @@ def do_cmprecipes( *,
     worst_reldiff_classic = [1e-99]
     worst_reldiff_updatedclassic = [1e-99]
     worst_reldiff_proposed = [1e-99]
+    worst_reldiff_proposedlux = [1e-99]
     if do_reldiff:
         def ytrf( yp, ypref, worst_reldiff_obj = None ):
             if do_strict:
@@ -349,6 +341,7 @@ def do_cmprecipes( *,
         yp_classic = ClassicCurve()(xvals,th)
         yp_updatedclassic = UpdatedClassicCurve()(xvals,th) if UpdatedClassicCurve else None
         yp_proposed = ProposedCurve()(xvals,th) if ProposedCurve else None
+        yp_proposedlux = ProposedLuxCurve()(xvals,th) if ProposedLuxCurve else None
         if do_vs_old:
             yref = yp_classic
 
@@ -381,14 +374,14 @@ def do_cmprecipes( *,
                       label = lbltrf('') )
         #color='red'
         color = 'blue'#th2color(th*0.3,'Reds')
-        split_th = 60
-        if th > split_th:
+        split_th = 60 if allow_split_th else None
+        if split_th is not None and th > split_th:
             color='green'
         if not do_vs_old:
             plt.plot( xvals, ytrf(yp_classic,yref,worst_reldiff_classic),
                       **common,
                       color=color,
-                      ls = '-.',
+                      #ls = '-.',
                       label = lbltrf('BC1974',split_th) )
         #color='green'
         color = 'red'#th2color(th*0.3,'Greens')
@@ -398,7 +391,7 @@ def do_cmprecipes( *,
             plt.plot( xvals, ytrf(yp_updatedclassic,yref,worst_reldiff_updatedclassic),
                       **common,
                       color=color,
-                      ls = '--',
+                      #ls = '--',
                       label = lbltrf('updated BC1974',
                                      split_theta = split_th if do_vs_old else None) )
 
@@ -412,21 +405,29 @@ def do_cmprecipes( *,
             plt.plot( xvals, ytrf(yp_proposed,yref,worst_reldiff_proposed),
                       **common,
                       color=color,
-                      ls = '-',
-                      label = lbltrf('new form',
+                      #ls = '-',
+                      label = lbltrf('BC2025 recipe (standard)',
                                      split_theta = split_th if do_vs_old else None) )
-    yvalname = 'yp' if mode=='primary' else 'ys'
+        if yp_proposedlux is not None:
+            if yp_proposed is not None:
+                color='purple'
+            plt.plot( xvals, ytrf(yp_proposedlux,yref,worst_reldiff_proposedlux),
+                      **common,
+                      color=color,
+                      #ls = '-',
+                      label = lbltrf('BC2025 recipe (luxury)',
+                                     split_theta = split_th if do_vs_old else None) )
 
     if do_reldiff:
         plt.semilogy()
         plt.ylim(1e-10,1.0)
         if do_strict:
-            plt.ylabel(f'max({yvalname}/{yvalname}ref-1,(1-{yvalname})/(1-{yvalname}ref)-1)')
+            plt.ylabel(f'max(y/yref-1,(1-y)/(1-yref)-1)')
         else:
-            plt.ylabel(f'{yvalname}/{yvalname}ref-1')
+            plt.ylabel(f'y/yref-1')
     else:
         plt.ylim(0.0,1.0)
-        plt.ylabel(yvalname)
+        plt.ylabel('y')
     plt.title(mode)
     plt.xlim(xvals[0],xvals[-1])
     plt.grid()
@@ -435,11 +436,16 @@ def do_cmprecipes( *,
     plt.xlabel('x')
     print("Worst reldiff (CLASSIC)    : %g"%worst_reldiff_classic[0])
     print("Worst reldiff (UpdCLASSIC) : %g"%worst_reldiff_updatedclassic[0])
-    print("Worst reldiff (Proposed)   : %g"%worst_reldiff_proposed[0])
+    if ProposedCurve:
+        print("Worst reldiff (Proposed)   : %g"%worst_reldiff_proposed[0])
+    if ProposedLuxCurve:
+        print("Worst reldiff (ProposedLux)   : %g"%worst_reldiff_proposedlux[0])
 
     for cn,curve in [ ('classic',ClassicCurve),
                       ('updclassic',UpdatedClassicCurve),
-                      ('proposed',ProposedCurve) ]:
+                      ('proposed',ProposedCurve),
+                      ('proposedlux',ProposedCurve),
+                     ]:
         if curve is None:
             continue
         print('%20s at x=1e6 and theta=0,45,90: %g   %g   %g'
@@ -898,9 +904,12 @@ def parse_outfile( args ):
     return ( [a for a in args if not a.startswith('outfile=')],
              outfile )
 
-def parse_flag( args, flag ):
+def parse_flag( args, flag, invert = False ):
     args2 = [ a for a in args if a!=flag ]
-    return ( args2, len(args2) < len(args) )
+    flagval = len(args2) < len(args)
+    if invert:
+        flagval = not flagval
+    return ( args2, flagval )
 
 def main_highx( args ):
     show_diff = False
