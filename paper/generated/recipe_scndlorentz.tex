@@ -1,0 +1,34 @@
+\begin{algorithm}
+    \caption{Algorithm for calculating $y_L(x,\sin\theta)$.
+             When $x\le1000$ the result has an absolute error less than $10^{-3}\cdot\min(y_\text{true},1-y_\text{true})$.
+             All variables must be double precision floating point types or better, as per the \texttt{binary64} format\protect\cite{IEEE754}.}
+    \begin{algorithmic}[1]
+        \Procedure{YL}{$x, \sin\theta$}
+            \If{$x < 0.1$}
+                \State ${y_0} \gets 1-{x}{\cdot}(1-{x}{\cdot}(1.0667-{x}{\cdot}(0.988-{x}{\cdot}(0.79-0.55{\cdot}{x}))))$
+            \Else
+                \If{$x>1000$}
+                    \State \textbf{return} $\text{YL}(1000,\sin\theta)\cdot\sqrt{1000/x}$
+                \EndIf
+                \State $x_s \gets \sqrt{x} $
+                \State $x' \gets (x_s-1)/(x_s+1) $
+                \State ${y_0} \gets 0.53379-{x'}{\cdot}(0.84182-{x'}{\cdot}(0.16806+{x'}{\cdot}(0.65124-{x'}{\cdot}(0.67623$\\
+                  \hspace{6em}$+{x'}{\cdot}(0.47199-{x'}{\cdot}(1.0872+{x'}{\cdot}(0.030142-{x'}{\cdot}(0.91361-{x'}{\cdot}(0.28313$\\
+                  \hspace{6em}$+{x'}{\cdot}(0.30078-0.1507{\cdot}{x'}))))))))))$
+            \EndIf
+                \State $s \gets \sqrt{\sin\theta} $
+                \State $u \gets x{\cdot}s$
+            \If{$u < 0.1$}
+                \State ${y^\Delta} \gets {u}{\cdot}{u}{\cdot}(0.53333333-{u}{\cdot}(1.9753-{u}{\cdot}(5.14-11.9{\cdot}{u}))))$
+            \Else
+                \State $u_s \gets \sqrt{u} $
+                \State $u' \gets (u_s-1)/(u_s+1) $
+                \State ${y^\Delta} \gets 0.0514714+{u'}{\cdot}(0.0863117-{u'}{\cdot}(0.191581+{u'}{\cdot}(0.266342-{u'}{\cdot}(0.504516$\\
+                  \hspace{6em}$+{u'}{\cdot}(0.32195-{u'}{\cdot}(0.894662-{u'}{\cdot}(0.0162501+{u'}{\cdot}(0.708855$\\
+                  \hspace{6em}$-0.33707{\cdot}{u'}))))))))$
+            \EndIf
+            \State \textbf{return} $y_0 + \sin\theta{\cdot}s{\cdot}y^\Delta$
+        \EndProcedure
+    \end{algorithmic}
+    \label{alg:yfct_scndlorentz}
+\end{algorithm}

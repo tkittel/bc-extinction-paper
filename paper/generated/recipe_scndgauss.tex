@@ -1,0 +1,34 @@
+\begin{algorithm}
+    \caption{Algorithm for calculating $y_G(x,\sin\theta)$.
+             When $x\le1000$ the result has an absolute error less than $10^{-3}\cdot\min(y_\text{true},1-y_\text{true})$.
+             All variables must be double precision floating point types or better, as per the \texttt{binary64} format\protect\cite{IEEE754}.}
+    \begin{algorithmic}[1]
+        \Procedure{YG}{$x, \sin\theta$}
+            \If{$x < 0.1$}
+                \State ${y_0} \gets 1-{x}{\cdot}(1.0606602-{x}{\cdot}(0.9238-{x}{\cdot}(0.667-{x}{\cdot}(0.409-0.22{\cdot}{x}))))$
+            \Else
+                \If{$x>1000$}
+                    \State \textbf{return} $\text{YG}(1000,\sin\theta)\cdot(0.001{\cdot}x)^{-0.933}$
+                \EndIf
+                \State $x_s \gets \sqrt{x} $
+                \State $x' \gets (x_s-1)/(x_s+1) $
+                \State ${y_0} \gets 0.4588909-{x'}{\cdot}(1.038687-{x'}{\cdot}(0.2401003+{x'}{\cdot}(1.288282-{x'}{\cdot}(0.7641972$\\
+                  \hspace{6em}$+{x'}{\cdot}(1.880246-{x'}{\cdot}(1.886916+{x'}{\cdot}(2.171852-{x'}{\cdot}(3.273034+{x'}{\cdot}(0.9771599$\\
+                  \hspace{6em}$-{x'}{\cdot}(2.988445-{x'}{\cdot}(0.4993548+{x'}{\cdot}(1.037121-0.4353142{\cdot}{x'}))))))))))))$
+            \EndIf
+                \State $s \gets \sqrt{\sin\theta} $
+                \State $u \gets x{\cdot}s$
+            \If{$u < 0.1$}
+                \State ${y^\Delta} \gets {u}{\cdot}{u}{\cdot}(0.46188022-{u}{\cdot}(1.333-{u}{\cdot}(2.66-4.68{\cdot}{u}))))$
+            \Else
+                \State $u_s \gets \sqrt{u} $
+                \State $u' \gets (u_s-1)/(u_s+1) $
+                \State ${y^\Delta} \gets 0.062289443+{u'}{\cdot}(0.13177896-{u'}{\cdot}(0.240705+{u'}{\cdot}(0.61857545$\\
+                  \hspace{6em}$-{u'}{\cdot}(0.61744404+{u'}{\cdot}(1.4812474-{u'}{\cdot}(1.5419561+{u'}{\cdot}(1.9976424$\\
+                  \hspace{6em}$-{u'}{\cdot}(2.8090858+{u'}{\cdot}(0.74297172-{u'}{\cdot}(2.3120683-0.8661981{\cdot}{u'}))))))))))$
+            \EndIf
+            \State \textbf{return} $y_0 + \sin\theta{\cdot}s{\cdot}y^\Delta$
+        \EndProcedure
+    \end{algorithmic}
+    \label{alg:yfct_scndgauss}
+\end{algorithm}

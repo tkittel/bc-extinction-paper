@@ -1,0 +1,44 @@
+\begin{algorithm}
+    \caption{Algorithm for calculating $y_L(x,\sin\theta)$.
+             When $x\le1000$ the result has an absolute error less than $10^{-6}\cdot\min(y_\text{true},1-y_\text{true})$.
+             All variables must be double precision floating point types or better, as per the \texttt{binary64} format\protect\cite{IEEE754}.}
+    \begin{algorithmic}[1]
+        \Procedure{YLLux}{$x, \sin\theta$}
+            \If{$x < 0.02$}
+                \State ${y_0} \gets 1-{x}{\cdot}(1-{x}{\cdot}(1.0666666666667-{x}{\cdot}(0.98765432098765$\\
+                  \hspace{6em}$-{x}{\cdot}(0.79012345679012-0.55308641975309{\cdot}{x}))))$
+            \Else
+                \If{$x>1000$}
+                    \State \textbf{return} $\text{YLLux}(1000,\sin\theta)\cdot\sqrt{1000/x}$
+                \EndIf
+                \State $x_s \gets \sqrt{x} $
+                \State $x' \gets (x_s-1)/(x_s+1) $
+                \State ${y_0} \gets 0.5336441259-{x'}{\cdot}(0.8429114501-{x'}{\cdot}(0.1770013802+{x'}{\cdot}(0.6797417272$\\
+                  \hspace{6em}$-{x'}{\cdot}(0.818932607+{x'}{\cdot}(0.7066833263-{x'}{\cdot}(2.153895064+{x'}{\cdot}(0.942873933$\\
+                  \hspace{6em}$-{x'}{\cdot}(5.438402926+{x'}{\cdot}(2.034470992-{x'}{\cdot}(12.91149187+{x'}{\cdot}(5.399270166$\\
+                  \hspace{6em}$-{x'}{\cdot}(26.43349543+{x'}{\cdot}(11.99710274-{x'}{\cdot}(43.38620265+{x'}{\cdot}(19.31504654$\\
+                  \hspace{6em}$-{x'}{\cdot}(54.09291652+{x'}{\cdot}(21.30361545-{x'}{\cdot}(48.71558791+{x'}{\cdot}(15.19814842$\\
+                  \hspace{6em}$-{x'}{\cdot}(29.65815201+{x'}{\cdot}(6.299367185-{x'}{\cdot}(10.86478452+{x'}{\cdot}(1.14907036$\\
+                  \hspace{6em}$-1.800708025{\cdot}{x'})))))))))))))))))))))))$
+            \EndIf
+                \State $s \gets \sqrt{\sin\theta} $
+                \State $u \gets x{\cdot}s$
+            \If{$u < 0.02$}
+                \State ${y^\Delta} \gets {u}{\cdot}{u}{\cdot}(0.53333333333333-{u}{\cdot}(1.9753086419753-{u}{\cdot}(5.1358024691358$\\
+                  \hspace{6em}$-11.891358024691{\cdot}{u}))))$
+            \Else
+                \State $u_s \gets \sqrt{u} $
+                \State $u' \gets (u_s-1)/(u_s+1) $
+                \State ${y^\Delta} \gets 0.05157982383+{u'}{\cdot}(0.08702046572-{u'}{\cdot}(0.199353768$\\
+                  \hspace{6em}$+{u'}{\cdot}(0.2899285322-{u'}{\cdot}(0.6378148804+{u'}{\cdot}(0.5502529572$\\
+                  \hspace{6em}$-{u'}{\cdot}(1.956981119+{u'}{\cdot}(0.9631382051-{u'}{\cdot}(5.54608499+{u'}{\cdot}(2.04851528$\\
+                  \hspace{6em}$-{u'}{\cdot}(14.45528159+{u'}{\cdot}(4.719780698-{u'}{\cdot}(32.73916116+{u'}{\cdot}(8.241956394$\\
+                  \hspace{6em}$-{u'}{\cdot}(59.63989821+{u'}{\cdot}(7.43970856-{u'}{\cdot}(81.0118243-{u'}{\cdot}(2.53170678$\\
+                  \hspace{6em}$+{u'}{\cdot}(75.52806893-{u'}{\cdot}(14.4309282+{u'}{\cdot}(42.64462669-{u'}{\cdot}(14.48078074$\\
+                  \hspace{6em}$+{u'}{\cdot}(10.92280777-5.137685796{\cdot}{u'}))))))))))))))))))))))$
+            \EndIf
+            \State \textbf{return} $y_0 + \sin\theta{\cdot}s{\cdot}y^\Delta$
+        \EndProcedure
+    \end{algorithmic}
+    \label{alg:yfct_scndlorentz_lux}
+\end{algorithm}
