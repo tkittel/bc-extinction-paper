@@ -1,0 +1,54 @@
+\begin{algorithm}
+    \caption{Algorithm for calculating $y_P(x,\sin\theta)$.
+             When $x\le1000$ the result has an absolute error less than $10^{-6}\cdot\min(y_\text{true},1-y_\text{true})$.
+             All variables must be double precision floating point types or better, as per the \texttt{binary64} format\protect\cite{IEEE754}.}
+    \begin{algorithmic}[1]
+        \Procedure{YPLux}{$x, \sin\theta$}
+            \If{$x < 0.02$}
+                \State ${y_0} \gets 1-{x}{\cdot}(0.94285714285714-{x}{\cdot}(0.8204329004329-{x}{\cdot}(0.59332136724729$\\
+                  \hspace{6em}$-{x}{\cdot}(0.36445371604802-0.19428532960037{\cdot}{x}))))$
+            \Else
+                \If{$x>1000$}
+                    \State \textbf{return} $\text{YPLux}(1000,\sin\theta)\cdot\sqrt{1000/x}$
+                \EndIf
+                \State $x_s \gets \sqrt{x} $
+                \State $x' \gets (x_s-1)/(x_s+1) $
+                \State ${y_0} \gets 0.5181739142759-{x'}{\cdot}(0.9312354258708-{x'}{\cdot}(0.1838441456426$\\
+                  \hspace{6em}$+{x'}{\cdot}(1.1362742358-{x'}{\cdot}(0.6439499617823+{x'}{\cdot}(2.206331176315$\\
+                  \hspace{6em}$-{x'}{\cdot}(1.140630599466+{x'}{\cdot}(5.318659095481-{x'}{\cdot}(1.818212320215$\\
+                  \hspace{6em}$+{x'}{\cdot}(14.55391219715-{x'}{\cdot}(10.87410353778+{x'}{\cdot}(45.03938805729$\\
+                  \hspace{6em}$-{x'}{\cdot}(110.6857924368+{x'}{\cdot}(174.6473769273-{x'}{\cdot}(720.5710673832$\\
+                  \hspace{6em}$+{x'}{\cdot}(736.1717109119-{x'}{\cdot}(3106.364394659+{x'}{\cdot}(2617.91188764$\\
+                  \hspace{6em}$-{x'}{\cdot}(9418.786974417+{x'}{\cdot}(6988.557590101-{x'}{\cdot}(20670.35083956$\\
+                  \hspace{6em}$+{x'}{\cdot}(13504.21392907-{x'}{\cdot}(33107.13743136+{x'}{\cdot}(18520.07264798$\\
+                  \hspace{6em}$-{x'}{\cdot}(38415.15440831+{x'}{\cdot}(17532.51527802-{x'}{\cdot}(31492.96870494$\\
+                  \hspace{6em}$+{x'}{\cdot}(10877.45934053-{x'}{\cdot}(17311.15064191+{x'}{\cdot}(3975.170684325$\\
+                  \hspace{6em}$-{x'}{\cdot}(5724.961892345+{x'}{\cdot}(647.8950238727$\\
+                  \hspace{6em}$-860.4745834869{\cdot}{x'})))))))))))))))))))))))))))))))$
+            \EndIf
+                \State $s \gets \sqrt{\sin\theta} $
+                \State $u \gets x{\cdot}s$
+            \If{$u < 0.02$}
+                \State ${y^\Delta} \gets {u}{\cdot}{u}{\cdot}(0.41021645021645-{u}{\cdot}(1.1866427344946-{u}{\cdot}(2.3689491543122$\\
+                  \hspace{6em}$-4.1771345864079{\cdot}{u}))))$
+            \Else
+                \State $u_s \gets \sqrt{u} $
+                \State $u' \gets (u_s-1)/(u_s+1) $
+                \State ${y^\Delta} \gets 0.05508580666571+{u'}{\cdot}(0.1171543796275-{u'}{\cdot}(0.2094959893224$\\
+                  \hspace{6em}$+{u'}{\cdot}(0.5753610003144-{u'}{\cdot}(0.5029926535087+{u'}{\cdot}(1.827528591995$\\
+                  \hspace{6em}$-{u'}{\cdot}(0.9343233427577+{u'}{\cdot}(5.560154682465-{u'}{\cdot}(1.67846357379$\\
+                  \hspace{6em}$+{u'}{\cdot}(21.02643609634-{u'}{\cdot}(13.57802643233+{u'}{\cdot}(107.3363063748$\\
+                  \hspace{6em}$-{u'}{\cdot}(151.8892352219+{u'}{\cdot}(576.5632688968-{u'}{\cdot}(1071.234226007$\\
+                  \hspace{6em}$+{u'}{\cdot}(2533.754063934-{u'}{\cdot}(5066.801335663+{u'}{\cdot}(8223.815227808$\\
+                  \hspace{6em}$-{u'}{\cdot}(16955.1507836+{u'}{\cdot}(18939.97089727-{u'}{\cdot}(40926.64492568$\\
+                  \hspace{6em}$+{u'}{\cdot}(29716.04901001-{u'}{\cdot}(71039.43814205+{u'}{\cdot}(29047.97910648$\\
+                  \hspace{6em}$-{u'}{\cdot}(86612.37915478+{u'}{\cdot}(12774.94362795-{u'}{\cdot}(70438.23189688$\\
+                  \hspace{6em}$-{u'}{\cdot}(4826.668786858+{u'}{\cdot}(34308.55921383-{u'}{\cdot}(8466.342245127$\\
+                  \hspace{6em}$+{u'}{\cdot}(7568.031380324$\\
+                  \hspace{6em}$-2978.804894556{\cdot}{u'}))))))))))))))))))))))))))))))$
+            \EndIf
+            \State \textbf{return} $y_0 + \sin\theta{\cdot}s{\cdot}y^\Delta$
+        \EndProcedure
+    \end{algorithmic}
+    \label{alg:yfct_primary_lux}
+\end{algorithm}

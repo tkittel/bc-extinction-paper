@@ -1,0 +1,49 @@
+\begin{algorithm}
+    \caption{Algorithm for calculating $y_G(x,\sin\theta)$.
+             When $x\le1000$ the result has an absolute error less than $10^{-6}\cdot\min(y_\text{true},1-y_\text{true})$.
+             All variables must be double precision floating point types or better, as per the \texttt{binary64} format\protect\cite{IEEE754}.}
+    \begin{algorithmic}[1]
+        \Procedure{YGLux}{$x, \sin\theta$}
+            \If{$x < 0.02$}
+                \State ${y_0} \gets 1-{x}{\cdot}(1.0606601717798-{x}{\cdot}(0.9237604307034-{x}{\cdot}(0.66666666666667$\\
+                  \hspace{6em}$-{x}{\cdot}(0.40888100159996-0.21773242158073{\cdot}{x}))))$
+            \Else
+                \If{$x>1000$}
+                    \State \textbf{return} $\text{YGLux}(1000,\sin\theta)\cdot(0.001{\cdot}x)^{-0.933}$
+                \EndIf
+                \State $x_s \gets \sqrt{x} $
+                \State $x' \gets (x_s-1)/(x_s+1) $
+                \State ${y_0} \gets 0.45898433395-{x'}{\cdot}(1.0398885672-{x'}{\cdot}(0.23347432787$\\
+                  \hspace{6em}$+{x'}{\cdot}(1.3320564936-{x'}{\cdot}(0.65964335645+{x'}{\cdot}(2.4573554347$\\
+                  \hspace{6em}$-{x'}{\cdot}(1.1858452452+{x'}{\cdot}(6.0101020414-{x'}{\cdot}(0.42409952962$\\
+                  \hspace{6em}$+{x'}{\cdot}(16.109953924+{x'}{\cdot}(7.6979330841-{x'}{\cdot}(40.844896412$\\
+                  \hspace{6em}$+{x'}{\cdot}(38.282141999-{x'}{\cdot}(90.529504717+{x'}{\cdot}(109.93053034$\\
+                  \hspace{6em}$-{x'}{\cdot}(168.29068816+{x'}{\cdot}(216.74542662-{x'}{\cdot}(254.04407166$\\
+                  \hspace{6em}$+{x'}{\cdot}(301.23376255-{x'}{\cdot}(299.83692304+{x'}{\cdot}(290.35481016$\\
+                  \hspace{6em}$-{x'}{\cdot}(262.9383083+{x'}{\cdot}(184.61968604-{x'}{\cdot}(159.14627416+{x'}{\cdot}(69.52062555$\\
+                  \hspace{6em}$-{x'}{\cdot}(58.698294202+{x'}{\cdot}(11.715653334$\\
+                  \hspace{6em}$-9.8564365005{\cdot}{x'}))))))))))))))))))))))))))$
+            \EndIf
+                \State $s \gets \sqrt{\sin\theta} $
+                \State $u \gets x{\cdot}s$
+            \If{$u < 0.02$}
+                \State ${y^\Delta} \gets {u}{\cdot}{u}{\cdot}(0.4618802153517-{u}{\cdot}(1.3333333333333-{u}{\cdot}(2.6577265103997$\\
+                  \hspace{6em}$-4.6812470639856{\cdot}{u}))))$
+            \Else
+                \State $u_s \gets \sqrt{u} $
+                \State $u' \gets (u_s-1)/(u_s+1) $
+                \State ${y^\Delta} \gets 0.06224953019339+{u'}{\cdot}(0.1328158690775-{u'}{\cdot}(0.236741722263$\\
+                  \hspace{6em}$+{u'}{\cdot}(0.6589627718965-{u'}{\cdot}(0.5420212226156+{u'}{\cdot}(2.036463256552$\\
+                  \hspace{6em}$-{u'}{\cdot}(0.97288478567+{u'}{\cdot}(5.846171066704-{u'}{\cdot}(0.4786858467243$\\
+                  \hspace{6em}$+{u'}{\cdot}(16.52467895771+{u'}{\cdot}(5.177873225504-{u'}{\cdot}(43.26855122074$\\
+                  \hspace{6em}$+{u'}{\cdot}(23.12266235959-{u'}{\cdot}(97.49162419575+{u'}{\cdot}(52.38175330609$\\
+                  \hspace{6em}$-{u'}{\cdot}(176.313696784+{u'}{\cdot}(68.31348886279-{u'}{\cdot}(238.6100261469$\\
+                  \hspace{6em}$+{u'}{\cdot}(41.13149813131-{u'}{\cdot}(222.4411069882-{u'}{\cdot}(10.56142327328$\\
+                  \hspace{6em}$+{u'}{\cdot}(125.8054728166-{u'}{\cdot}(30.66189892098+{u'}{\cdot}(32.28090591464$\\
+                  \hspace{6em}$-13.18049019718{\cdot}{u'})))))))))))))))))))))))$
+            \EndIf
+            \State \textbf{return} $y_0 + \sin\theta{\cdot}s{\cdot}y^\Delta$
+        \EndProcedure
+    \end{algorithmic}
+    \label{alg:yfct_scndgauss_lux}
+\end{algorithm}

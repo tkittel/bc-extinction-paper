@@ -30,6 +30,9 @@
 \usepackage{subcaption}
 \usepackage{caption}
 
+\usepackage[section]{placeins}
+
+
 %internal refs with macros, for consistency:
 \newcommand{\labsec}[1]{\label{sec:#1}}
 \newcommand{\refsecnumonly}[1]{\ref{sec:#1}}
@@ -520,6 +523,8 @@ and approximate fit. Mention that there will be no well determined precision of
 the provided recipes at these extreme values, but that the solution with a
 simple power law is both simple and trivially ensures well behaved numerical
 results not matter the size of x.
+
+\input{generated/recipe_primary.tex}
 
 \section{Conclusions}
 show cmprecipes plots
@@ -1413,7 +1418,13 @@ FIXME: Perhaps we should also make one for the fresnel model?
 
 \section{The recipes}
 
-\input{generated/recipes.tex}
+\input{generated/recipe_scndgauss.tex}
+\input{generated/recipe_scndlorentz.tex}
+\input{generated/recipe_scndfresnel.tex}
+\input{generated/recipe_primary_lux.tex}
+\input{generated/recipe_scndgauss_lux.tex}
+\input{generated/recipe_scndlorentz_lux.tex}
+\input{generated/recipe_scndfresnel_lux.tex}
 
 
 \section{Appendix title}

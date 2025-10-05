@@ -18,7 +18,22 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
 
     assert lang in languages
 
-    o = []
+    o_shared = [ [] ]
+    o = o_shared[0]
+
+    flush_if_latex_mode = False
+    def flush_if_latex(tag):
+        pass
+    if outfile and 'TAGHERE' in outfile:
+        if lang!='latex':
+            raise SystemExit('TAGHERE multi output only supported for lang=latex')
+        flush_if_latex_mode = True
+        def flush_if_latex(tag):
+            assert len(o_shared[0])>10
+            c = '\n'.join(o_shared[0]) + '\n'
+            o_shared[0].clear()
+            pathlib.Path(outfile.replace('TAGHERE',tag)).write_text(c)
+
     eps_lux = recipe_target_prec(lux=True)
     eps_std = recipe_target_prec(lux=False)
 
@@ -159,7 +174,9 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 o.append(r'    \end{algorithmic}')
                 o.append(r'    \label{alg:yfct_%s}'%(('%s_lux' if lux else '%s')%mode))
                 o.append(r'\end{algorithm}')
-            o.append('')
+                flush_if_latex('%s%s'%(mode, '_lux' if lux else ''))
+            if not flush_if_latex_mode:
+                o.append('')
 
     if include_testfcts:
 
@@ -307,7 +324,8 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
 
     content = '\n'.join(o) + '\n'
     if outfile:
-        pathlib.Path(outfile).write_text(content)
+        if not flush_if_latex_mode:
+            pathlib.Path(outfile).write_text(content)
     else:
         print(content,end='')
     return o
@@ -464,7 +482,8 @@ def fmt_horner_for_latex( polycoeffs, varname, resvarname ):
     return o
 
 def textbox(lang,*msg_lines):
-    yield ''
+    if lang!='latex':
+        yield ''
     if lang in ('py','cpp'):
         c = '#' if lang=='py' else '/'
         yield c*80

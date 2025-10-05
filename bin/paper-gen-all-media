@@ -9,7 +9,7 @@ import tqdm
 import random
 
 cmds = """
-printcode latex <DESTDIR>/recipes.tex
+printcode latex <DESTDIR>/recipe_TAGHERE.tex
 plot table1 updated destdir=<DESTDIR>
 plot table1 diff destdir=<DESTDIR>
 plot table3 updated destdir=<DESTDIR>

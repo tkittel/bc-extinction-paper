@@ -1,0 +1,34 @@
+\begin{algorithm}
+    \caption{Algorithm for calculating $y_F(x,\sin\theta)$.
+             When $x\le1000$ the result has an absolute error less than $10^{-3}\cdot\min(y_\text{true},1-y_\text{true})$.
+             All variables must be double precision floating point types or better, as per the \texttt{binary64} format\protect\cite{IEEE754}.}
+    \begin{algorithmic}[1]
+        \Procedure{YF}{$x, \sin\theta$}
+            \If{$x < 0.1$}
+                \State ${y_0} \gets 1-{x}{\cdot}(1-{x}{\cdot}(0.88-{x}{\cdot}(0.639-{x}{\cdot}(0.394-0.21{\cdot}{x}))))$
+            \Else
+                \If{$x>1000$}
+                    \State \textbf{return} $\text{YF}(1000,\sin\theta)\cdot\sqrt{1000/x}$
+                \EndIf
+                \State $x_s \gets \sqrt{x} $
+                \State $x' \gets (x_s-1)/(x_s+1) $
+                \State ${y_0} \gets 0.493354-{x'}{\cdot}(0.963692-{x'}{\cdot}(0.235067+{x'}{\cdot}(1.18222-{x'}{\cdot}(0.672931$\\
+                  \hspace{6em}$+{x'}{\cdot}(1.78522-{x'}{\cdot}(1.09976+{x'}{\cdot}(2.10882-{x'}{\cdot}(1.34721+{x'}{\cdot}(1.46841$\\
+                  \hspace{6em}$-{x'}{\cdot}(1.0054+{x'}{\cdot}(0.426279-0.313436{\cdot}{x'})))))))))))$
+            \EndIf
+                \State $s \gets \sqrt{\sin\theta} $
+                \State $u \gets x{\cdot}s$
+            \If{$u < 0.1$}
+                \State ${y^\Delta} \gets {u}{\cdot}{u}{\cdot}(0.44-{u}{\cdot}(1.278-{u}{\cdot}(2.56-4.52{\cdot}{u}))))$
+            \Else
+                \State $u_s \gets \sqrt{u} $
+                \State $u' \gets (u_s-1)/(u_s+1) $
+                \State ${y^\Delta} \gets 0.05839+{u'}{\cdot}(0.12063-{u'}{\cdot}(0.233343+{u'}{\cdot}(0.578753-{u'}{\cdot}(0.584531$\\
+                  \hspace{6em}$+{u'}{\cdot}(1.42753-{u'}{\cdot}(1.28278+{u'}{\cdot}(1.95436-{u'}{\cdot}(2.18561+{u'}{\cdot}(0.877761$\\
+                  \hspace{6em}$-{u'}{\cdot}(1.80505-0.599956{\cdot}{u'}))))))))))$
+            \EndIf
+            \State \textbf{return} $y_0 + \sin\theta{\cdot}s{\cdot}y^\Delta$
+        \EndProcedure
+    \end{algorithmic}
+    \label{alg:yfct_scndfresnel}
+\end{algorithm}
