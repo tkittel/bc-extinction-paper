@@ -424,7 +424,7 @@ def do_cmprecipes( *,
         if do_strict:
             plt.ylabel( r'$|y-y_{ref}|\,/\,\min(y_{ref},1-y_{ref})$' )
         else:
-            plt.ylabel(f'y/yref-1')
+            plt.ylabel('y/yref-1')
     else:
         plt.ylim(0.0,1.0)
         plt.ylabel('y')
