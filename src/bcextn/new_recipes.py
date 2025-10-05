@@ -1,7 +1,7 @@
 
 
 def recipe_taylor_cutoff( lux ):
-    return 0.01 if lux else 0.1
+    return 0.02 if lux else 0.1
 
 def recipe_highx_cutoff():
     return 1000.0

@@ -38,9 +38,11 @@ def worker( cmd ):
     return 'success'
 
 def main():
+    import sys
+    do_quick = 'quick' in sys.argv[1:]
     generate()
     print("Generation done.")
-    verify()
+    verify(do_quick)
     print("Verification done.")
 
 def generate():
@@ -80,16 +82,19 @@ def compile_commands( srcfile, lang ):
             cc = [prog] + stdl + ['-lm'] + b + [srcfile,'-o','testapp']
             yield cc
 
-def verify():
+def verify( quick ):
     src_cpp = destdir.joinpath('bc2025.cpp')
     src_c = destdir.joinpath('bc2025.c')
     src_py = destdir.joinpath('bc2025.py')
     print(f"Checking {src_py}")
     subprocess.run( [sys.executable,src_py], check = True )
-    compile_cmds = []
-    compile_cmds += list( compile_commands( src_cpp, 'cpp' ) )
-    compile_cmds += list( compile_commands( src_c, 'c' ) )
-    random.shuffle(compile_cmds)#avoid failures hiding at the end
+    cc_cpp = list( compile_commands( src_cpp, 'cpp' ) )
+    cc_c = list( compile_commands( src_c, 'c' ) )
+    if quick:
+        compile_cmds = [ cc_cpp[0], cc_c[0] ]
+    else:
+        compile_cmds = cc_cpp + cc_c
+        random.shuffle(compile_cmds)#avoid failures hiding at the end
     for cc in compile_cmds:
         with tempfile.TemporaryDirectory() as temp_dir:
             print("Checking %s %s && ./testapp"%(

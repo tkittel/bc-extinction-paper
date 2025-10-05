@@ -3,21 +3,34 @@ def taylor_y0_coeffs( mode, fpmode ):
     p = _mpf_taylor_y0_coeffs( mode )
     if fpmode=='mpf':
         return p
-    return _chop_for_recipe( p, lux=(fpmode=='luxrecipe') )
+    return _chop_for_recipe( mode, p, lux=(fpmode=='luxrecipe') )
 
 def taylor_ydelta_coeffs( mode, fpmode ):
     assert fpmode in ('mpf','luxrecipe','stdrecipe')
     p = _mpf_taylor_ydelta_coeffs( mode )
     if fpmode=='mpf':
         return p
-    return _chop_for_recipe( p, lux=(fpmode=='luxrecipe') )
+    return _chop_for_recipe( mode, p, lux=(fpmode=='luxrecipe') )
 
-def _chop_for_recipe( p, lux ):
+def _chop_for_recipe( mode, p, lux ):
     skip2mode = (float(p[0])==0 and float(p[1])==0)
     def n(i):
         if lux:
             return 14
-        return [12,8,5,3,3,2][max(0,i-1) if skip2mode else i]
+        #Tuning ndigits a bit for std recipes, to get desired resolution with
+        #as few digits as possible:
+        stdndigits = [12,8,5,3,3,2]
+        if mode=='primary':
+            stdndigits = [12,8,4,3,3,2]
+        elif mode=='scndgauss':
+            stdndigits = [12,8,4,3,3,2]
+        elif mode=='scndlorentz':
+            stdndigits = [12,8,5,3,3,2]
+        elif mode=='scndfresnel':
+            stdndigits = [12,8,4,3,3,2]
+        else:
+            assert False
+        return stdndigits[max(0,i-1) if skip2mode else i]
     return [ float(f'%.{n(i)}g'%float(e)) for i,e in enumerate(p) ]
 
 def _mpf_taylor_y0_coeffs( mode ):
