@@ -6,7 +6,7 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
     from .data import load_json_data
     from .taylor_recipes import taylor_ydelta_coeffs, taylor_y0_coeffs
     from .load import load_legendre
-    from .new_recipes import recipe_target_prec, recipe_highx_pow
+    from .new_recipes import recipe_target_prec, recipe_highx_pow, recipe_taylor_cutoff
     import pathlib
 
     if lang=='latex':
@@ -42,7 +42,7 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
         for mode in modes:
             fctname = 'bc2025_y_%s%s'%(mode,'_lux' if lux else '')
             ns = 'std::' if lang=='cpp' else ''
-            taylorthr = '0.01' if lux else '0.1'
+            taylorthr = recipe_taylor_cutoff(lux)
             fpmode = 'luxrecipe' if lux else 'stdrecipe'
             pydelta_taylor = taylor_ydelta_coeffs( mode, fpmode = fpmode )
             pydelta = load_legendre(mode,is_lux=lux)['pdelta']
