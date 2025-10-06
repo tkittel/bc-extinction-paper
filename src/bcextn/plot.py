@@ -1362,4 +1362,126 @@ def main_integrand( args ):
     plt.xlabel('$\\eta$')
     plt_savefig_pdf_or_show(plt,outfile)
 
-#TODO: plot showing y(x) bands for the 4 models?
+def main_xscanforpaper( args ):
+    args, outfile = parse_outfile(args)
+    modes=['primary','scndfresnel','scndlorentz','scndgauss']
+    if len(args)!=1 or args[0] not in modes:
+        raise SystemExit('Please provide mode as one of: %s'%(' '.join(modes)))
+    mode = args[0]
+    del args
+    from .load import load_xscan, load_xscan090
+    from .printcode import mode2letter
+    data = load_xscan(mode)
+    data090 = load_xscan090(mode)
+    highres_used = []
+    for thstr, yvals in sorted(data['theta_2_ypvals'].items()):
+        assert float(thstr) == int(float(thstr))
+        ithval = int(float(thstr))
+
+        xvals = data['xvals']
+        lbl = None
+        print(thstr)
+        if ithval in (0,90):
+            highres_used.append(thstr)
+            #high res
+            xvals = data090['xvals']
+            yvals = data090['theta_2_ypvals'][thstr]
+        if ithval in (0,10,20,30,40,50,60,70,80,90):
+        #if ithval in (0,15,30,45,60,75,90):
+        #if ithval in (0,30,60,90):
+            lbl = r'$\theta=%i^\circ$'%ithval
+
+        color = th2color(thstr)
+        plt.plot( xvals, yvals,
+                  label = lbl,
+                  color = color,
+                  alpha=0.8)
+    assert len(highres_used)==2
+    plt.xlim(1e-3,1e3)
+    #plt.ylabel('$y$')
+    plt.ylabel( r'$y_%s(x,\theta)$'%mode2letter(mode) )
+    plt.ylim(0,1)
+    plt.semilogx()
+    plt.legend()
+    plt.grid()
+    plt.xlabel('$x$')
+    plt_savefig_pdf_or_show(plt,outfile)
+
+def mode2color_single(mode):
+    return { 'primary' : 'black',
+             'scndgauss':'tab:green',
+             'scndlorentz':'tab:blue',
+             'scndfresnel':'tab:orange',
+            }[mode]
+
+def main_xscanbands( args):
+    args, outfile = parse_outfile(args)
+    args, noband =  parse_flag(args,'noband')
+    args, nooutline =  parse_flag(args,'nooutline')
+
+    assert not args
+    from .load import load_xscan090 as loadfct
+    from .printcode import mode2letter
+    #from .load import load_xscan as loadfct
+    modes=['primary',
+           'scndlorentz',
+           'scndgauss',
+           'scndfresnel',
+           ]
+
+    def genlbl(mode):
+        return r'$y_%s(x,\theta)$'%mode2letter(mode)
+
+    def load( mode ):
+        data = loadfct(mode)
+        return dict( mode = mode,
+                     x = data['xvals'],
+                     color = mode2color_single(mode) if mode!='primary' else 'black',
+                     y0 = data['theta_2_ypvals']['0.0'],
+                     y90 = data['theta_2_ypvals']['90.0'] )
+    #data = [ load(mode) for mode in modes ]
+    custom_leg = []
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Rectangle
+    import matplotlib.colors
+    for imode,mode in enumerate(modes):
+        d = load(mode)
+        kw = {}
+        kw['color'] = d['color']
+        alpha_fill = 0.25
+        alpha_edge = 1.0
+        kw['alpha'] = alpha_fill
+        z = imode+10
+        plt.fill_between( d['x'], d['y0'], d['y90'],**kw,
+                          zorder = z + 0.01 )
+
+        ls_offset = imode*4.0
+        ls_dashlength = 1.0
+        ls_dashspace = 4.0
+        if mode == 'primary':
+            ls_dashlength = 2.0
+            ls_dashspace = 2.0
+
+        #legend_line = Line2D( [0], [0], linestyle=(0, (ls_dashlength, ls_dashspace)), color=kw['color'])
+
+        kw['alpha'] = alpha_edge
+        kw['ls']=( ls_offset, ( ls_dashlength, ls_dashspace) )
+        plt.plot( d['x'], d['y0'], **kw, zorder = z + 0.02  )
+        plt.plot( d['x'], d['y90'],**kw, zorder = z + 0.03 )
+
+        edgecol = matplotlib.colors.to_rgba(kw['color'],alpha_edge)
+        fillcol = matplotlib.colors.to_rgba(kw['color'],alpha_fill)
+        filled_square = Rectangle((0, 0), 1, 1,
+                                  fc = fillcol, ec = edgecol,
+                                  lw=1, ls=(0, (ls_dashlength, ls_dashspace)))
+        custom_leg.append( ( filled_square, genlbl(d['mode']) ) )
+
+    plt.xlim(1e-3,1e3)
+    plt.ylabel('$y$')
+    plt.ylim(0,1)
+    plt.semilogx()
+    plt.legend(handles=[o for o,lbl in custom_leg],
+               labels=[lbl for o,lbl in custom_leg])
+    plt.grid()
+    plt.xlabel('$x$')
+    plt_savefig_pdf_or_show(plt,outfile)
