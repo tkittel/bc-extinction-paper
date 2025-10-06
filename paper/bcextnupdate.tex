@@ -330,13 +330,13 @@ the Gaussian model ($M=G$) exhibits neither of these, and is therefore
 relatively straight-forward to evaluate via numerical quadrature.
 \begin{figure}[tp]
     \centering
-    \begin{subfigure}{0.45\textwidth}
+    \begin{subfigure}{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
         \caption{}\labfig{integrandfcts:subfig:gPGLF}
     \end{subfigure}
     \hfill
-    \begin{subfigure}{0.45\textwidth}
+    \begin{subfigure}{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/integrand_gP_of_eta_g.pdf}
         \caption{}\labfig{integrandfcts:subfig:gP}
@@ -367,7 +367,7 @@ help of the \texttt{SageMath} \cite{sagemath} mathematics software system.
 work are provided in (FIXME: ZENODO??), and can be run completely with a
 Conda-Forge(REF?) installation of purely Open Source tools. The main software
 used is \texttt{Python}, \texttt{mpmath}, \texttt{SageMath}, \texttt{NumPy} and
-\texttt{matplotlib} (FIXME REFS).}
+\texttt{matplotlib} (FIXME REFS) (FIXME: Mention data as json??).}
 
 The actual numerical quadrature evaluation of the integral is based on
 Gauss-Legendre quadrature, and is performed over a large number of sub-intervals
@@ -478,7 +478,7 @@ to $n=\infty$.
 
 TODO: Show resulting rainbow curves here? And consider putting the details of
 the evaluations (next 4 subsections) in appendix?
-
+Bla \reffig{yrefeval}.
 
 %\begin{align}
 %  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
@@ -611,6 +611,28 @@ the evaluations (next 4 subsections) in appendix?
 %%%robinson extrapolation.
 %%%
 %%%Mention specifics of quad intervals (bounds).
+
+\begin{figure}[tp]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/yrefeval_primary.pdf}
+        \caption{}\labfig{yrefeval:subfig:primary}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/yrefeval_bands.pdf}
+        \caption{}\labfig{yrefeval:subfig:bands}
+    \end{subfigure}
+    \caption{\Refsubfigfrommaincaption{yrefeval:subfig:primary} shows the
+      $y_P(x,\theta)$ curves resulting from the high precision evaluation of
+      \refeqn{yintegral}, with each color denoting a specific value of $\theta$
+      as indicated. \Refsubfigfrommaincaption{yrefeval:subfig:bands}
+      shows the bands of $y_M(x,\theta)$ values covered by all four models, as
+      $\theta$ is varied from $0^\circ$ to  $90^\circ$..}
+    \labfig{yrefeval}
+\end{figure}
 
 \section{Original recipes}\labsec{origrecipes}
 
