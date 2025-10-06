@@ -33,6 +33,8 @@
 \usepackage[section]{placeins}
 
 
+\DeclareMathOperator{\sinc}{sinc}
+
 %internal refs with macros, for consistency:
 \newcommand{\labsec}[1]{\label{sec:#1}}
 \newcommand{\refsecnumonly}[1]{\ref{sec:#1}}
@@ -66,6 +68,7 @@
 \newcommand{\labeqn}[1]{\label{eqn:#1}}
 \newcommand{\refeqnnumonly}[1]{\ref{eqn:#1}}
 \newcommand{\refeqn}[1]{Eq.~\refeqnnumonly{#1}}
+\newcommand{\refeqnrange}[2]{Eqs.~\refeqnnumonly{#1}--\refeqnnumonly{#2}}
 \newcommand{\Refeqn}[1]{Eq.~\refeqnnumonly{#1}}%same as \refeqn, but always capitalised!
 \newcommand{\reftwoeqns}[2]{Eqs.~\refeqnnumonly{#1} and \refeqnnumonly{#2}}
 \def\LRA{\Leftrightarrow}
@@ -261,7 +264,7 @@ shape of the Bragg diffraction cross section as a function of deviation from the
 nominal direction, normalised so $f_M(0)=1$. The difference in extinction levels
 predicted by the different Becker-Coppens models are essentially due to the
 difference of these $f_M(\eta)$ functions. For the secondary extinction models,
-the shape of $f_M(\eta)$ are given by the mosaic distribution of coherent
+the shape of $f_M(\eta)$ are essentially given by the mosaic distribution of coherent
 crystal domains within material particles, while for primary extinction it is
 due to the intrinsic response of a crystalline domain which is perfect but of
 finite size. Additionally, the exact final form of the $f_M(\eta)$ functions are
@@ -274,30 +277,147 @@ form of these functions, plotted in \reffig{fofeta}, are as follows:
 \caption{Bla.} % NB \protect\cite{...} is required in floating figures
 \labfig{fofeta}
 \end{figure}
-\begin{align}
-  f_P(\eta) &= \frac{\eta^2-\eta\sin(2\eta)+sin^2(\eta)}{\eta^4} \\
-  f_G(\eta) &= \exp\left\{-\frac{9}{16\pi}\eta^2\right\} \\
-  f_L(\eta) &= \frac{1}{1+\eta^2} \\
-  f_F(\eta) &= \frac{ \sin^2(3\eta/4) } { (3\eta/4)^2 }
-  \labeqn{fofeta}
-\end{align}
+\begin{subequations}
+  \begin{align}
+    f_P(\eta) &= \frac{\eta^2-\eta\sin(2\eta)+sin^2(\eta)}{\eta^4}\labeqn{fofeta:P:first}\\
+    f_G(\eta) &= \exp\left\{-\frac{9}{16\pi}\eta^2\right\}\labeqn{fofeta:G}\\
+    f_L(\eta) &= \frac{1}{1+\eta^2}\labeqn{fofeta:L}\\
+    f_F(\eta) &= \frac{ \sin^2(3\eta/4) } { (3\eta/4)^2 }\labeqn{fofeta:F:last}
+  \end{align}
+\end{subequations}
 
-MENTION: goal of a recipe is to provide yM(x,theta). Define precision definition.
+The task of providing updated recipes for the evaluation of \refeqn{yintegral}
+is twofold. Firstly, a reference dataset must be created by
+evaluating the integral to high precision on a sufficiently large number of
+$(x,\theta)$ points. This is the subject of \refsec{refeval}.
+Secondly, a recipe must be found and tuned on this dataset in order to
+reproduce its values with suffiently high precision. As such recipes would
+ultimately be used in data modelling or analysis, it should be possible to
+implement them in software with a reasonably low cost of
+evaluation. Fortunately, computing hardware has evolved tremendously since the
+original recipes by Becker-Coppens were developed, and some additional degree of
+complexity in the updated recipes are therefore allowed.
 
-Precision of Becker-Coppens recipes:
-
-Mention that we are not just doing $y/(y_\text{ref}-1)$, since at low $x$, $y$ is
-very near 1, and one would not consider $0.999\pm0.01$ to be a very precise
-result, since it could predict $y>1$. So instead we will define the precision
-as:
+One important issues in all of this is the definition of precision of a given
+estimate of $y$, compared with a reference value $y_\text{ref}$. The naive
+definition $\text{precision}(y)\equiv\frac{|y-y_\text{ref}|}{y_\text{ref}}$ is
+not always useful at low levels of extinction where $y$ values are always close
+to $1$, and where the quantity distinguishing different models might arguably be
+$1-y$ rather than $y$ itself. To ensure that the developed recipes for
+determining $y$ are useful and trustworthy in all scenarios, the more stringent
+definition of precision will thus be used throughout this work:
 \begin{align}
   \text{precision}(y) \equiv \frac{|y-y_\text{ref}|}{\min(y_\text{ref},1-y_\text{ref})}
 \end{align}
 Naturally, for this definition to be useful in practice, this requires
-$y_\text{ref}$ to be available in a precision much higher than the precision on
-$y$. Bla mpmath.
+$y_\text{ref}$ to itself be available in a precision much higher than the
+precision on $y$.
 
-\section{Original recipes}
+\section{Evaluating the integrals}\labsec{refeval}
+
+The behaviour of the integrand of \refeqn{yintegral} is illustrated in
+\reffig{integrandfcts}, and is seen to carry over features from the equivalent
+$f(\eta)$ functions in \refeqnrange{fofeta:P:first}{fofeta:F:last}. In
+particular two of these features are challenging from the point of view of
+numerical quadrature: Slow decay ($~1/\eta^2$) and oscillatory behaviour. Only
+the Gaussian model ($M=G$) exhibits neither of these, and is therefore
+relatively straight-forward evaluate via numerical quadrature.
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
+        \caption{}\labfig{integrandfcts:subfig:gPGLF}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/integrand_gP_of_eta_g.pdf}
+        \caption{}\labfig{integrandfcts:subfig:gP}
+    \end{subfigure}
+    \caption{\Refsubfigfrommaincaption{integrandfcts:subfig:gPGLF} shows the
+      integrand of \refeqn{yintegral} for the four different models at
+      $x=1$ and $\theta=45^\circ$. \Refsubfigfrommaincaption{integrandfcts:subfig:gP}
+      shows the integrand for the primary extinction model ($M=P$) at various values of
+      $x$ and $\theta$.}
+    \labfig{integrandfcts}
+\end{figure}
+%see \reffig{integrandfcts:subfig:gP} and \reffig{integrandfcts:subfig:gPGLF} and \reffig{integrandfcts}.
+
+In order to reduce the concern of floating point precision, all work described
+in this section is carried out in \texttt{Python} using the arbitrary-precision
+floating point arithmetic provided by the \texttt{mpmath} package \cite{mpmath},
+configured to keep at least 150 digits of precision in all
+operations. Additionally, the implementation of the $\varphi^0(s)$,
+$\varphi^\pi(s)$, and $f_M(\eta)$ functions were all implemented in a
+numerically stable manner. Specifically, all special functions are evaluated
+with special \texttt{mpmath} routines where appropriate (including the $\sinc$
+function for $f_F(\eta)$), $f_P(\eta)$ is evaluated via a 50th order Taylor
+expansion when $|\eta|<0.1$, $\varphi^0(s)$ is evaluated via a 60th order Taylor
+expansion when $|\eta|<0.1$, and $\varphi^pi(s)$ is evaluated via a 60th order
+Taylor expansion when $|\eta|<0.01$. The Taylor expansions are found with the
+help of the \texttt{SageMath} (FIXME CITE) mathematics software system.
+\footnote{For reference, all the code and datasets associated with the present
+work are provided in (FIXME: ZENODO??), and can be run completely with a
+Conda-Forge(REF?) installation of purely Open Source tools. The main software
+used is \texttt{Python}, \texttt{mpmath}, \texttt{SageMath}, \texttt{NumPy} and
+\texttt{matplotlib} (FIXME REFS).}
+
+The numerical quadrature is based on Gauss-Legendre quadrature, and works well
+for reasonable $x$ values, say $0.001<x<1000$, with the exact limits depending
+on the model $M$. For practical reasons, we shall limit $x<1000$, and simply
+provide a reasonable extrapolation to higher $x$ values in the final
+recipes. This is considered adequate since $x>1000$ is associated with such
+hefty levels of extinction that almost no scattering cross section remains (note
+in this regard that the original Becker-Coppens recipes only provided numerical
+reference values for $0.1{\le}x\le30$). For low $x$ values it is fortunately the
+case that it has been possible to find Taylor series approximations to the exact
+result near $x=0$ using \texttt{SageMath}. This result not only provides
+convenient high-precision results near $x=0$, but also serves as a valuable
+verification of the numerical quadrature results in the overlapping region where
+both methods can be used. In the following subsections, specific details
+pertaining to the evaluation of each of the four models will be considered in
+turn.
+
+TODO: Show resulting rainbow curves here? And consider putting the details of
+the evaluations (next 4 subsections) in appendix?
+
+\subsection{Details of evaluation for $M=P$}\labsec{refeval:subsectionP}
+
+show lowx taylor for a few terms, plus mention how many terms used.
+
+Mention specifics of tails.
+
+Mention specifics of quad intervals (bounds).
+
+\subsection{Details of evaluation for $M=G$}\labsec{refeval:subsectionG}
+
+show lowx taylor for a few terms, plus mention how many terms used.
+
+Mention no tail needed!!
+
+Mention specifics of quad intervals (bounds).
+
+
+\subsection{Details of evaluation for $M=L$}\labsec{refeval:subsectionL}
+
+show lowx taylor for a few terms, plus mention how many terms used.
+
+Mention specifics of tails.
+
+Mention specifics of quad intervals (bounds).
+
+\subsection{Details of evaluation for $M=F$}\labsec{refeval:subsectionF}
+
+show lowx taylor for a few terms, plus mention how many terms used.
+
+mention tail encapsulation as for M=P does not work, since integrand
+continuously goes to y=0. Thus interval required would be insane. So therefore:
+robinson extrapolation.
+
+Mention specifics of quad intervals (bounds).
+
+\section{Original recipes}\labsec{origrecipes}
 
 Original recipes and their problems:
 
@@ -319,6 +439,35 @@ Original recipes and their problems:
   B(\theta) &= 0.22 - 0.12(0.5-\cos(2\theta))^2
   \labeqn{ypfitfctparsorig}
 \end{align}
+
+\begin{figure}[htp]
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
+        \caption{$M=P$}\labfig{prec2dplotNEW:subfig:P}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
+        \caption{$M=G$}\labfig{prec2dplotNEW:subfig:G}
+    \end{subfigure}
+    \vspace{0.5cm}
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
+        \caption{$M=L$}\labfig{prec2dplotNEW:subfig:L}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
+        \caption{$M=F$}\labfig{prec2dplotNEW:subfig:F}
+    \end{subfigure}
+    \caption{Bla. precision 2d classic recipe (vs. new lux recipe)}
+    \labfig{prec2dplotNEW}
+\end{figure}
 
 tables: Mention OCR(tesseract)+human checking.
 
@@ -383,107 +532,8 @@ tables: Mention OCR(tesseract)+human checking.
 %%\end{figure}
 %%
 
-\section{Evaluating the integrals}
- The integrals (only general ideas for all 4 models, more stuff in appendix?).
 
- plot integrands
-
-\begin{figure}[htp]
-    \centering
-    \begin{subfigure}[t]{0.49\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
-        \caption{$M=P$}\labfig{prec2dplotNEW:subfig:P}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.49\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
-        \caption{$M=G$}\labfig{prec2dplotNEW:subfig:G}
-    \end{subfigure}
-    \vspace{0.5cm}
-    \begin{subfigure}[t]{0.49\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
-        \caption{$M=L$}\labfig{prec2dplotNEW:subfig:L}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.49\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
-        \caption{$M=F$}\labfig{prec2dplotNEW:subfig:F}
-    \end{subfigure}
-    \caption{Bla. precision 2d classic recipe (vs. new lux recipe)}
-    \labfig{prec2dplotNEW}
-\end{figure}
-
-%\begin{figure}[ht]
-%    \centering
-%    \begin{subfigure}{0.45\textwidth}
-%        \centering
-%        \includegraphics[width=\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
-%        \caption{}\labfig{integrandfcts:subfig:gPGLF}
-%    \end{subfigure}
-%    \hfill
-%    \begin{subfigure}{0.45\textwidth}
-%        \centering
-%        \includegraphics[width=\textwidth]{generated/integrand_gP_of_eta_g.pdf}
-%        \caption{}\labfig{integrandfcts:subfig:gP}
-%    \end{subfigure}
-%    \caption{Bla..}
-%    \labfig{prec2dplot}
-%\end{figure}
-%
-
-
-\begin{figure}[ht]
-    \centering
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
-        \caption{}\labfig{integrandfcts:subfig:gPGLF}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{generated/integrand_gP_of_eta_g.pdf}
-        \caption{}\labfig{integrandfcts:subfig:gP}
-    \end{subfigure}
-    \caption{\Refsubfigfrommaincaption{integrandfcts:subfig:gPGLF} shows the
-      integrand of \refeqn{yintegral} for the four different models at
-      $x=1$ and $\theta45^\circ$. \Refsubfigfrommaincaption{integrandfcts:subfig:gP}
-      shows the integrand for the primary extinction model ($M=P$) at various values of
-      $x$ and $\theta$.}
-    \labfig{integrandfcts}
-\end{figure}
-
-ARGH see \reffig{integrandfcts:subfig:gP} and \reffig{integrandfcts:subfig:gPGLF} and \reffig{integrandfcts}.
-
-% \begin{figure}[ht] %
-%\begin{center}
-%\includegraphics[width=0.6\textwidth]{generated/integrand_gP_of_eta_g.pdf}
-%\end{center}
-%\caption{Bla.} % NB \protect\cite{...} is required in floating figures
-%\labfig{integrandgP}
-%\end{figure}
-%
-%\begin{figure}[ht] %
-%\begin{center}
-%\includegraphics[width=0.6\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
-%\end{center}
-%\caption{Bla. x=1, theta=45degree.} % NB \protect\cite{...} is required in floating figures
-%\labfig{integrandgPGLF}
-%\end{figure}
-
- mention how we evaluate the integrand (mpmath, taylor, etc.)
-
-
-mention general tools: taylor + quad + tail. Fresnel needs robinson instead
-since tail estimate not easy, and gauss does not need a tail estimate at all.
-
-Show results? I.e. y(x) rainbow curves.
-
-\section{Developing new recipes}
+\section{Developing new recipes}\labsec{newrecipes}
 : The new recipes, how they are developed and what they are (only show 1,
          put 7 in appendix?)
     MENTION HERE OR IN PREVIOUS? Y=y0+sin3/2*(ypi-yo) = y0+sin3/2*ydelta. But
