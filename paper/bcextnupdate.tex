@@ -382,17 +382,129 @@ turn.
 TODO: Show resulting rainbow curves here? And consider putting the details of
 the evaluations (next 4 subsections) in appendix?
 
+%\begin{align}
+%  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
+%+ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
+% - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
+%&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
+% - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5 \\
+%%& + \tfrac{19564394058822418571}{855860038150930312500}(4+311\sin^{9/2}\theta)x^6\\
+%%
+%  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
+%  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
+%- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
+% &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
+% - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
+%% +\tfrac{64\sqrt{7}}{6615}(4+311\sin^{9/2}\theta)x^6\\
+% %
+%  y_L(x,\theta)\approx&\,  1-x
+%  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
+%- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
+%&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
+%- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
+%% +\tfrac{2816}{32805}(4+311\sin^{9/2}\theta)x^6\\
+%%
+%  y_F(x,\theta)\approx&\, 1 - x
+%  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
+%  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
+%  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
+%   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
+%%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
+%\end{align}
+
 \subsection{Details of evaluation for $M=P$}\labsec{refeval:subsectionP}
 
 show lowx taylor for a few terms, plus mention how many terms used.
+\subsubsection{Taylor series approximation}
 
+\begin{align}
+  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
++ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
+ - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
+&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
+ - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5
+\end{align}
+
+\subsubsection{Tail integration}
 Mention specifics of tails.
+
+For positive $\eta$ values we have:
+\begin{align}
+  f_P(\eta) \le f_P^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}\labeqn{fplus}\\
+  f_P(\eta) \ge f_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}\labeqn{fminus}
+\end{align}
+Where $f^-(\eta)$ is only strictly positive when $\eta>1$, so we will restrict
+ourselves to $\eta>2$ (??)
+
+Since $\varphi(\theta,s)$ and $f(\eta)$ decreases monotonically for increasing
+$s$ and $\eta$ respectively for all positive arguments, we can conclude that:
+\begin{align}
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \le
+\int_{a}^{\infty} f_P^+(\eta)\varphi\left(\theta,xf^-_P(\eta)\right)d\eta \equiv T^+(\theta,x,a) \nonumber\\
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \ge
+\int_{a}^{\infty} f_P^-(\eta)\varphi\left(\theta,xf^+_P(\eta)\right)d\eta \equiv T^-(\theta,x,a)
+\end{align}
+Using $k=x/a$ and ensuring $a>\max(x,2)$ we have $k<1$.
+
+With the help of the SageMath (REF) Computer Algebra System, $T^\pm(\theta,x,a)$
+can be evaluated analytically and expressed as a Taylor expansion in inverse
+powers of $a$:
+\begin{align}
+  T^+(\theta,x,a) &= \frac{1}{a}  + \frac{1-k}{2a^2 }
+  +\left[\frac{1}{3} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
+  +\mathcal{O}\left(\frac{1}{a^4}\right)\\
+  T^-(\theta,x,a) &= \frac{1}{a}  - \frac{1+k}{2a^2 }
+  +\frac{8+4\sin^{5/2}\theta}{25}k^2\frac{1}{a^3}
+  +\mathcal{O}\left(\frac{1}{a^4}\right)
+\end{align}
+
+Varying both $k$ and $\sin\theta$ over values the unit interval and evaluating
+Taylor coefficients for terms up to $1/a^{20}$ numerically, it is seen that the
+maximal absolute numerical value of coefficients is always within a factor of
+$2.50$ when compared to the previous order. Thus, if we restrict ourselves to
+$a>10$, we can conservatively limit the maximal contributions of the terms of
+order $1/a^4$ or higher in REFEQNABOVE to be at most $10/a^4$. With that, we can
+use $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral
+value, while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper
+bound of the error on the estimate. In other words, for $a>\max(10,x)$ we get:
+\begin{align}
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
+\frac{1}{a}  - \frac{k}{2a^2 }
+  +\left[\frac{1}{6} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
+  \pm
+\left(\frac{1}{2a^2 }+\frac{1}{6a^3}+\frac{10}{a^4}\right)
+\labeqn{tailintegralpenultimate}
+\end{align}
+Where the term in the final parenthesis represents an upper bound on the
+error. Due to the leading factor of $1/a^2$ in the error term, there is not much
+value in keeping the higher order terms of \refeqn{tailintegralpenultimate}. Thus, by
+using $k=x/a$ and $a>10$ and a slight additional pessimisation of the error bound, we
+can arrive at the following simple formula for the estimation of the tail of the
+integral:
+\begin{align}
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
+\frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
+\labeqn{tailintegralP}
+\end{align}
+
+\subsubsection{bla bla quads}
 
 Mention specifics of quad intervals (bounds).
 
 \subsection{Details of evaluation for $M=G$}\labsec{refeval:subsectionG}
 
+\subsubsection{Taylor series approximation}
+
 show lowx taylor for a few terms, plus mention how many terms used.
+
+\begin{align}
+  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
+  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
+- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
+ &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
+ - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
+\end{align}
+
 
 Mention no tail needed!!
 
@@ -401,15 +513,55 @@ Mention specifics of quad intervals (bounds).
 
 \subsection{Details of evaluation for $M=L$}\labsec{refeval:subsectionL}
 
+\subsubsection{Taylor series approximation}
+
 show lowx taylor for a few terms, plus mention how many terms used.
 
-Mention specifics of tails.
+\begin{align}
+  y_L(x,\theta)\approx&\,  1-x
+  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
+- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
+&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
+- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
+\end{align}
+
+\subsubsection{Tail integration}
+
+NOTE: Here we can actually find a closed-form taylor expression in $1/a$. With
+$k=x/a$ and requiring $a>x>0$ and $a>1$. Showing for brewity just the first
+three orders of $1/a$ here, it is:
+\begin{align}
+\int_{a}^{\infty} f_L(\eta)\varphi\left(\theta,xf_L(\eta)\right)d\eta \approx
+\frac{1}{a} - \frac{2k}{3a^2}
++\left(
+\frac{128 + 64{\sin^{5/2}\theta}}{225}k^2
+-\frac{1}{3}
+\right)\frac{1}{a^3} + \ldots
+\labeqn{tailintegralL}
+\end{align}
+In the implementation, terms up to $1/a^{20}$ are included, and the error bound
+is conservatively estimated as the sum of the absolute values of the terms of
+order $1/a^{18}$, $1/a^{19}$, and $1/a^{20}$. Thus, in practice the error
+bound will be of order $1/a^{18}$ which is a lot more precise than the case for
+$M=P$ where it only improves as order $1/a^{2}$. Hence, actual numerical
+quadrature is only needed over a relatively limited range.
 
 Mention specifics of quad intervals (bounds).
 
 \subsection{Details of evaluation for $M=F$}\labsec{refeval:subsectionF}
 
+\subsubsection{Taylor series approximation}
+
 show lowx taylor for a few terms, plus mention how many terms used.
+
+\begin{align}
+  y_F(x,\theta)\approx&\, 1 - x
+  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
+  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
+  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
+   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
+%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
+\end{align}
 
 mention tail encapsulation as for M=P does not work, since integrand
 continuously goes to y=0. Thus interval required would be insane. So therefore:
@@ -881,79 +1033,6 @@ show cmprecipes plots
 
 
 \section{STUFF FOR APPENDIX OR MAIN PART?}
-\subsection{Tail integration}
-
-For positive $\eta$ values we have:
-
-\begin{align}
-  f(\eta) \le f^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}
-  \labeqn{fplus}
-\end{align}
-\begin{align}
-  f(\eta) \ge f^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}
-  \labeqn{fminus}
-\end{align}
-
-Where $f^-(\eta)$ is only strictly positive when $\eta>1$, so we will restrict
-ourselves to $\eta>2$ (??)
-
-Since $\varphi(\theta,s)$ and $f(\eta)$ decreases monotonically for increasing
-$s$ and $\eta$ respectively for all positive arguments, we can conclude that:
-
-\begin{align}
-\int_{a}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta \le
-\int_{a}^{\infty} f^+(\eta)\varphi\left(\theta,xf^-(\eta)\right)d\eta \equiv T^+(\theta,x,a) \nonumber\\
-\int_{a}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta \ge
-\int_{a}^{\infty} f^-(\eta)\varphi\left(\theta,xf^+(\eta)\right)d\eta \equiv T^-(\theta,x,a)
-\end{align}
-
-Using $k=x/a$ and ensuring $a>\max(x,2)$ we have $k<1$.
-
-With the help of the SageMath (REF) Computer Algebra System, $T^\pm(\theta,x,a)$
-can be evaluated analytically and expressed as a Taylor expansion in inverse
-powers of $a$:
-
-\begin{align}
-  T^+(\theta,x,a) = \frac{1}{a}  + \frac{1-k}{2a^2 }
-  +\left[\frac{1}{3} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
-  +\mathcal{O}\left(\frac{1}{a^4}\right)
-\end{align}
-
-\begin{align}
-  T^-(\theta,x,a) = \frac{1}{a}  - \frac{1+k}{2a^2 }
-  +\frac{8+4\sin^{5/2}\theta}{25}k^2\frac{1}{a^3}
-  +\mathcal{O}\left(\frac{1}{a^4}\right)
-\end{align}
-
-Varying both $k$ and $\sin\theta$ over values the unit interval and evaluating
-Taylor coefficients for terms up to $1/a^{20}$ numerically, it is seen that the
-maximal absolute numerical value of coefficients is always within a factor of
-$2.50$ when compared to the previous order. Thus, if we restrict ourselves to
-$a>10$, we can conservatively limit the maximal contributions of the terms of
-order $1/a^4$ or higher in REFEQNABOVE to be at most $10/a^4$. With that, we can
-use $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral
-value, while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper
-bound of the error on the estimate. In other words, for $a>\max(10,x)$ we get:
-
-\begin{align}
-\int_{a}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta \approx
-\frac{1}{a}  - \frac{k}{2a^2 }
-  +\left[\frac{1}{6} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
-  \pm
-\left(\frac{1}{2a^2 }+\frac{1}{6a^3}+\frac{10}{a^4}\right)
-\labeqn{tailintegralpenultimate}
-\end{align}
-Where the term in the final parenthesis represents an upper bound on the
-error. Due to the leading factor of $1/a^2$ in the error term, there is not much
-value in keeping the higher order terms of \refeqn{tailintegralpenultimate}. Thus, by
-using $k=x/a$ and $a>10$ and a slight additional pessimisation of the error bound, we
-can arrive at the following simple formula for the estimation of the tail of the
-integral:
-\begin{align}
-\int_{a}^{\infty} f(\eta)\varphi\left(\theta,xf(\eta)\right)d\eta \approx
-\frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
-\labeqn{tailintegral}
-\end{align}
 
 \subsection{Central integration}
 
@@ -977,7 +1056,7 @@ First, for $x<1$, it is investigated if the direct Taylor expansion method
 described in REFSECTION is suitable to achieve the required precision. If it is
 not, the integral is solved by a combination of high-precision Gauss-Legendre
 numerical integration over the interval $[0,a]$ while the contribution over the
-interval $[a,\infty]$ is estimated by \refeqn{tailintegral}. The only problem
+interval $[a,\infty]$ is estimated by \refeqn{tailintegralP}. The only problem
 that remains is which value of $a$ to choose in this scenario.
 
 
