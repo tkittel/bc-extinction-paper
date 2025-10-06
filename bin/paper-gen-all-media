@@ -9,6 +9,8 @@ import tqdm
 import random
 
 cmds = """
+plot xscanforpaper primary outfile=<DESTDIR>/yrefeval_primary.pdf
+plot xscanbands outfile=<DESTDIR>/yrefeval_bands.pdf
 printcode latex <DESTDIR>/recipe_TAGHERE.tex
 plot table1 updated destdir=<DESTDIR>
 plot table1 diff destdir=<DESTDIR>
