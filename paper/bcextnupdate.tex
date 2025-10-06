@@ -34,6 +34,8 @@
 
 
 \DeclareMathOperator{\sinc}{sinc}
+\newcommand{\order}{\mathcal{O}}
+
 
 %internal refs with macros, for consistency:
 \newcommand{\labsec}[1]{\label{sec:#1}}
@@ -185,7 +187,7 @@ Sabine?). Unfortunately, in case of stronger extinction effects, the model
 appears to suffer from an obvious breakdown at large Bragg angles, as can be
 seen in \reffig{ypbreakdownorigrecipe}.
 
-\begin{figure}[ht] %
+\begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{../data/ncrystal_bc_yp_breakdown_be.pdf}
 \end{center}
@@ -251,7 +253,7 @@ should be moved from the second to the third term.}
 All the $\varphi$--functions are even functions of $s$, and as can be seen in
 \reffig{phiofs}, monotonically decreasing functions of $|s|$, attaining
 values $1$ at $s=0$ and $0$ at $s=\pm\infty$.
-\begin{figure}[ht] %
+\begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated/phi_of_s.pdf}
 \end{center}
@@ -270,7 +272,7 @@ due to the intrinsic response of a crystalline domain which is perfect but of
 finite size. Additionally, the exact final form of the $f_M(\eta)$ functions are
 given based on spherical geometries for the crystallites or particles. The exact
 form of these functions, plotted in \reffig{fofeta}, are as follows:
-\begin{figure}[ht] %
+\begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated/f_of_eta.pdf}
 \end{center}
@@ -315,14 +317,18 @@ precision on $y$.
 
 \section{Evaluating the integrals}\labsec{refeval}
 
+TODO: Mention somewhere the target precision, e.g. that we have 1e-8 (check)
+everywhere, and mostly a lot better since a conservative approach to error
+estimation is employed everywhere.
+
 The behaviour of the integrand of \refeqn{yintegral} is illustrated in
 \reffig{integrandfcts}, and is seen to carry over features from the equivalent
 $f(\eta)$ functions in \refeqnrange{fofeta:P:first}{fofeta:F:last}. In
 particular two of these features are challenging from the point of view of
-numerical quadrature: Slow decay ($~1/\eta^2$) and oscillatory behaviour. Only
+numerical quadrature: Slow decay ($\sim1/\eta^2$) and oscillatory behaviour. Only
 the Gaussian model ($M=G$) exhibits neither of these, and is therefore
-relatively straight-forward evaluate via numerical quadrature.
-\begin{figure}[ht]
+relatively straight-forward to evaluate via numerical quadrature.
+\begin{figure}[tp]
     \centering
     \begin{subfigure}{0.45\textwidth}
         \centering
@@ -352,35 +358,127 @@ operations. Additionally, the implementation of the $\varphi^0(s)$,
 $\varphi^\pi(s)$, and $f_M(\eta)$ functions were all implemented in a
 numerically stable manner. Specifically, all special functions are evaluated
 with special \texttt{mpmath} routines where appropriate (including the $\sinc$
-function for $f_F(\eta)$), $f_P(\eta)$ is evaluated via a 50th order Taylor
-expansion when $|\eta|<0.1$, $\varphi^0(s)$ is evaluated via a 60th order Taylor
-expansion when $|\eta|<0.1$, and $\varphi^pi(s)$ is evaluated via a 60th order
-Taylor expansion when $|\eta|<0.01$. The Taylor expansions are found with the
-help of the \texttt{SageMath} (FIXME CITE) mathematics software system.
+function for $f_F(\eta)$), and the $f_P(\eta)$, $\varphi^0(s)$, and
+$\varphi^\pi(s)$ functions are evaluated using Taylor expansions of at least 50
+orders when their arguments are small, since their direct mathematical forms are
+otherwise numerically unstable in that region. The Taylor expansions are found with the
+help of the \texttt{SageMath} \cite{sagemath} mathematics software system.
 \footnote{For reference, all the code and datasets associated with the present
 work are provided in (FIXME: ZENODO??), and can be run completely with a
 Conda-Forge(REF?) installation of purely Open Source tools. The main software
 used is \texttt{Python}, \texttt{mpmath}, \texttt{SageMath}, \texttt{NumPy} and
 \texttt{matplotlib} (FIXME REFS).}
 
-The numerical quadrature is based on Gauss-Legendre quadrature, and works well
-for reasonable $x$ values, say $0.001<x<1000$, with the exact limits depending
-on the model $M$. For practical reasons, we shall limit $x<1000$, and simply
-provide a reasonable extrapolation to higher $x$ values in the final
-recipes. This is considered adequate since $x>1000$ is associated with such
-hefty levels of extinction that almost no scattering cross section remains (note
-in this regard that the original Becker-Coppens recipes only provided numerical
-reference values for $0.1{\le}x\le30$). For low $x$ values it is fortunately the
-case that it has been possible to find Taylor series approximations to the exact
-result near $x=0$ using \texttt{SageMath}. This result not only provides
-convenient high-precision results near $x=0$, but also serves as a valuable
-verification of the numerical quadrature results in the overlapping region where
-both methods can be used. In the following subsections, specific details
-pertaining to the evaluation of each of the four models will be considered in
-turn.
+The actual numerical quadrature evaluation of the integral is based on
+Gauss-Legendre quadrature, and is performed over a large number of sub-intervals
+of $\eta$ values in order to ensure the highest precision of results. This
+approach works well for reasonable $x$ values, say
+$0.001{\lesssim}x{\lesssim}1000$, with the exact limits depending on the model
+$M$. For practical reasons, we shall limit $x{\le}1000$, and simply provide a
+reasonable extrapolation to higher $x$ values in the final recipes (TODO: ref to
+highx section). This is considered adequate since $x>1000$ is associated with
+such hefty levels of extinction that almost no scattering cross section remains
+anway. Also note in this regard that the original Becker-Coppens recipes only
+provided numerical reference values for $0.1{\le}x\le30$). For low $x$ values it
+is fortunately the case that it has been possible to find Taylor series
+approximations to the exact result near $x=0$ using \texttt{SageMath}. This
+result not only provides convenient high-precision results near $x=0$, but also
+serves as a valuable verification of the numerical quadrature results in the
+overlapping region where both methods can be used. For $M=P$, $G$, $L$, and $F$
+respectively, 30, 60, 60, and 20 orders are used in the Taylor expansions. The
+sum of the absolute value of the last 3 terms in the expansions are used as a
+very conservative estimate on the error of these results. For reference, the
+first few terms of the Taylor expansions are shown here:
+\begin{align}
+  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
++ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
+ - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
+&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
+ - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5 \\
+%& + \tfrac{19564394058822418571}{855860038150930312500}(4+311\sin^{9/2}\theta)x^6\\
+%
+  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
+  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
+- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
+ &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
+ - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
+% +\tfrac{64\sqrt{7}}{6615}(4+311\sin^{9/2}\theta)x^6\\
+ %
+  y_L(x,\theta)\approx&\,  1-x
+  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
+- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
+&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
+- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
+% +\tfrac{2816}{32805}(4+311\sin^{9/2}\theta)x^6\\
+%
+  y_F(x,\theta)\approx&\, 1 - x
+  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
+  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
+  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
+   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
+%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
+\end{align}
+
+The next issue is that it is obviously not practically possible to perform the
+numerical quadrature over $\eta$ all the way to infinity. For $M=G$ the
+contributions decreases so strongly with $\eta$, that there is never any
+significant contribution to the integral for $eta>1000$, and accordingly
+numerical quadrature out to $\eta=1000$ is always sufficient to ensure the
+desired precision on $y$ values. For $M=L$, the integrand is sufficiently simple
+that we are able to find a Taylor series approximation for the tail of the
+integrand, so that we get:
+\begin{align}
+\int_{a}^{\infty} f_L(\eta)\varphi\left(\theta,xf_L(\eta)\right)d\eta \approx
+\frac{1}{a} - \frac{2k}{3a^2}
++\left(
+\frac{128 + 64{\sin^{5/2}\theta}}{225}k^2
+-\frac{1}{3}
+\right)\frac{1}{a^3} + \ldots
+\labeqn{tailintegralL}
+\end{align}
+where we have required $a>x>0$ and $a>1$, and introduced $k=x/a$ which satisfies
+$0<k<1$. For breweity, only the first few terms are shown in
+\refeqn{tailintegralL}, but in the actual implementation, terms up to $1/a^{20}$
+are included. Again, the error bound is conservatively estimated as the sum of
+the absolute values of the last three terms (of order $1/a^{18}$, $1/a^{19}$,
+and $1/a^{20}$). Thus, in practice the error bound will be of order $1/a^{18}$,
+requiring actual numerical quadrature only over $[0,a]$ for very modest values
+of $a$. For $M=P$ the integrand is more challenging due to the presence of
+trigonometric functions. Firstly, the desire for high precision results implies
+that the $\eta$ ranges passed into the numerical quadrature machinery will be
+limited to always be shorter than the period of these trigonometric functions,
+with a resulting large increase in the number of times the Gauss-Legendre
+quadrature algorithm must be applied. Secondly, the increased complexity of the
+integrand means that unlike the case of $M=L$, we are not able to find a direct
+Taylor series approximation for the tail integral from $[a,\infty]$. However, as
+is shown in appendix TODOTODO, we are able to bound $f_P(\eta)$ by simpler
+functions, and accordingly obtain a useful bound on the tail contribution in
+this case as well:
+\begin{align}
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
+\frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
+\labeqn{tailintegralP}
+\end{align}
+Here the indicated error is a conservative upper bound on the error, and
+unfortunately the slower convergence of just $\order(1/a^2)$ implies that actual
+numerical quadrature is required over $[0,a]$ for rather significant values of
+$a$ -- but fortunately not impossible on modern hardware.
+
+Finally, $M=L$ poses a somewhat different challenge, due to the fact that it was
+not possible to find a sufficiently simple functions bounding $f_L(\eta)$ tight
+enough to provide a useful estimate of the contribution of the tail of the
+integral. Since the integrand additionally decays only as $1/\eta^2$ and suffers
+from the same oscillations as $f_P(\eta)$, it is impractical to simply integrate
+over $[0,a]$ for a sufficiently large $a$. Thus, a different approach was used
+in this case, instead defining the $n$th contribution as the integral over the
+interval $[(4\pi/3)n,(4\pi/3)(n+1)]$, find the contributions up to at least
+$n=1000$ and then use Richardson's extrapolation \cite{richardson1911ix} via
+\texttt{mpmath}'s \texttt{nsum} function to include the contributions up
+to $n=\infty$.
 
 TODO: Show resulting rainbow curves here? And consider putting the details of
 the evaluations (next 4 subsections) in appendix?
+
 
 %\begin{align}
 %  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
@@ -412,162 +510,107 @@ the evaluations (next 4 subsections) in appendix?
 %%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
 %\end{align}
 
-\subsection{Details of evaluation for $M=P$}\labsec{refeval:subsectionP}
-
-show lowx taylor for a few terms, plus mention how many terms used.
-\subsubsection{Taylor series approximation}
-
-\begin{align}
-  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
-+ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
- - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
-&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
- - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5
-\end{align}
-
-\subsubsection{Tail integration}
-Mention specifics of tails.
-
-For positive $\eta$ values we have:
-\begin{align}
-  f_P(\eta) \le f_P^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}\labeqn{fplus}\\
-  f_P(\eta) \ge f_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}\labeqn{fminus}
-\end{align}
-Where $f^-(\eta)$ is only strictly positive when $\eta>1$, so we will restrict
-ourselves to $\eta>2$ (??)
-
-Since $\varphi(\theta,s)$ and $f(\eta)$ decreases monotonically for increasing
-$s$ and $\eta$ respectively for all positive arguments, we can conclude that:
-\begin{align}
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \le
-\int_{a}^{\infty} f_P^+(\eta)\varphi\left(\theta,xf^-_P(\eta)\right)d\eta \equiv T^+(\theta,x,a) \nonumber\\
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \ge
-\int_{a}^{\infty} f_P^-(\eta)\varphi\left(\theta,xf^+_P(\eta)\right)d\eta \equiv T^-(\theta,x,a)
-\end{align}
-Using $k=x/a$ and ensuring $a>\max(x,2)$ we have $k<1$.
-
-With the help of the SageMath (REF) Computer Algebra System, $T^\pm(\theta,x,a)$
-can be evaluated analytically and expressed as a Taylor expansion in inverse
-powers of $a$:
-\begin{align}
-  T^+(\theta,x,a) &= \frac{1}{a}  + \frac{1-k}{2a^2 }
-  +\left[\frac{1}{3} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
-  +\mathcal{O}\left(\frac{1}{a^4}\right)\\
-  T^-(\theta,x,a) &= \frac{1}{a}  - \frac{1+k}{2a^2 }
-  +\frac{8+4\sin^{5/2}\theta}{25}k^2\frac{1}{a^3}
-  +\mathcal{O}\left(\frac{1}{a^4}\right)
-\end{align}
-
-Varying both $k$ and $\sin\theta$ over values the unit interval and evaluating
-Taylor coefficients for terms up to $1/a^{20}$ numerically, it is seen that the
-maximal absolute numerical value of coefficients is always within a factor of
-$2.50$ when compared to the previous order. Thus, if we restrict ourselves to
-$a>10$, we can conservatively limit the maximal contributions of the terms of
-order $1/a^4$ or higher in REFEQNABOVE to be at most $10/a^4$. With that, we can
-use $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral
-value, while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper
-bound of the error on the estimate. In other words, for $a>\max(10,x)$ we get:
-\begin{align}
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
-\frac{1}{a}  - \frac{k}{2a^2 }
-  +\left[\frac{1}{6} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
-  \pm
-\left(\frac{1}{2a^2 }+\frac{1}{6a^3}+\frac{10}{a^4}\right)
-\labeqn{tailintegralpenultimate}
-\end{align}
-Where the term in the final parenthesis represents an upper bound on the
-error. Due to the leading factor of $1/a^2$ in the error term, there is not much
-value in keeping the higher order terms of \refeqn{tailintegralpenultimate}. Thus, by
-using $k=x/a$ and $a>10$ and a slight additional pessimisation of the error bound, we
-can arrive at the following simple formula for the estimation of the tail of the
-integral:
-\begin{align}
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
-\frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
-\labeqn{tailintegralP}
-\end{align}
-
-\subsubsection{bla bla quads}
-
-Mention specifics of quad intervals (bounds).
-
-\subsection{Details of evaluation for $M=G$}\labsec{refeval:subsectionG}
-
-\subsubsection{Taylor series approximation}
-
-show lowx taylor for a few terms, plus mention how many terms used.
-
-\begin{align}
-  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
-  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
-- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
- &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
- - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
-\end{align}
-
-
-Mention no tail needed!!
-
-Mention specifics of quad intervals (bounds).
-
-
-\subsection{Details of evaluation for $M=L$}\labsec{refeval:subsectionL}
-
-\subsubsection{Taylor series approximation}
-
-show lowx taylor for a few terms, plus mention how many terms used.
-
-\begin{align}
-  y_L(x,\theta)\approx&\,  1-x
-  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
-- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
-&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
-- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
-\end{align}
-
-\subsubsection{Tail integration}
-
-NOTE: Here we can actually find a closed-form taylor expression in $1/a$. With
-$k=x/a$ and requiring $a>x>0$ and $a>1$. Showing for brewity just the first
-three orders of $1/a$ here, it is:
-\begin{align}
-\int_{a}^{\infty} f_L(\eta)\varphi\left(\theta,xf_L(\eta)\right)d\eta \approx
-\frac{1}{a} - \frac{2k}{3a^2}
-+\left(
-\frac{128 + 64{\sin^{5/2}\theta}}{225}k^2
--\frac{1}{3}
-\right)\frac{1}{a^3} + \ldots
-\labeqn{tailintegralL}
-\end{align}
-In the implementation, terms up to $1/a^{20}$ are included, and the error bound
-is conservatively estimated as the sum of the absolute values of the terms of
-order $1/a^{18}$, $1/a^{19}$, and $1/a^{20}$. Thus, in practice the error
-bound will be of order $1/a^{18}$ which is a lot more precise than the case for
-$M=P$ where it only improves as order $1/a^{2}$. Hence, actual numerical
-quadrature is only needed over a relatively limited range.
-
-Mention specifics of quad intervals (bounds).
-
-\subsection{Details of evaluation for $M=F$}\labsec{refeval:subsectionF}
-
-\subsubsection{Taylor series approximation}
-
-show lowx taylor for a few terms, plus mention how many terms used.
-
-\begin{align}
-  y_F(x,\theta)\approx&\, 1 - x
-  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
-  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
-  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
-   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
-%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
-\end{align}
-
-mention tail encapsulation as for M=P does not work, since integrand
-continuously goes to y=0. Thus interval required would be insane. So therefore:
-robinson extrapolation.
-
-Mention specifics of quad intervals (bounds).
+%%%\subsection{Details of evaluation for $M=P$}\labsec{refeval:subsectionP}
+%%%
+%%%show lowx taylor for a few terms, plus mention how many terms used.
+%%%\subsubsection{Taylor series approximation}
+%%%
+%%%Taylor orders used for evaluation:
+%%%P 30
+%%%G 60
+%%%L 60
+%%%F 20
+%%%
+%%%\begin{align}
+%%%  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
+%%%+ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
+%%% - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
+%%%&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
+%%% - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5
+%%%\end{align}
+%%%
+%%%
+%%%\subsubsection{bla bla quads}
+%%%
+%%%Mention specifics of quad intervals (bounds).
+%%%
+%%%\subsection{Details of evaluation for $M=G$}\labsec{refeval:subsectionG}
+%%%
+%%%\subsubsection{Taylor series approximation}
+%%%
+%%%show lowx taylor for a few terms, plus mention how many terms used.
+%%%
+%%%\begin{align}
+%%%  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
+%%%  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
+%%%- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
+%%% &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
+%%% - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
+%%%\end{align}
+%%%
+%%%
+%%%Mention no tail needed!!
+%%%
+%%%Mention specifics of quad intervals (bounds).
+%%%
+%%%
+%%%\subsection{Details of evaluation for $M=L$}\labsec{refeval:subsectionL}
+%%%
+%%%\subsubsection{Taylor series approximation}
+%%%
+%%%show lowx taylor for a few terms, plus mention how many terms used.
+%%%
+%%%\begin{align}
+%%%  y_L(x,\theta)\approx&\,  1-x
+%%%  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
+%%%- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
+%%%&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
+%%%- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
+%%%\end{align}
+%%%
+%%%\subsubsection{Tail integration}
+%%%
+%%%NOTE: Here we can actually find a closed-form taylor expression in $1/a$. With
+%%%$k=x/a$ and requiring $a>x>0$ and $a>1$. Showing for brewity just the first
+%%%three orders of $1/a$ here, it is:
+%%%\begin{align}
+%%%\int_{a}^{\infty} f_L(\eta)\varphi\left(\theta,xf_L(\eta)\right)d\eta \approx
+%%%\frac{1}{a} - \frac{2k}{3a^2}
+%%%+\left(
+%%%\frac{128 + 64{\sin^{5/2}\theta}}{225}k^2
+%%%-\frac{1}{3}
+%%%\right)\frac{1}{a^3} + \ldots
+%%%\labeqn{tailintegralLDUPLICATE}
+%%%\end{align}
+%%%In the implementation, terms up to $1/a^{20}$ are included, and the error bound
+%%%is conservatively estimated as the sum of the absolute values of the terms of
+%%%order $1/a^{18}$, $1/a^{19}$, and $1/a^{20}$. Thus, in practice the error
+%%%bound will be of order $1/a^{18}$ which is a lot more precise than the case for
+%%%$M=P$ where it only improves as order $1/a^{2}$. Hence, actual numerical
+%%%quadrature is only needed over a relatively limited range.
+%%%
+%%%Mention specifics of quad intervals (bounds).
+%%%
+%%%\subsection{Details of evaluation for $M=F$}\labsec{refeval:subsectionF}
+%%%
+%%%\subsubsection{Taylor series approximation}
+%%%
+%%%show lowx taylor for a few terms, plus mention how many terms used.
+%%%
+%%%\begin{align}
+%%%  y_F(x,\theta)\approx&\, 1 - x
+%%%  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
+%%%  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
+%%%  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
+%%%   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
+%%%%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
+%%%\end{align}
+%%%
+%%%mention tail encapsulation as for M=P does not work, since integrand
+%%%continuously goes to y=0. Thus interval required would be insane. So therefore:
+%%%robinson extrapolation.
+%%%
+%%%Mention specifics of quad intervals (bounds).
 
 \section{Original recipes}\labsec{origrecipes}
 
@@ -592,7 +635,7 @@ Original recipes and their problems:
   \labeqn{ypfitfctparsorig}
 \end{align}
 
-\begin{figure}[htp]
+\begin{figure}[tp]
     \centering
     \begin{subfigure}[t]{0.49\textwidth}
         \centering
@@ -623,7 +666,7 @@ Original recipes and their problems:
 
 tables: Mention OCR(tesseract)+human checking.
 
-\begin{table}[ht]
+\begin{table}[tp]
 \caption{Precision of original BC Table 1 compared to updated values (NB: MENTION PRECISION DEF USED).}
 \smallskip
 \tiny
@@ -632,7 +675,7 @@ tables: Mention OCR(tesseract)+human checking.
 \end{center}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[tp]
 \caption{Precision of original BC Table 3 compared to updated values (NB: MENTION PRECISION DEF USED).}
 \smallskip
 \tiny
@@ -641,7 +684,7 @@ tables: Mention OCR(tesseract)+human checking.
 \end{center}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[tp]
 \caption{Precision of original BC Table 4 compared to updated values (NB: MENTION PRECISION DEF USED).}
 \smallskip
 \tiny
@@ -651,7 +694,7 @@ tables: Mention OCR(tesseract)+human checking.
 \end{table}
 
 
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
 %%\end{center}
@@ -659,7 +702,7 @@ tables: Mention OCR(tesseract)+human checking.
 %%\labfig{prec2dplot:primary}
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
 %%\end{center}
@@ -667,7 +710,7 @@ tables: Mention OCR(tesseract)+human checking.
 %%\labfig{prec2dplot:scndgauss}
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
 %%\end{center}
@@ -675,7 +718,7 @@ tables: Mention OCR(tesseract)+human checking.
 %%\labfig{prec2dplot:scndlorentz}
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
 %%\end{center}
@@ -712,7 +755,7 @@ The advantage of this form is that reduces the numerical issue of having a
 recipe for a two dimensional surface to instead having two one-dimensional
 curves, which is significantly less challenging.
 
-\begin{figure}[ht] %
+\begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated/highx.pdf}
 \end{center}
@@ -731,7 +774,7 @@ results not matter the size of x.
 \section{Conclusions}
 show cmprecipes plots
 
-\begin{figure}[htp]
+\begin{figure}[tp]
     \centering
     \begin{subfigure}[t]{0.49\textwidth}
         \centering
@@ -761,7 +804,7 @@ show cmprecipes plots
     \labfig{cmprecipes}
 \end{figure}
 
-%%\begin{figure}[htp]
+%%\begin{figure}[tp]
 %%    \centering
 %%    \begin{subfigure}[t]{0.49\textwidth}
 %%        \centering
@@ -792,7 +835,7 @@ show cmprecipes plots
 %%\end{figure}
 
 
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_primary.pdf}
 %%\end{center}
@@ -800,7 +843,7 @@ show cmprecipes plots
 %%\labfig{cmprecipes:primary}
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_primary_lux.pdf}
 %%\end{center}
@@ -808,7 +851,7 @@ show cmprecipes plots
 %%\labfig{cmprecipes:primary:lux}
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndgauss.pdf}
 %%\end{center}
@@ -816,7 +859,7 @@ show cmprecipes plots
 %%\labfig{cmprecipes:scndgauss}%fixme
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndgauss_lux.pdf}
 %%\end{center}
@@ -824,7 +867,7 @@ show cmprecipes plots
 %%\labfig{cmprecipes:scndgauss:lux}%fixme
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndlorentz.pdf}
 %%\end{center}
@@ -833,7 +876,7 @@ show cmprecipes plots
 %%\labfig{cmprecipes:scndlorentz}%fixme
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndlorentz_lux.pdf}
 %%\end{center}
@@ -842,7 +885,7 @@ show cmprecipes plots
 %%\labfig{cmprecipes:scndlorentz:lux}%fixme
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndfresnel.pdf}
 %%\end{center}
@@ -850,7 +893,7 @@ show cmprecipes plots
 %%\labfig{cmprecipes:scndfresnel}%fixme
 %%\end{figure}
 %%
-%%\begin{figure}[ht] %
+%%\begin{figure}[tp] %
 %%\begin{center}
 %%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndfresnel_lux.pdf}
 %%\end{center}
@@ -998,7 +1041,7 @@ show cmprecipes plots
 
 
 
-%\begin{figure}[ht] %
+%\begin{figure}[tp] %
 %\label{fig:figure1}
 %\begin{center}
 %\includegraphics[width=0.6\textwidth]{fig1.png} % NB use pdflatex for non-postscript
@@ -1015,7 +1058,7 @@ show cmprecipes plots
 
 % Basic table
 
-%\begin{table}[ht]
+%\begin{table}[tp]
 %\caption{Caption to table \protect\cite{lamport86}} % NB \protect\cite{...} is required in floating tables
 %\smallskip
 %\begin{center}
@@ -1113,8 +1156,6 @@ $N_P=\frac{3}{4\pi}$, $C_m=1$.
 meaning that the previous equation has to have index $M$ and two constants
 depending on $M$ (the normalisation factors and the factor in front of x, the
 only real difference is for the Lorentzian model I think).
-
-hest
 
 
 \subsection{New recipes}
@@ -1513,11 +1554,71 @@ interesting as it can save additional multiplications!!)
 
 \appendix % if required
 
+\section{Tail integration for $M=P$}
+For $M=P$ and $f_P(\eta)$ given by \refeqn{fofeta:P:first}, it is desired to
+provide an estimate of the tail of the integral in \refeqn{yintegral}, i.e.\ the
+integral over just the $[a,\infty]$ for some finite and positive $a$.
+
+For positive $\eta$ values we have:
+\begin{align}
+  f_P(\eta) \le f_P^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}\labeqn{fplus}\\
+  f_P(\eta) \ge f_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}\labeqn{fminus}
+\end{align}
+Where $f^-(\eta)$ is only strictly positive when $\eta>1$, so we will restrict
+ourselves to $\eta>2$ (??)
+
+Since $\varphi(\theta,s)$ and $f(\eta)$ decreases monotonically for increasing
+$s$ and $\eta$ respectively for all positive arguments, we can conclude that:
+\begin{align}
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \le
+\int_{a}^{\infty} f_P^+(\eta)\varphi\left(\theta,xf^-_P(\eta)\right)d\eta \equiv T^+(\theta,x,a) \nonumber\\
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \ge
+\int_{a}^{\infty} f_P^-(\eta)\varphi\left(\theta,xf^+_P(\eta)\right)d\eta \equiv T^-(\theta,x,a)
+\end{align}
+Using $k=x/a$ and ensuring $a>\max(x,2)$ we have $k<1$.
+
+With the help of \texttt{SageMath}, $T^\pm(\theta,x,a)$ can be evaluated
+analytically and expressed as a Taylor expansion in inverse powers of $a$:
+\begin{align}
+  T^+(\theta,x,a) &= \frac{1}{a}  + \frac{1-k}{2a^2 }
+  +\left[\frac{1}{3} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
+  +\mathcal{O}\left(\frac{1}{a^4}\right)\\
+  T^-(\theta,x,a) &= \frac{1}{a}  - \frac{1+k}{2a^2 }
+  +\frac{8+4\sin^{5/2}\theta}{25}k^2\frac{1}{a^3}
+  +\mathcal{O}\left(\frac{1}{a^4}\right)
+\end{align}
+
+Varying both $k$ and $\sin\theta$ over values the unit interval and evaluating
+Taylor coefficients for terms up to $1/a^{20}$ numerically, it is seen that the
+maximal absolute numerical value of coefficients is always within a factor of
+$2.50$ when compared to the previous order. Thus, if we restrict ourselves to
+$a>10$, we can conservatively limit the maximal contributions of the terms of
+order $1/a^4$ or higher in REFEQNABOVE to be at most $10/a^4$. With that, we can
+use $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral
+value, while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper
+bound of the error on the estimate. In other words, for $a>\max(10,x)$ we get:
+\begin{align}
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
+\frac{1}{a}  - \frac{k}{2a^2 }
+  +\left[\frac{1}{6} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
+  \pm
+\left(\frac{1}{2a^2 }+\frac{1}{6a^3}+\frac{10}{a^4}\right)
+\labeqn{tailintegralpenultimate}
+\end{align}
+Where the term in the final parenthesis represents an upper bound on the
+error. Due to the leading factor of $1/a^2$ in the error term, there is not much
+value in keeping the higher order terms of
+\refeqn{tailintegralpenultimate}. Thus, by using $k=x/a$ and $a>10$ and a slight
+additional pessimisation of the error bound, we can arrive at the relatively
+simple formula for the estimation of the tail of the integral given in
+\refeqn{tailintegralP}.:
+
+
 \section{Updated tables}
 
 FIXME: Perhaps we should also make one for the fresnel model?
 
-\begin{table}[ht]
+\begin{table}[tp]
 \caption{Updated BC Table 1 with a few extra columns and rows.}
 \smallskip
 \tiny
@@ -1526,7 +1627,7 @@ FIXME: Perhaps we should also make one for the fresnel model?
 \end{center}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[tp]
 \caption{Updated BC Table 3 with a few extra columns and rows.}
 \smallskip
 \tiny
@@ -1535,7 +1636,7 @@ FIXME: Perhaps we should also make one for the fresnel model?
 \end{center}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[tp]
 \caption{Updated BC Table 4 with a few extra columns and rows.}
 \smallskip
 \tiny
