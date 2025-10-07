@@ -48,7 +48,7 @@
 
 \newcommand{\labappendix}[1]{\label{app:#1}}
 \newcommand{\refappendixnumonly}[1]{\ref{app:#1}}
-\newcommand{\refappendix}[1]{\refappendixnumonly{#1}}
+\newcommand{\refappendix}[1]{Appendix~\refappendixnumonly{#1}}
 
 \newcommand{\refalgnumonly}[1]{\ref{alg:#1}}
 \newcommand{\refalg}[1]{Algorithm~\refalgnumonly{#1}}
@@ -70,6 +70,7 @@
 \newcommand{\reftabnumonly}[1]{\ref{tab:#1}}
 \newcommand{\reftab}[1]{Table~\reftabnumonly{#1}}
 \newcommand{\Reftab}[1]{Table~\reftabnumonly{#1}}%same as \reftab, but always capitalised!
+\newcommand{\reftabrange}[2]{Tables~\reftabnumonly{#1}--\reftabnumonly{#2}}
 %%%%\newcommand{\lablisting}[1]{\label{lst:#1}}
 %%%%\newcommand{\reflistingnumonly}[1]{\ref{lst:#1}}
 %%%%\newcommand{\reflisting}[1]{Listing~\reflistingnumonly{#1}}
@@ -451,9 +452,9 @@ with a resulting large increase in the number of times the Gauss-Legendre
 quadrature algorithm must be applied. Secondly, the increased complexity of the
 integrand means that unlike the case of $M=L$, we are not able to find a direct
 Taylor series approximation for the tail integral from $[a,\infty]$. However, as
-is shown in appendix TODOTODO, we are able to bound $f_P(\eta)$ by simpler
-functions, and accordingly obtain a useful bound on the tail contribution in
-this case as well:
+is shown in \refappendix{yptailintegration}, we are able to bound $f_P(\eta)$ by
+simpler functions, and accordingly obtain a useful bound on the tail
+contribution in this case as well:
 \begin{align}
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
 \frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
@@ -476,141 +477,14 @@ $n=1000$ and then use Richardson's extrapolation \cite{richardson1911ix} via
 \texttt{mpmath}'s \texttt{nsum} function to include the contributions up
 to $n=\infty$.
 
-TODO: Show resulting rainbow curves here? And consider putting the details of
-the evaluations (next 4 subsections) in appendix?
-Bla \reffig{yrefeval}.
+The resulting curves of $y_M(x,\theta)$ reference values are shown in
+\reffig{yrefeval}, and for future reference \refappendix{yreftables} contains a
+selection of such values in
+\reftabrange{yrefvals:P:first}{yrefvals:F:last}. However, it should be noted
+that the FIXMEREF also contains a larger number of such values to a much higher
+precision in \texttt{JSON} format.
 
-%\begin{align}
-%  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
-%+ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
-% - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
-%&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
-% - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5 \\
-%%& + \tfrac{19564394058822418571}{855860038150930312500}(4+311\sin^{9/2}\theta)x^6\\
-%%
-%  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
-%  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
-%- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
-% &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
-% - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
-%% +\tfrac{64\sqrt{7}}{6615}(4+311\sin^{9/2}\theta)x^6\\
-% %
-%  y_L(x,\theta)\approx&\,  1-x
-%  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
-%- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
-%&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
-%- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
-%% +\tfrac{2816}{32805}(4+311\sin^{9/2}\theta)x^6\\
-%%
-%  y_F(x,\theta)\approx&\, 1 - x
-%  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
-%  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
-%  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
-%   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
-%%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
-%\end{align}
 
-%%%\subsection{Details of evaluation for $M=P$}\labsec{refeval:subsectionP}
-%%%
-%%%show lowx taylor for a few terms, plus mention how many terms used.
-%%%\subsubsection{Taylor series approximation}
-%%%
-%%%Taylor orders used for evaluation:
-%%%P 30
-%%%G 60
-%%%L 60
-%%%F 20
-%%%
-%%%\begin{align}
-%%%  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
-%%%+ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
-%%% - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
-%%%&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
-%%% - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5
-%%%\end{align}
-%%%
-%%%
-%%%\subsubsection{bla bla quads}
-%%%
-%%%Mention specifics of quad intervals (bounds).
-%%%
-%%%\subsection{Details of evaluation for $M=G$}\labsec{refeval:subsectionG}
-%%%
-%%%\subsubsection{Taylor series approximation}
-%%%
-%%%show lowx taylor for a few terms, plus mention how many terms used.
-%%%
-%%%\begin{align}
-%%%  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
-%%%  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
-%%%- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
-%%% &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
-%%% - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
-%%%\end{align}
-%%%
-%%%
-%%%Mention no tail needed!!
-%%%
-%%%Mention specifics of quad intervals (bounds).
-%%%
-%%%
-%%%\subsection{Details of evaluation for $M=L$}\labsec{refeval:subsectionL}
-%%%
-%%%\subsubsection{Taylor series approximation}
-%%%
-%%%show lowx taylor for a few terms, plus mention how many terms used.
-%%%
-%%%\begin{align}
-%%%  y_L(x,\theta)\approx&\,  1-x
-%%%  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
-%%%- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
-%%%&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
-%%%- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
-%%%\end{align}
-%%%
-%%%\subsubsection{Tail integration}
-%%%
-%%%NOTE: Here we can actually find a closed-form taylor expression in $1/a$. With
-%%%$k=x/a$ and requiring $a>x>0$ and $a>1$. Showing for brewity just the first
-%%%three orders of $1/a$ here, it is:
-%%%\begin{align}
-%%%\int_{a}^{\infty} f_L(\eta)\varphi\left(\theta,xf_L(\eta)\right)d\eta \approx
-%%%\frac{1}{a} - \frac{2k}{3a^2}
-%%%+\left(
-%%%\frac{128 + 64{\sin^{5/2}\theta}}{225}k^2
-%%%-\frac{1}{3}
-%%%\right)\frac{1}{a^3} + \ldots
-%%%\labeqn{tailintegralLDUPLICATE}
-%%%\end{align}
-%%%In the implementation, terms up to $1/a^{20}$ are included, and the error bound
-%%%is conservatively estimated as the sum of the absolute values of the terms of
-%%%order $1/a^{18}$, $1/a^{19}$, and $1/a^{20}$. Thus, in practice the error
-%%%bound will be of order $1/a^{18}$ which is a lot more precise than the case for
-%%%$M=P$ where it only improves as order $1/a^{2}$. Hence, actual numerical
-%%%quadrature is only needed over a relatively limited range.
-%%%
-%%%Mention specifics of quad intervals (bounds).
-%%%
-%%%\subsection{Details of evaluation for $M=F$}\labsec{refeval:subsectionF}
-%%%
-%%%\subsubsection{Taylor series approximation}
-%%%
-%%%show lowx taylor for a few terms, plus mention how many terms used.
-%%%
-%%%\begin{align}
-%%%  y_F(x,\theta)\approx&\, 1 - x
-%%%  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
-%%%  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
-%%%  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
-%%%   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
-%%%%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
-%%%\end{align}
-%%%
-%%%mention tail encapsulation as for M=P does not work, since integrand
-%%%continuously goes to y=0. Thus interval required would be insane. So therefore:
-%%%robinson extrapolation.
-%%%
-%%%Mention specifics of quad intervals (bounds).
 
 \begin{figure}[tp]
     \centering
@@ -915,7 +789,7 @@ detailed and impressive in the subjective oppinion of the authors..
 
 \appendix % if required
 
-\section{Tail integration primary extinction}
+\section{Tail integration for the primary extinction model}\labappendix{yptailintegration}
 For $M=P$ and $f_P(\eta)$ given by \refeqn{fofeta:P:first}, it is desired to
 provide an estimate of the tail of the integral in \refeqn{yintegral}, i.e.\ the
 integral over just the $[a,\infty]$ for some finite and positive $a$.
@@ -974,38 +848,53 @@ additional pessimisation of the error bound, we can arrive at the relatively
 simple formula for the estimation of the tail of the integral given in
 \refeqn{tailintegralP}.:
 
+\section{Reference values}\labappendix{yreftables}
 
-\section{Updated tables}
-
-FIXME: Perhaps we should also make one for the fresnel model?
+FIXME BLA BLA \reftabrange{yrefvals:P:first}{yrefvals:F:last}.
 
 \begin{table}[tp]
-\caption{Updated BC Table 1 with a few extra columns and rows.}
+\caption{Select reference values of $y_P(x,\theta)$. For compactness, values are
+  multiplied by $10^5$ and rounded to the nearest whole number.}
 \smallskip
 \tiny
 \begin{center}
 \input{generated/table1_updated.tex}
 \end{center}
+\labtab{yrefvals:P:first}
 \end{table}
 
 \begin{table}[tp]
-\caption{Updated BC Table 3 with a few extra columns and rows.}
+\caption{Select reference values of $y_G(x,\theta)$. For compactness, values are
+  multiplied by $10^5$ and rounded to the nearest whole number.}
 \smallskip
 \tiny
 \begin{center}
 \input{generated/table3_updated.tex}
 \end{center}
+\labtab{yrefvals:G}
 \end{table}
 
 \begin{table}[tp]
-\caption{Updated BC Table 4 with a few extra columns and rows.}
+\caption{Select reference values of $y_L(x,\theta)$. For compactness, values are
+  multiplied by $10^5$ and rounded to the nearest whole number.}
 \smallskip
 \tiny
 \begin{center}
 \input{generated/table4_updated.tex}
 \end{center}
+\labtab{yrefvals:L}
 \end{table}
 
+\begin{table}[tp]
+\caption{Select reference values of $y_F(x,\theta)$. For compactness, values are
+  multiplied by $10^5$ and rounded to the nearest whole number.}
+\smallskip
+\tiny
+\begin{center}
+\input{generated/tableF_updated.tex}
+\end{center}
+\labtab{yrefvals:F:last}
+\end{table}
 
 \section{The recipes}\labappendix{recipes}.
 
@@ -1025,7 +914,7 @@ precision. FIXMEREF to c/c++/py code?
 \input{generated/recipe_scndlorentz_lux.tex}
 \input{generated/recipe_scndfresnel_lux.tex}
 
-\section{LEFTOVERS}
+\section{LEFTOVERS FIXME CLEANUP}
 
 
  of a particularly challenging numerical
@@ -1094,7 +983,8 @@ interesting as it can save additional multiplications!!)
 
 
 \begin{acknowledgements}
-The contributions of non-authors etc. should be given here.
+The contributions of non-authors etc. should be given here. (DMSC cluster?
+although not used much).
 \end{acknowledgements}
 
 \begin{funding}
@@ -1112,82 +1002,6 @@ List funding organizations, recipients, grant numbers, etc.
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
-%BC x:
-%
-%r = radius of ideal spherical crystal
-%
-%x = sigma(0)*r = 3/4 Q*beta*r = 2/3 Q alphabar tbar
-%    alphabar = (3/2)r sin2theta/lambda
-%    beta = 2r sin2theta / lambda
-%   so x = 3/4 Q* 2r sin2theta / lambda  *r = 3/2 Q * r^2 * Q * sin2theta
-%   /lambda =
-%    Q = ?
-
-%  (3/2)*sphere_r^2 = (3/2)*(AVPATHLENGTH*3/4)^2
-
-%
-%    NCrystal code:
-%%    bc_x =         wl^2*F^2/V^2 * ( 2 / 3 ) * blksz^2
-%%    sabine_x =     wl^2*F^2/V^2 * blksz^2
-%
-%
-
-%sabine_x =
-
-%block_size =
-
-% Average path length through a sphere of radius is (4/3)*radius = (2/3)*diameter.
-% so radius = 3/4 * <average_pathlength>
-
-%If we use blksz_Aa to mean the Average path length through the crystallite, we
-%have to use r = 4/3 * ....
-
-% BC x: factor of (2/3) is when using l to mean the average path length through
-% the crystallite.
-
-%Sabine x:
-
-
-% shuqi BC xp:
-% double Q_theta = NC::ncsquare(Nc * wl * F_hkl) * wl; //division by sin_2theta to be done later
-
-% double xp = 2. / 3. * NC::ncsquare(Nc * wl * F_hkl) * l * l;
-
-
-
-%BC x:
-%
-%35a:
-%
-%x = (2/3)*Q*alphabar*tbar
-%alphabar = tbar * sin2theta/wl (eq. 35b with 3r/2 = tbar)
-%tbar: average path length through the crystallite (tbar=3/2*radius for a sphere).
-%     Q = |F/V|^2*wl^3/sin2theta
-%
-%so x = (2/3)*(|F/V|^2*wl^3/sin2theta)*(tbar * sin2theta/wl)*tbar
-%     = (2/3)* |F/V|^2*wl^2 * tbar^2
-%
-%
-% Sabine x (2006 paper):
-%
-%x = Qk T C D (6.4.5.7)  (C=1 for no absorption)
-%T: average path length through crystallite (so (3/2)*radius for a sphere)
-%
-%
-%Sabine x Shuqi:
-%  double xp = NC::ncsquare(Nc * wl * F_hkl * l);
-%
-%Sabine x for spheres (1988 paper):
-%
-%x = Qk T D (middle of left column, p371)
-%Qk = |F/V|^2*wl^2 / sintheta (top right column, p370)
-%BUT NOTE: Qtheta = |F/V|^2*wl^3 / sin2theta ``on the glancing-angle scale''(top right column, p370) (FOR SECONDARY EXTINCTION????)
-%
-%371 notes for spheres T=D=(3/2)*radius
-%
-% So x = |F/V|^2*wl^2 / sintheta * (3radius/2)^2
 
 
 %Nice formulation: "... the coherently scattering domain size, referred to here as the crystallite size for readability."
