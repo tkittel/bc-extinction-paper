@@ -45,7 +45,14 @@
 \newcommand{\reftwosections}[2]{Sections~\refsecnumonly{#1} and \refsecnumonly{#2}}
 \newcommand{\refthreesections}[3]{Sections~\refsecnumonly{#1}, \refsecnumonly{#2}, and \refsecnumonly{#3}}
 \newcommand{\refsectionrange}[2]{Sections~\refsecnumonly{#1}--\refsecnumonly{#2}}
-\newcommand{\refappendix}[1]{\refsecnumonly{#1}}
+
+\newcommand{\labappendix}[1]{\label{app:#1}}
+\newcommand{\refappendixnumonly}[1]{\ref{app:#1}}
+\newcommand{\refappendix}[1]{\refappendixnumonly{#1}}
+
+\newcommand{\refalgnumonly}[1]{\ref{alg:#1}}
+\newcommand{\refalg}[1]{Algorithm~\refalgnumonly{#1}}
+\newcommand{\refalgrange}[2]{Algorithms~\refalgnumonly{#1}--\refalgnumonly{#2}}
 
 \newcommand{\labfig}[1]{\label{fig:#1}}
 \newcommand{\reffignumonly}[1]{\ref{fig:#1}}
@@ -388,35 +395,28 @@ overlapping region where both methods can be used. For $M=P$, $G$, $L$, and $F$
 respectively, 30, 60, 60, and 20 orders are used in the Taylor expansions. The
 sum of the absolute value of the last 3 terms in the expansions are used as a
 very conservative estimate on the error of these results. For reference, the
-first few terms of the Taylor expansions are shown here:
+first five orders of the Taylor expansions are shown here:
 \begin{align}
   y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
 + \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
- - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
+ - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\labeqn{ytaylor:P:first}\\\nonumber
 &+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
- - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5 \\
-%& + \tfrac{19564394058822418571}{855860038150930312500}(4+311\sin^{9/2}\theta)x^6\\
-%
+ - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5\\
   y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
   + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
-- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
+- \tfrac{2}{3}(1+2\sin^3\theta)x^3\labeqn{ytaylor:G}\\\nonumber
  &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
  - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
-% +\tfrac{64\sqrt{7}}{6615}(4+311\sin^{9/2}\theta)x^6\\
- %
   y_L(x,\theta)\approx&\,  1-x
   + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
-- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
+- \tfrac{80}{81}(1+2\sin^3\theta)x^3\labeqn{ytaylor:L}\\\nonumber
 &+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
 - \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
-% +\tfrac{2816}{32805}(4+311\sin^{9/2}\theta)x^6\\
-%
   y_F(x,\theta)\approx&\, 1 - x
   + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
-  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
+  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \labeqn{ytaylor:F:last}\\\nonumber
   &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
    - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
-%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
 \end{align}
 
 The next issue is that it is obviously not practically possible to perform the
@@ -751,51 +751,130 @@ tables: Mention OCR(tesseract)+human checking.
 
 
 \section{Developing new recipes}\labsec{newrecipes}
-: The new recipes, how they are developed and what they are (only show 1,
-         put 7 in appendix?)
-    MENTION HERE OR IN PREVIOUS? Y=y0+sin3/2*(ypi-yo) = y0+sin3/2*ydelta. But
-    AFTER showing the original recipe to make the point that one does not need
-    to parameterise in theta - Mention taylor + prime+legendre+unprime + highx
-    extrapolation.
 
-bla talk about the new recipes. Two parts to the work: high res integrations +
-finding reliable alg or parameterisation to produce results consistent with that.
+With the availability of reliable high-precision reference datasets of
+$y_M(x,\theta)$ values discussed in \refsec{refeval}, the goal is now to provide
+a set of improved recipes tuned to this data -- in order to replace the original
+ones by Becker-Coppens discussed in \refsec{origrecipes}. For the benefit of
+future reference work, two version of the recipes will be provided: ``standard''
+versions, providing $y$ estimates with errors guaranteed to be less than
+$10^{-3}\cdot\min(y_\text{ref},1-y_\text{ref})$ for all $x{\le}1000$ and
+``luxury'' versions where the error guarantee is tightened to be less than
+$10^{-6}\cdot\min(y_\text{ref},1-y_\text{ref})$. For $x>1000$, no strict error
+guarantee is given, but the recipes should still be reasonable and well behaved.
 
-Bla bla.. theta dep. By using \refeqn{phi} and standard rules of integrals, we can write
+In order to develop these recipes, we first observe that one does not
+strictly need to parameterise $y_M(x,\theta)$ as a two-dimensional function as
+was done in the original work. This is because it follows from
+\reftwoeqns{yintegral}{phi} and the usual rules of integration that:
 \begin{align}
-  y_M(\theta,x) = y^0_M(x) + {\sin^{3/2}\theta}\,y^\delta_M(x\sqrt{\sin\theta})
+  y_M(\theta,x) = y^0_M(x) + {\sin^{3/2}\theta}\,y^\Delta_M(x\sqrt{\sin\theta})
   \labeqn{yintegralbyy0ydelta}
 \end{align}
 where we have defined
 \begin{align}
-y^0_M(x)\equiv y_M(0,x)\\
-y^\pi_M(x)\equiv y_M(\pi,x)\\
-y^{\Delta}_M(x)\equiv y_M^\pi(x)-y_M^0(x)
+y^0_M(x)&\equiv y_M(x,0)\\
+y^\pi_M(x)&\equiv y_M(x,\pi/2)\\
+y^\Delta_M(x)&\equiv y_M^\pi(x)-y_M^0(x)
   \labeqn{y0pideltadef}
 \end{align}
-The advantage of this form is that reduces the numerical issue of having a
-recipe for a two dimensional surface to instead having two one-dimensional
-curves, which is significantly less challenging.
+Thus, the recipe simply has to contain parameterisations of the two
+one-dimensional functions $y^0_M(x)$ and $y^\Delta_M(x)$, and then implement the
+$\theta$ dependency via \refeqn{yintegralbyy0ydelta}. In this respect it is
+interesting to note that in most envisioned use-cases, it is $\sin\theta$ rather
+than $\theta$ which is more cheaply calculated, due to its appearance in the
+Bragg condition. This therefore fits nicely with \refeqn{yintegralbyy0ydelta},
+where only a single additional square-root must be evaluated rather than a more
+expensive trigonometric function. Thus, our recipes will in practice be taking
+$\sin\theta$ rather than $\theta$ as argument.
 
+In terms of the $x$-dependency of $y^0_M(x)$ and $y^\Delta_M(x)$, three
+different regimes shall be considered. Firstly, the regime at very low
+$x$-values is natural to simply evaluate via Taylor expansions. For this
+purpose, it was chosen to use 5th order expansions for both $y^0_M(x)$ and
+$y^\Delta_M(x)$, coefficients of which can trivially be determined from
+\refeqnrange{ytaylor:P:first}{ytaylor:F:last}. The standard recipes will use the
+Taylor expansions when $x<0.1$, while the luxury recipes will do so only when
+$x<0.02$.
+
+At the other extreme, $x$ values higher than $1000$ will as previously mentioned
+simply be handled by extrapolation. As shown in \reffig{highx}, a simple power
+law $y_M(x){\sim}x^{-p}$ appears to describe the curves well for $x\gtrsim100$,
+so while the new recipes will not provide any precise statement on guaranteed
+precision for $x>1000$, they will still provide numerically stable and
+reasonable results. The power constant is $p=0.933$ in case of the Gaussian
+model ($M=G$), and $p=0.5$ in all other cases.
 \begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated/highx.pdf}
 \end{center}
-\caption{Bla highx 0.5 0.933.}
+\caption{Reference $y^0_M(x)$ and $y^\pi_M(x)$ curves. Dotted lines show a power
+  law $y_M(x){\sim}x^{-p}$ with normalisation fixed to coincide with reference
+  curves at $x=1000$. The power constant used is $p=0.5$ when $M{\ne}G$ and
+  $p=0.933$ when $M=G$.}
 \labfig{highx}
 \end{figure}
 
-Extrapolation to extremely high $x$ values: Bla bla power law. Show scaling plot
-and approximate fit. Mention that there will be no well determined precision of
-the provided recipes at these extreme values, but that the solution with a
-simple power law is both simple and trivially ensures well behaved numerical
-results not matter the size of x.
+That leaves just the regime of intermediate $x$-values, ranging from the Taylor
+threshold at $x=0.1$ or $x=0.02$, and up to $x=1000$. In order to be able to
+perform a standard fit of Legendre polynomials to the data, the $x$ values are
+first mapped onto the interval from $[-1,1]$ via the transformation:
+\begin{align}
+  x' = \frac{\sqrt{x}-1}{\sqrt{x}+1}
+  \labeqn{xprimetrf}
+\end{align}
+Here, any power of $x$ would have worked in place of $\sqrt{x}$, but in practice
+the subsequent fits are found to more easily align with the data points for this
+specific transformation. Likewise, the fits for $y^0_M(x)$ curves also performed
+better when the $y$ values are transformed:
+\begin{align}
+  y' =  \frac{ y + \frac{1}{4}x'(3 - {x'}^2) -\frac{1}{2}}{ ( 1 + x' )^2( 1 - x' ) }
+  \labeqn{yprimetrf}
+\end{align}
+Legendre polynomials are then fitted to the resulting sets of $(x',y')$ points.
+The specific form of the $x'$ polynomium in the numerator of \refeqn{yprimetrf}
+was chosen to ensure $y'=0$ at $x'=\pm1$ without changing the slope at either of
+these points. The denominator was chosen to factor out this boundary condition,
+and again the specific powers used in the denominator was chosen to be those
+found to make the Legendre polynomials more easily align with the data
+points. Although the fits are performed using Legendre polynomials, due to their
+many advantages (such as ortogonality and having fitting procedures readily
+available in \texttt{NumPy}FIXMEREF), the final provided recipes will naturally
+first convert the fitted coefficients into coefficients of standard
+polynomials. This not only simplifies the final recipes, but also allows for
+efficient and robust evaluation of these polynomials via Horner's
+method(FIXMEREF). Additionally, the specific form of the transformation in
+\refeqn{yprimetrf} has the advantage that the inverse transformation from $y'$
+values back to $y$ values involves polynomials of $x'$ which can simply be
+combined with the polynomials from the legendre fits into a single set of
+coefficients.
 
+The fits for $y^\Delta_M(x)$ curves are also performed after a transformation of
+$x$ values according to \refeqn{yprimetrf}, but do not, however, require a
+transformation of $y$ values akin to \refeqn{yprimetrf}. Otherwise the procedure
+is similar to the $y^\Delta_M(x)$ case.
+
+That leaves only the choice of order of Legendre polynomial fit to perform, as
+well as the number of digits of the coefficients to include in the final
+recipes. In summary, these values were carefully investigated and chosen
+independently for each particular $y^0_M(x)$ or $y^\Delta_M(x)$ curve, in order
+to live up to the provided error guarantees of the particular recipe, while
+naturally keeping the recipe as simple as possible. Putting it all together, the
+recipe for $y_P(x,\theta)$ is shown in \label{alg:yfct_primary}. All other
+recipes follow the same general form, with the main difference being the
+specific coefficients used, and for reference the other 7 algorithms are
+included in \refappendix{recipes}. Additionally, to further adoption,
+\texttt{C}, \texttt{C++}, and \texttt{Python} code implementing the recipes as
+standalone functions are also made available at FIXMEREF.
 \input{generated/recipe_primary.tex}
 
 \section{Conclusions}
-show cmprecipes plots
 
+The final precision of both the new ``standard'' and ``luxury'' recipes from the
+present work, as well as the original recipes due to Becker-Coppens, are shown
+in \reffig{cmprecipes}. It is clearly seen that the new recipes provide the
+guaranteed error bounds of respectively $10^{-3}$ and $10^{-6}$, while the older
+recipes are mostly useful in a more limited range of intermediate $x$ values.
 \begin{figure}[tp]
     \centering
     \begin{subfigure}[t]{0.49\textwidth}
@@ -826,219 +905,13 @@ show cmprecipes plots
     \labfig{cmprecipes}
 \end{figure}
 
-%%\begin{figure}[tp]
-%%    \centering
-%%    \begin{subfigure}[t]{0.49\textwidth}
-%%        \centering
-%%        \includegraphics[width=\textwidth]{generated/cmprecipes_primary_lux.pdf}
-%%        \caption{$M=P$}\labfig{cmprecipeslux:subfig:P}
-%%    \end{subfigure}
-%%    \hfill
-%%    \begin{subfigure}[t]{0.49\textwidth}
-%%        \centering
-%%        \includegraphics[width=\textwidth]{generated/cmprecipes_scndgauss_lux.pdf}
-%%        \caption{$M=G$}\labfig{cmprecipeslux:subfig:G}
-%%    \end{subfigure}
-%%    \vspace{0.5cm}
-%%    \begin{subfigure}[t]{0.49\textwidth}
-%%        \centering
-%%        \includegraphics[width=\textwidth]{generated/cmprecipes_scndlorentz_lux.pdf}
-%%        \caption{$M=L$}\labfig{cmprecipeslux:subfig:L}
-%%    \end{subfigure}
-%%    \hfill
-%%    \begin{subfigure}[t]{0.49\textwidth}
-%%        \centering
-%%        \includegraphics[width=\textwidth]{generated/cmprecipes_scndfresnel_lux.pdf}
-%%        \caption{$M=F$}\labfig{cmprecipeslux:subfig:F}
-%%    \end{subfigure}
-%%    \caption{Bla bla cmprecipes lux. Note: breakdown near 45degrees in $M=L$ plot (we have split
-%%      that line into $\pm45^\circ$ to show it) }
-%%    \labfig{cmprecipeslux}
-%%\end{figure}
-
-
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_primary.pdf}
-%%\end{center}
-%%\caption{cmprecipes primary.}
-%%\labfig{cmprecipes:primary}
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_primary_lux.pdf}
-%%\end{center}
-%%\caption{cmprecipes primary lux.}
-%%\labfig{cmprecipes:primary:lux}
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndgauss.pdf}
-%%\end{center}
-%%\caption{cmprecipes scndgauss.}
-%%\labfig{cmprecipes:scndgauss}%fixme
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndgauss_lux.pdf}
-%%\end{center}
-%%\caption{cmprecipes scndgauss lux.}
-%%\labfig{cmprecipes:scndgauss:lux}%fixme
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndlorentz.pdf}
-%%\end{center}
-%%\caption{cmprecipes scndlorentz. NOTE BREAKDOWN NEAR 45degrees (we have split
-%%  that line into $\pm45^\circ$ to show it).}
-%%\labfig{cmprecipes:scndlorentz}%fixme
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndlorentz_lux.pdf}
-%%\end{center}
-%%\caption{cmprecipes scndlorentz lux. NOTE BREAKDOWN NEAR 45degrees (we have split
-%%  that line into $\pm45^\circ$ to show it).}
-%%\labfig{cmprecipes:scndlorentz:lux}%fixme
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndfresnel.pdf}
-%%\end{center}
-%%\caption{cmprecipes scndfresnel.}
-%%\labfig{cmprecipes:scndfresnel}%fixme
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/cmprecipes_scndfresnel_lux.pdf}
-%%\end{center}
-%%\caption{cmprecipes scndfresnel lux.}
-%%\labfig{cmprecipes:scndfresnel:lux}%fixme
-%%\end{figure}
-
-%%\begin{align}
-%%  \labeqn{fofetaL}
-%%\end{align}
-%%\begin{align}
-%%  % sinc(x) = sin(x)/x
-%%  % eq. 44, sigma(0) = Q*alpha
-%%  %
-%%  % eta = pi * eps1 * beta = (4/3)*pi*eps1*alpha, so pi*eps1*alpha = 3eta/4
-%%  %
-%%  % f(eta) = sigma(eps1(eta))/sigma(0)
-%%  %        = sinc^2( pi*eps1*alpha )
-%%  %        = sinc^2( 3eta/4 )
-%%  \labeqn{fofetaF}
-%%  \labeqn{fofeta}
-%%
-%%\end{align}
-%%
-%
-%capture the width of the Bragg  the shape of the Bragg diffraction cross
-%section as a function of deviation from the
-%
-%
-% of the intrinsic angular response...
-% ``rocking curves'' intrinsic
-%to each
-%
-%The $f_M(\eta)$ functions capture the shape of the intrinsic angular response...
-% ``rocking curves'' intrinsic
-%to each
-%
-%
-%
-%
-%We should probably plot phi0 and phipi? (and perhaps phi at some intermediate
-%values of theta as well)? And also plot the fM functions.
-%
-%interpolation between the solutions as:.. note phipi > phi0,
-%strictly true that phi is monotonically increasing with theta, and since
-%f,C,N>0, so is y accordingly. Can we also see from the equation that y must drop
-%monotonically with x? And that y=1 at x=0 and y=0 at x=inf?
-%
-%primary eps1: ``divergence of incident beam''.
-%
-%
-%NB: $x$ is also defined differently for the different models, refer to paper,
-%but for convenience we will refer to it simply as $x$ with no subscript.
-%
-%In the
-%work by Becker-Coppens \cite{BC1974}, four specific models and recipes are
-%provided for the determination of $y$: one for primary extinction, and three for
-%secondary extinction, differing only in the choice of distribution used to
-%describe the mosaic spread of coherent domains within the crystalline materials.
-%
-
-
-
-
-
-%$
-%$
-%$
-%$
-%$
-%$\begin{itemize}
-%$\item[Bla] bhejsa
-%$\item[Bla2] bhejsa
-%$\end{itemize}
-%$
-%$In
-%$Becker-Coppens
-%$
-%$, which always fulfils ,
-%$
-%$The extinction factor $y$ will always be
-%$observed
-%$
-%$Iobs = y*Ikin
-%$
-%$Introduce y, x, theta, and the 4 models.
-%$
-%
-%$
-%$
-%$For instance, assume a particle fulfils the condition for
-%$scattering on a reflection plane with d-spacing $d$ and Bragg angle $\theta$
-%$({\em}Bragg's Law):
-%$\begin{align}
-%$  \lambda=2d\sin\theta
-%$\end{align}
-%$If the particle undergoes a scattering event, Braggs law will still be fulfilled
-%$for the outgoing particle as well, and it is possible that a second scattering.
-%$
-%$
-%$  for scattering on a plane with d-spacing $d$, will
-%$and undergoing a Bragg diffraction scattering, will still fulfil the Bragg
-%$condition for scattering
-%$
-%$ , will always have a non-zero
-%$
-%$
-%$Iobs = y*Ikin
-%$
-%$important point, BC in their paper explicitly mentions and deals with 2theta=pi,
-%$so they are NOT working on the assumption of small theta only. However, pg 21
-%$bottom of first column, they discuss that they do assume small extinction only
-%$at 2theta=pi, so perhaps we should not be surprised in case of issues.
-%$
-%$
-%$but we should:
-%$%1/sin2th = 1/(2*sinth*costh) = (d/wl) / sqrt(1-(wl/2d)^2) = 1/(2*s*sqrt(1-s^2))
-%
-%$sinth = wl/2d
-%$
-%$multiple scattering
-%$
-%$Extinction  is the phenomen... Primary extinction is...
+Although a precise description of extinction phenomenons are vastly complicated
+and by no means will be a solved subject due to the present work, it is
+nonetheless the hope of the authors that analysis and modelling codes will adopt
+these new recipes when applying the Becker-Coppens models, so the research and
+discussions going forward can focus on the physics rather than the flawed
+numerical evaluations plaguing the original work, which was otherwise extremely
+detailed and impressive in the subjective oppinion of the authors..
 %$
 %$NB: $\theta$ is the Bragg angle, defined by:
 %$\begin{align}
@@ -1668,8 +1541,16 @@ FIXME: Perhaps we should also make one for the fresnel model?
 \end{table}
 
 
-\section{The recipes}
+\section{The recipes}\labappendix{recipes}.
 
+In \refalgrange{alg:yfct_scndgauss}{alg:yfct_scndfresnel} are shown the
+``standard'' precision recipes for calculating $y_G(x,\theta)$, $y_L(x,\theta)$,
+and $y_F(x,\theta)$, while the recipe for calculating $y_P(x,\theta)$ was
+already shown in \refalg{yfct_primary}. Additionally, intended for
+high-precision reference work,
+\refalgrange{alg:yfct_primary_lux}{alg:yfct_scndfresnel_lux} show the ``luxury''
+recipes for calculating the same four functions, but at an increased level of
+precision. FIXMEREF to c/c++/py code?
 \input{generated/recipe_scndgauss.tex}
 \input{generated/recipe_scndlorentz.tex}
 \input{generated/recipe_scndfresnel.tex}
@@ -1678,21 +1559,6 @@ FIXME: Perhaps we should also make one for the fresnel model?
 \input{generated/recipe_scndlorentz_lux.tex}
 \input{generated/recipe_scndfresnel_lux.tex}
 
-
-\section{Appendix title}
-
-Text text text text text text text text text text text text text text
-text text text text text text text.
-
-\subsection{Appendix subsection title}
-
-Text text text text text text text text text text text text text text
-text text text text text text text.
-
-\subsubsection{Appendix subsubsection title}
-
-Text text text text text text text text text text text text text text
-text text text text text text text.
 
 
 \begin{acknowledgements}
