@@ -18,6 +18,7 @@ plot table3 updated destdir=<DESTDIR>
 plot table3 diff destdir=<DESTDIR>
 plot table4 updated destdir=<DESTDIR>
 plot table4 diff destdir=<DESTDIR>
+plot tableF updated destdir=<DESTDIR>
 # NOTE: Splitting th-point at 45 into 45+-epsilon for lorentz, to not miss the breakdown near 45deg!
 plot cmprecipes primary outfile=<DESTDIR>/cmprecipes_primary.pdf
 plot cmprecipes scndgauss outfile=<DESTDIR>/cmprecipes_scndgauss.pdf
