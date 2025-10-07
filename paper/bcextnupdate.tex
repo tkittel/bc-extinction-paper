@@ -860,7 +860,7 @@ recipes. In summary, these values were carefully investigated and chosen
 independently for each particular $y^0_M(x)$ or $y^\Delta_M(x)$ curve, in order
 to live up to the provided error guarantees of the particular recipe, while
 naturally keeping the recipe as simple as possible. Putting it all together, the
-recipe for $y_P(x,\theta)$ is shown in \label{alg:yfct_primary}. All other
+recipe for $y_P(x,\theta)$ is shown in \refalg{yfct_primary}. All other
 recipes follow the same general form, with the main difference being the
 specific coefficients used, and for reference the other 7 algorithms are
 included in \refappendix{recipes}. Additionally, to further adoption,
@@ -912,544 +912,10 @@ these new recipes when applying the Becker-Coppens models, so the research and
 discussions going forward can focus on the physics rather than the flawed
 numerical evaluations plaguing the original work, which was otherwise extremely
 detailed and impressive in the subjective oppinion of the authors..
-%$
-%$NB: $\theta$ is the Bragg angle, defined by:
-%$\begin{align}
-%$  \sin\theta = \frac{\lambda}{2d_{hkl}}
-%$  \labeqn{braggequation}
-%$\end{align}
-%$
-%$And $x$ is defined by (fixme: here $l$ is actually tbar which is 3/2 times
-%$sphere radius):
-%$\begin{align}
-%$  x = \frac{ 2l^2\lambda^2F^2}{3V^2}
-%$  \labeqn{xdef}
-%$\end{align}
-%$
-%$Introduction, mention how bragg diffraction and how $y_p(\theta,d_{hkl},F^2)$
-%$will depend on the geometrical layout of the crystallites. Mention Bragg angle,
-%$and x-value, and show the original recipe, and how it is used with $l$, $x$,
-%$$F^2$, $\theta$, $d_{hkl}$.
-%$
-%Also show the break-down!
-
-
-
-
-%\begin{figure}[tp] %
-%\label{fig:figure1}
-%\begin{center}
-%\includegraphics[width=0.6\textwidth]{fig1.png} % NB use pdflatex for non-postscript
-%\end{center}
-%\caption{Caption \protect\cite{knuth84}} % NB \protect\cite{...} is required in floating figures
-%\end{figure}
-
-
-
-
-
-
-%\section{New recipes}
-
-% Basic table
-
-%\begin{table}[tp]
-%\caption{Caption to table \protect\cite{lamport86}} % NB \protect\cite{...} is required in floating tables
-%\smallskip
-%\begin{center}
-%\begin{tabular}{llcr}
-%\midrule
-% HEADING    & FOR        & EACH       & COLUMN     \\
-%\midrule
-% entry      & entry      & entry      & entry      \\
-% entry      & entry      & entry      & entry      \\
-% entry      & entry      & entry      & entry      \\
-%\end{tabular}
-%\end{center}
-%\end{table}
-%
-
-
-\section{STUFF FOR APPENDIX OR MAIN PART?}
-
-\subsection{Central integration}
-
-With the integrand implemented via mpmath (REF), and a
-Gauss-Legendre numerical integration, we integrate a particular integral
-$[0,a]$. However, for reliable performance it is crucial that ...
-
-as the integrand contains trigonometic functions in REFFOFETA,
-it is important that each
-
-\subsection{Direct evaluation at low $x$ via Taylor expansions}
-bla
-\subsection{Integration strategy}
-
-
-
-At a particular $(\theta,x)$ point, the strategy to evaluate $y_p(\theta,x)$
-within a target precision of $\epsilon=10^{-7}$ is described in the following.
-
-First, for $x<1$, it is investigated if the direct Taylor expansion method
-described in REFSECTION is suitable to achieve the required precision. If it is
-not, the integral is solved by a combination of high-precision Gauss-Legendre
-numerical integration over the interval $[0,a]$ while the contribution over the
-interval $[a,\infty]$ is estimated by \refeqn{tailintegralP}. The only problem
-that remains is which value of $a$ to choose in this scenario.
-
-
-strategy: $\delta{}a$ is $\max(100,x)$, rounded up to
-For increasing values of i, set a=step*i and evaluate via a Gauss-Legendre
-integration the integral over $[0,a]$. Check if combining this result with a
-tail integration over $[a,\infty]$ would provide a final result with suitable
-low error. If not, increase $a$ by $\Delta{}a$
-
-\section{LEFTOVERS}
-
-
- of a particularly challenging numerical
-integral....  Furthermore, the numerical evaluation in BC1974 is generally most
-precise and useful in regions of intermediate extinction levels, where arguably
-most data analysis ... a feature of
-numerical precision and domain of validity of the recipes as presented in the
-... phenomenologically, the observed Bragg diffraction cross section will thus be reduced by
-a factor of $y$
-
-... Although these models describe different
-underlying physics, they are in practice mathematically similar and each require
-the evaluation of a particular non-trivial integral
-
-TODO: Mention BC highly cited, used for structure refinement, etc.
-
-TODO: Mention y is monotonically decreasing function of x, and increases for
-higher thetabragg. Mention limits y=1 at x=0, y=0 and x=inf. This is also
-important when discussing the precision definition to use.
-
-NEXT: One paragraph with a few details of the BC models, spherical particles,
-primary+secondary, for different secondary mosaic distributions, etc. Then start
-introducing equations for phi/phi0/phipi/f/y eq36/... and then introduce the
-four models PGLF. Then mention the issues, show the NCrystal plot and the 2d
-precision plots.
-
-
-NB: $\theta$ is the Bragg angle, defined by:
-\begin{align}
-  \sin\theta = \frac{\lambda}{2d_{hkl}}
-  \labeqn{braggequationREPEATEDFIXME}
-\end{align}
-
-And $x$ is defined by (fixme: is $l$ the sphere radius or tbar..., also this is
-for primary):
-
-\begin{align}
-  x = \frac{ 2l^2\lambda^2F^2}{3V^2}
-  \labeqn{xdefREPEATEDFIXME}
-\end{align}
-
-$N_P=\frac{3}{4\pi}$, $C_m=1$.
-(FIXME: Don't focus first om primary, just do them all from the beginning,
-meaning that the previous equation has to have index $M$ and two constants
-depending on $M$ (the normalisation factors and the factor in front of x, the
-only real difference is for the Lorentzian model I think).
-
-
-\subsection{New recipes}
-
-Minimal update, simply updating the four parameters from the old model:
-
-\begin{align}
-  A(\theta) &= 0.559+0.537\cos(2\theta)\nonumber\\
-  B(\theta) &= 0.604-0.222(0.5-\cos(2\theta))^2
-\labeqn{ypfitfctparsupdated}
-\end{align}
-
-Improved and slightly more complicated recipe for more precise adherence to eq. 36:
-
-\begin{align}
-  y_{p}(\theta,x)=\left\{1+2x+\frac{A(\theta)x^2-0.1x}{1+B(\theta)x+C(\theta)x(1+x)^{-1} }\right\}^{-1/2}
-  \labeqn{ypfitfctlux}
-\end{align}
-
-\begin{align}
-  A(\theta) &= 0.8968-0.2928\sin(\theta)+2.528\sin^2(\theta)-11.21\sin^3(\theta)\nonumber\\
-            &\hspace*{1em} +21.07\sin^4(\theta)-20.17\sin^5(\theta)+7.32\sin^6(\theta)\nonumber\\
-  B(\theta) &= 0.4697-0.1688\sin(\theta)+5.37\sin^2(\theta)-20.68\sin^3(\theta)\nonumber\\
-            &\hspace*{1em} +40.52\sin^4(\theta)-38.09\sin^5(\theta)+12.89\sin^6(\theta)\nonumber\\
-  C(\theta) &= -0.7486-0.5671\sin(\theta)-1.248\sin^2(\theta)+17.56\sin^3(\theta)\nonumber\\
-            &\hspace*{1em} -47.8\sin^4(\theta)+59.14\sin^5(\theta)-26.61\sin^6(\theta)
-\labeqn{ypfitfctluxpars}
-\end{align}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%
-%(amax+amin)/2 is:
-%
-%\begin{align}
-%  \frac{1}{a}
-%  -\frac{k}{2a^2}
-%  +\frac{1}{6a^3}
-%  +\frac{8+4\sin^{5/2}\theta}{25a^3}k^2
-%  -\frac{4+8\sin^{3}\theta}{21a^4}k^3
-%  +\mathcal{O}\left(\frac{1}{a^5}\right)
-%\end{align}
-%
-%(amax-amin)/2 is:
-%
-%\begin{align}
-%  \frac{1}{2a^2}
-%  +\frac{1}{6a^3}
-%  -2k^2\frac{2+\sin^{5/2}\theta}{15a^4}
-%  +2k^3\frac{1+\sin^{3}\theta}{3a^5}
-%  -2k^2\frac{2+\sin^{5/2}\theta}{35a^5}
-%  +\mathcal{O}\left(\frac{1}{a^6}\right)
-%\end{align}
-
-
-% amax:
-% power of t - power of x | power of t | coefficient
-% 1    | 1  | 1
-% 2    | 2  | 1/2
-% 2    | 3  | -1/2*xx + 1/3
-% 3    | 5  | 4/25*(sinth^(5/2) + 2)*xx^2
-% 4    | 6  | -2/15*(sinth^(5/2) + 2)*xx^2 + 1/4*xx
-% 4    | 7  | -4/21*(2*sinth^3 + 1)*xx^3
-% 5    | 8  | 1/3*(2*sinth^3 + 1)*xx^3 - 1/10*(sinth^(5/2) + 2)*xx^2
-% 5    | 9  | 16/315*(13*sinth^(7/2) + 2)*xx^4 - 4/27*(2*sinth^3 + 1)*xx^3 + 4/45*(sinth^(5/2) + 2)*xx^2
-% 6    | 10 | -24/175*(13*sinth^(7/2) + 2)*xx^4 + 2/15*(2*sinth^3 + 1)*xx^3
-% 6    | 11 | -4/165*(43*sinth^4 + 2)*xx^5 + 48/385*(13*sinth^(7/2) + 2)*xx^4 - 8/33*(2*sinth^3 + 1)*xx^3
-% 7    | 12 | 4/45*(43*sinth^4 + 2)*xx^5 - 8/105*(13*sinth^(7/2) + 2)*xx^4 + 1/9*(2*sinth^3 + 1)*xx^3
-% 7    | 13 | 64/12285*(311*sinth^(9/2) + 4)*xx^6 - 8/65*(43*sinth^4 + 2)*xx^5 + 48/455*(13*sinth^(7/2) + 2)*xx^4
-% 8    | 14 | -32/1323*(311*sinth^(9/2) + 4)*xx^6 + 2/21*(43*sinth^4 + 2)*xx^5 - 24/245*(13*sinth^(7/2) + 2)*xx^4
-% ...
-%
-% amin:
-% power of t - power of x | power of t | coefficient
-% 1     | 1  | 1
-% 2     | 2  | -1/2
-% 2     | 3  | -1/2*xx
-% 3     | 5  | 4/25*(sinth^(5/2) + 2)*xx^2
-% 4     | 6  | 2/15*(sinth^(5/2) + 2)*xx^2 + 1/4*xx
-% 4     | 7  | -4/21*(2*sinth^3 + 1)*xx^3 + 4/35*(sinth^(5/2) + 2)*xx^2
-% 5     | 8  | -1/3*(2*sinth^3 + 1)*xx^3 - 1/10*(sinth^(5/2) + 2)*xx^2
-% 5     | 9  | 16/315*(13*sinth^(7/2) + 2)*xx^4 - 4/9*(2*sinth^3 + 1)*xx^3 - 4/45*(sinth^(5/2) + 2)*xx^2
-% 6     | 10 | 24/175*(13*sinth^(7/2) + 2)*xx^4 - 2/15*(2*sinth^3 + 1)*xx^3 - 2/25*(sinth^(5/2) + 2)*xx^2
-% 6     | 11 | -4/165*(43*sinth^4 + 2)*xx^5 + 96/385*(13*sinth^(7/2) + 2)*xx^4 + 4/33*(2*sinth^3 + 1)*xx^3
-% 7     | 12 | -4/45*(43*sinth^4 + 2)*xx^5 + 8/35*(13*sinth^(7/2) + 2)*xx^4 + 1/3*(2*sinth^3 + 1)*xx^3
-% 7     | 13 | 64/12285*(311*sinth^(9/2) + 4)*xx^6 - 8/39*(43*sinth^4 + 2)*xx^5 + 48/455*(13*sinth^(7/2) + 2)*xx^4 + 8/39*(2*sinth^3 + 1)*xx^3
-% 8     | 14 | 32/1323*(311*sinth^(9/2) + 4)*xx^6 - 2/7*(43*sinth^4 + 2)*xx^5 - 24/245*(13*sinth^(7/2) + 2)*xx^4 + 2/21*(2*sinth^3 + 1)*xx^3
-% ...
-
-
-
-\subsection{Secondary extinction}
-
-The BC model for secondary extinction ends up being mathematically similar to
-the one for primary extinction, with the main difference being that the
-distortion of cross sections captured in $f(\eta)$ now comes from the
-description of a mosaic crystal grain rather than from an effective spread
-inherent to the diffraction happening inside each coherent domain. Additionally,
-the variable $x$ is replaced by a variable $X$ depending on both the mosaic
-spreads and the average path length $\bar{T}$ (FIXME: Repeat here in more
-detail? Also maybe the language used in the first paragraph in BC1974 II.3 is
-better than the one used here??).
-
-\begin{align}
-  X = \frac{2}{3}...fixme.
-  %FIXME Q or F/V?? Perhaps just define Q in the beginning.
-  \labeqn{capitalXdef}
-\end{align}
-
-To produce equivalent of \refeqn{yintegral} (BC.36), one must go back to BC.14,
-and replace $\sigma(\epsilon_1)$ with the convoluted $\bar\sigma(\epsilon_1)$
-values for the three variants given in BC.40a, BC.41a, and BC.44
-respectively. This results in
-
-\begin{align}
-  f_G(\eta) = \exp\left\{-\frac{9}{16\pi}\eta^2\right\}
-  \labeqn{fofetaG}
-\end{align}
-\begin{align}
-  f_L(\eta) = \frac{1}{1+\eta^2}
-  \labeqn{fofetaL}
-\end{align}
-\begin{align}
-  % sinc(x) = sin(x)/x
-  % eq. 44, sigma(0) = Q*alpha
-  %
-  % eta = pi * eps1 * beta = (4/3)*pi*eps1*alpha, so pi*eps1*alpha = 3eta/4
-  %
-  % f(eta) = sigma(eps1(eta))/sigma(0)
-  %        = sinc^2( pi*eps1*alpha )
-  %        = sinc^2( 3eta/4 )
-  f_F(\eta) = \frac{ \sin^2(3\eta/4) } { (3\eta/4)^2 }
-  \labeqn{fofetaF}
-\end{align}
-
-\begin{align}
-  %Note integration limit from 0..inf, so have multiplied factor in front by 2!!
-  y_s^G(\theta,X_G) = \frac{3}{2\pi}\int_{0}^{\infty} f_G(\eta)\varphi\left(\theta,X_Gf_G(\eta)\right)d\eta
-  \labeqn{ysintegralG}
-\end{align}
-\begin{align}
-  %Note integration limit from 0..inf, so have multiplied factor in front by 2!!
-  y_s^L(\theta,X_L) = \frac{2}{\pi}\int_{0}^{\infty} f_L(\eta)\varphi\left(\theta,\frac{4}{3}X_Lf_L(\eta)\right)d\eta
-  \labeqn{ysintegralL}
-\end{align}
-\begin{align}
-  %Note integration limit from 0..inf, so have multiplied factor in front by 2!!
-  y_s^F(\theta,X_F) = \frac{3}{2\pi}\int_{0}^{\infty} f_F(\eta)\varphi\left(\theta,X_Ff_F(\eta)\right)d\eta
-  \labeqn{ysintegralF}
-\end{align}
-
-
-% Factor in front of integral, based on eq. 14, should be:
-%
-% sigma(0)/Q * (deta/deps1)^(-1) = sigma(0)/ ( Q * pi * ( (4/3)*alphaGL) = ( sigma(0)/(alphaGL*Q) ) * 3/(4pi)
-%
-% Gauss: ( sigma(0)/(alphaG*Q) ) * 3/(4pi)
-%      = ( (alphaG*Q)/(alphaG*Q) ) *  3/(4pi) = 3/(4pi)
-% Lorentz: ( sigma(0)/(alphaL*Q) ) * 3/(4pi)
-%           = ( ( (4/3) * Q * alphaL) / (alphaL*Q) ) * 3/(4pi)
-%           = (4/3) * 3/(4pi) = 1/pi
-% Fresnel: ( sigma(0)/(alphaG*Q) ) * 3/(4pi)
-%      = ( (alphaG*Q)/(alphaG*Q) ) *  3/(4pi) = 3/(4pi)
-%
-% As a sanity check, one can let x->0 and we see that the factor should also be
-% the normalisation constant of f (since phi(0)=1 and yp(x=0)=1):
-% Gauss. This normalisation constant is easily calculated to be:
-%
-% Gauss: 3/(4pi) (CONSISTENT!!)
-% Lorentz: 1/pi (CONSISTENT!!)
-% FRESNEL: 3/(4pi) (CONSISTENT!!)
-
-% Factor in front of X inside phi-function should be whatever comes out of
-% transforming sigma(eps1)*r to factor*x*f(eta).
-%
-% x = (2/3)*Q*alpha*tbar
-% r = (2/3) * tbar
-% eta = pi * eps1 * ( (4/3)*alphaGL)
-%
-% sigma(eps1)*r = sigma(0)*f(eta)*(2/3)*tbar
-%               = f(eta)*(2/3)*sigma(0)*tbar*(x/((2/3)*Q*alpha*tbar))
-%               = ( sigma(0)/(Q*alpha) ) * x * f(eta)
-% So the factor before x inside the call to phi should be sigma(0)/(Q*alpha):
-%
-% Gauss and Fresnel have sigma(0)=Q*alpha, so the factor is unity.
-% Lorentzian have sigma(0)=(4/3)(Q*alpha so the factor is 4/3.
-%
-
-%ACTUALLY $X_F$ is $X_G$....
-
-
-% Now let us also double-check the argument of the phi function (which is
-% sigma(eps1) in eq. 14). in the integrand, and how/if it depends on the
-% normalisation of f. In particular it could show up as we go from eq. 14 to 36
-% (or the equivalent for the secondary models):
-%
-% Primary:
-%    Argument of phi function should actually be sigma(eps1)*r, which
-%    can be written as sigma(0)*f(eta)*r, and sigma(0)*r is given by
-%    Q*alphabar*r = Q*alphabar*(tbar/(3/2)) which happens to be exactly the
-%    definition of x.
-%
-% Scnd Lorentz:
-%
-%    If argument of phi function should also be sigmaL(eps1)*R, written as
-%    sigmaL(0)*fL(eta)*R, then we can again look at sigmaL(0)*R:
-%
-%    sigmaL(0)*R = (4/3)*Q*alphaL*R = (4/3)*Q*alphaL*((2/3)*TBar)
-%                = (4/3)* [ (2/3)*Q*alphaL*TBar ] = (4/3)*X
-%
-% Scnd Gauss:
-%
-%    If argument of phi function should also be sigmaG(eps1)*R, written as
-%    sigmaG(0)*fG(eta)*R, then we can again look at sigmaG(0)*R:
-%
-%    sigmaG(0)*R = Q*alphaG*R = Q*alphaG*((2/3)*TBar)
-%                = (2/3)*Q*alphaG*TBar = X
-%
-% Scnd Fresnel form: sigmaF(0)=Q*alphaG (note not alphaF!), so argument of phi
-% is like the Gaussian case? However integral of (sin(x)/x)^2 from -inf to +inf is pi, not 4pi/3
-
-%%BC provides
-%%three models for the shape of the mosaic distributions: Gaussian (G), Lorentzian
-%%(L), and a Fresnel distribution (F).
-%%
-%%the spread in cross-sections in principle a mosaic spread distribution
-%%
-%%with the exception a more standard mosaic spread function
-%%plays the role  that the intrinsic spread  the BC Bla. Gauss/Lorentz/Fresnel, differs by
-%%
-%%
-%%
-
-
-
-%%%%%
-
-% Eq. 14 -> 36?
-%
-% yp = (1/Q)*integral( sigma(eps1)*phi(sigma(eps1)) d(eps1)
-%
-% with f=sigma(eps1)/sigma(0) we get:
-%
-% yp = (sigma(0)/Q)*integral( f(eps1)*phi(sigma(eps1)) d(eps1)
-%
-% For primary in sphere, we have sigma(0)=(3/4)QBeta (eq. 29), so
-%
-% yp = 3/4Beta*integral( f(eps1)*phi(sigma(eps1)) d(eps1)
-%
-% Also eta = pi*eps1*beta, so deta = pi*deps1*beta
-%
-% yp = (3/(4pi))*integral( f(eta)*phi(sigma(eta)) d(eps1*pi*beta)
-%
-% For secondary extinction, Gaussian, we get:
-%
-% sigma(0) = Q*alphaG and eta=pi*eps1*(4/3)*alphaG
-%
-% and d(eta) = d(eps1 * pi*(4/3)*alphaG)
-
-% SO:
-% yG = (sigma(0)/Q)*integral( f(eps1)*phi(sigma(eps1)) d(eps1)
-%    = 3/(4pi) * integral( f(eps1)*phi(sigma(eps1)) d(eta)
-%
-% And for Lorentzian we get:
-%
-% sigma(0) = (4/3)*Q*alphaL, eta=pi*eps1*(4/3)*alphaL
-%
-% SO:
-
-% yL = (sigma(0)/Q)*integral( f(eps1)*phi(sigma(eps1)) d(eps1)
-%    = (4/3)/(pi*(4/3))*integral( f(eps1)*phi(sigma(eps1)) d(eta)
-%    = 1/pi * integral( f(eps1)*phi(sigma(eps1)) d(eta)
-%
-%
-
-% Now let us also double-check the argument of the phi function (which is
-% sigma(eps1) in eq. 14). in the integrand, and how/if it depends on the
-% normalisation of f. In particular it could show up as we go from eq. 14 to 36
-% (or the equivalent for the secondary models):
-%
-% Primary:
-%    Argument of phi function should actually be sigma(eps1)*r, which
-%    can be written as sigma(0)*f(eta)*r, and sigma(0)*r is given by
-%    Q*alphabar*r = Q*alphabar*(tbar/(3/2)) which happens to be exactly the
-%    definition of x.
-%
-% Scnd Lorentz:
-%
-%    If argument of phi function should also be sigmaL(eps1)*R, written as
-%    sigmaL(0)*fL(eta)*R, then we can again look at sigmaL(0)*R:
-%
-%    sigmaL(0)*R = (4/3)*Q*alphaL*R = (4/3)*Q*alphaL*((2/3)*TBar)
-%                = (4/3)* [ (2/3)*Q*alphaL*TBar ] = (4/3)*X
-%
-% Scnd Gauss:
-%
-%    If argument of phi function should also be sigmaG(eps1)*R, written as
-%    sigmaG(0)*fG(eta)*R, then we can again look at sigmaG(0)*R:
-%
-%    sigmaG(0)*R = Q*alphaG*R = Q*alphaG*((2/3)*TBar)
-%                = (2/3)*Q*alphaG*TBar = X
-%
-% Scnd Fresnel form: sigmaF(0)=Q*alphaG (note not alphaF!), so like the Gaussian
-% case? However integral of (sin(x)/x)^2 from -inf to +inf is pi, not 4pi/3
-
-
-\section{Taylor expansions}
-
-USAGE IN RECIPES: Always use Taylor expansions (5th order) for x below a
-threshold of 0.1 (std recipe) and 0.01 (lux recipe).
-
-\begin{align}
-  y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
-+ \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
- - \tfrac{54120476}{91216125}(1+2\sin^3\theta)x^3\\\nonumber
-&+ \tfrac{350769113251}{1924903480500}(2+13\sin^{7/2}\theta)x^4
- - \tfrac{276478446363113}{2846107289025000}(2+43\sin^4\theta)x^5 \\
-%& + \tfrac{19564394058822418571}{855860038150930312500}(4+311\sin^{9/2}\theta)x^6\\
-%
-  y_G(x,\theta)\approx&\,  1 - \tfrac{3\sqrt{2}}{4}x
-  + \tfrac{4\sqrt{3}}{15}(2+\sin^{5/2}\theta)x^2
-- \tfrac{2}{3}(1+2\sin^3\theta)x^3\\\nonumber
- &+ \tfrac{16\sqrt{5}}{175}(2+13\sin^{7/2}\theta)x^4
- - \tfrac{2\sqrt{6}}{45}(2+43\sin^4\theta)x^5\\
-% +\tfrac{64\sqrt{7}}{6615}(4+311\sin^{9/2}\theta)x^6\\
- %
-  y_L(x,\theta)\approx&\,  1-x
-  + \tfrac{8}{15}(2+\sin^{5/2}\theta)x^2
-- \tfrac{80}{81}(1+2\sin^3\theta)x^3\\\nonumber
-&+ \tfrac{32}{81}(2+13\sin^{7/2}\theta)x^4
-- \tfrac{112}{405}(2+43\sin^4\theta)x^5\\
-% +\tfrac{2816}{32805}(4+311\sin^{9/2}\theta)x^6\\
-%
-  y_F(x,\theta)\approx&\, 1 - x
-  + \tfrac{11}{25}(2+\sin^{5/2}\theta) x^2
-  - \tfrac{604}{945}(1+2\sin^3\theta)x^3 \\\nonumber
-  &+ \tfrac{15619}{79380}(2+13\sin^{7/2}\theta)x^4
-   - \tfrac{655177}{6237000}(2+43\sin^4\theta)x^5
-%  + \tfrac{27085381}{1094593500}(4+311\sin^{9/2}\theta)x^6
-\end{align}
-
-FIXME: How can we refer to these models? Both in this paper and in e.g. NCrystal
-where we use them? We can use ``BCK'' (Becker-Coppens-Kittelmann), if such
-self-reference is allowed? Or perhaps BC2025(lux|minimal|) vs. BC1974 ?
-
-For ease of reference the three updated recipes provided here, will be referred
-to as BCK-minimal, BCK, and BCKLux. The first is as the name implies a minimal,
-which only ..... Next, the BCK model aims to provide numerical evaluations at
-the $0.1\%$ level, while finally BCKLux provides an even more precise numerical
-evaluation at the $10^-8$ level of precision. (define precision!)
-
-
-NOTE: Mention that this should be evaluated using Horner's method!! (which is
-also the default in numpy's polyval and how it has always been done in
-NCrystal). (Although Motzkin's method or the Knuth-Eve algorithm is actually
-interesting as it can save additional multiplications!!)
-
-\begin{align}
-  y^\Delta_P(x)\equiv  y^\pi_P(x)-y^0_P(x)\approx&\, \tfrac{2369}{5775}x^2 - \tfrac{108240952}{91216125}x^3
-+ \tfrac{350769113251}{148069498500}x^4 - \tfrac{11888573193613859}{2846107289025000}x^5 \\
-%
- y^\pi_G(x)-y^0_G(x)\approx&\, \tfrac{4\sqrt{3}}{15}x^2
-- \tfrac{4}{3}x^3
- + \tfrac{208\sqrt{5}}{175}x^4
- - \tfrac{86\sqrt{6}}{45}x^5\\
-%
-  y^\pi_L(x)-y^0_L(x)\approx&\, \tfrac{8}{15}x^2
-- \tfrac{160}{81}x^3
-+ \tfrac{416}{81}x^4
-- \tfrac{4816}{405}x^5\\
-%
-  y^\pi_F(x)-  y^0_F(x)\approx&\, \tfrac{11}{25}x^2
-  - \tfrac{1208}{945}x^3
-  + \tfrac{203047}{79380}x^4
-   - \tfrac{28172611}{6237000}x^5
-\end{align}
-
-
-
-
 
 \appendix % if required
 
-\section{Tail integration for $M=P$}
+\section{Tail integration primary extinction}
 For $M=P$ and $f_P(\eta)$ given by \refeqn{fofeta:P:first}, it is desired to
 provide an estimate of the tail of the integral in \refeqn{yintegral}, i.e.\ the
 integral over just the $[a,\infty]$ for some finite and positive $a$.
@@ -1543,12 +1009,12 @@ FIXME: Perhaps we should also make one for the fresnel model?
 
 \section{The recipes}\labappendix{recipes}.
 
-In \refalgrange{alg:yfct_scndgauss}{alg:yfct_scndfresnel} are shown the
+In \refalgrange{yfct_scndgauss}{yfct_scndfresnel} are shown the
 ``standard'' precision recipes for calculating $y_G(x,\theta)$, $y_L(x,\theta)$,
 and $y_F(x,\theta)$, while the recipe for calculating $y_P(x,\theta)$ was
 already shown in \refalg{yfct_primary}. Additionally, intended for
 high-precision reference work,
-\refalgrange{alg:yfct_primary_lux}{alg:yfct_scndfresnel_lux} show the ``luxury''
+\refalgrange{yfct_primary_lux}{yfct_scndfresnel_lux} show the ``luxury''
 recipes for calculating the same four functions, but at an increased level of
 precision. FIXMEREF to c/c++/py code?
 \input{generated/recipe_scndgauss.tex}
@@ -1558,6 +1024,72 @@ precision. FIXMEREF to c/c++/py code?
 \input{generated/recipe_scndgauss_lux.tex}
 \input{generated/recipe_scndlorentz_lux.tex}
 \input{generated/recipe_scndfresnel_lux.tex}
+
+\section{LEFTOVERS}
+
+
+ of a particularly challenging numerical
+integral....  Furthermore, the numerical evaluation in BC1974 is generally most
+precise and useful in regions of intermediate extinction levels, where arguably
+most data analysis ... a feature of
+numerical precision and domain of validity of the recipes as presented in the
+... phenomenologically, the observed Bragg diffraction cross section will thus be reduced by
+a factor of $y$
+
+... Although these models describe different
+underlying physics, they are in practice mathematically similar and each require
+the evaluation of a particular non-trivial integral
+
+TODO: Mention BC highly cited, used for structure refinement, etc.
+
+TODO: Mention y is monotonically decreasing function of x, and increases for
+higher thetabragg. Mention limits y=1 at x=0, y=0 and x=inf. This is also
+important when discussing the precision definition to use.
+
+NEXT: One paragraph with a few details of the BC models, spherical particles,
+primary+secondary, for different secondary mosaic distributions, etc. Then start
+introducing equations for phi/phi0/phipi/f/y eq36/... and then introduce the
+four models PGLF. Then mention the issues, show the NCrystal plot and the 2d
+precision plots.
+
+NB: $\theta$ is the Bragg angle, defined by:
+\begin{align}
+  \sin\theta = \frac{\lambda}{2d_{hkl}}
+  \labeqn{braggequation}
+\end{align}
+
+And $x$ is defined by (fixme: is $l$ the sphere radius or tbar..., also this is
+for primary):
+
+\begin{align}
+  x = \frac{ 2l^2\lambda^2F^2}{3V^2}
+  \labeqn{xdef}
+\end{align}
+
+$N_P=\frac{3}{4\pi}$, $C_m=1$.
+(FIXME: Don't focus first om primary, just do them all from the beginning,
+meaning that the previous equation has to have index $M$ and two constants
+depending on $M$ (the normalisation factors and the factor in front of x, the
+only real difference is for the Lorentzian model I think).
+
+
+
+
+FIXME: How can we refer to these models? Both in this paper and in e.g. NCrystal
+where we use them? We can use ``BCK'' (Becker-Coppens-Kittelmann), if such
+self-reference is allowed? Or perhaps BC2025(lux|minimal|) vs. BC1974 ?
+
+For ease of reference the three updated recipes provided here, will be referred
+to as BCK-minimal, BCK, and BCKLux. The first is as the name implies a minimal,
+which only ..... Next, the BCK model aims to provide numerical evaluations at
+the $0.1\%$ level, while finally BCKLux provides an even more precise numerical
+evaluation at the $10^-8$ level of precision. (define precision!)
+
+
+NOTE: Mention that this should be evaluated using Horner's method!! (which is
+also the default in numpy's polyval and how it has always been done in
+NCrystal). (Although Motzkin's method or the Knuth-Eve algorithm is actually
+interesting as it can save additional multiplications!!)
 
 
 
