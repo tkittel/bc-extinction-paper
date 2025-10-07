@@ -508,7 +508,7 @@ def textbox(lang,*msg_lines):
         yield ''
 
 def mode2letter(mode):
-    return { 'primary':'p',
+    return { 'primary':'P',
              'scndgauss':'G',
              'scndlorentz':'L',
              'scndfresnel':'F'}[mode]

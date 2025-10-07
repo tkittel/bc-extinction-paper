@@ -964,12 +964,12 @@ def main_highx( args ):
         ml = mode2letter(mode)
         ax.plot( xvals, y0,
                  #label = f'$y_{ml}(\\theta=0,x)$',
-                 label = f'$y_{ml}^0$',
+                 label = f'$y_{ml}^0(x)$',
                  color = mode2color(mode,0),
                  ls = th2ls[0] )
         ax.plot( xvals, y90,
                  #label = f'$y_{ml}(\\theta=\\pi,x)$',
-                 label = f'$y_{ml}^\\pi$',
+                 label = f'$y_{ml}^\\pi(x)$',
                  color = mode2color(mode,90),
                  ls = th2ls[90] )
 
@@ -1005,6 +1005,7 @@ def main_highx( args ):
 
     assert len(set(xmaxvals))==1
     ax.set_xlim(xmin,xmaxvals[0])
+    ax.set_ylim(1e-3,1.0)
     ax.set_ylabel('$y$')
     ax.set_xlabel('$x$')
     ax.legend()
