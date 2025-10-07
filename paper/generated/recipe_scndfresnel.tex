@@ -3,6 +3,7 @@
              When $x\le1000$ the result has an absolute error less than $10^{-3}\cdot\min(y_\text{true},1-y_\text{true})$.
              All variables must be double precision floating point types or better, as per the \texttt{binary64} format\protect\cite{IEEE754}.}
     \begin{algorithmic}[1]
+        \small
         \Procedure{YF}{$x, \sin\theta$}
             \If{$x < 0.1$}
                 \State ${y_0} \gets 1-{x}{\cdot}(1-{x}{\cdot}(0.88-{x}{\cdot}(0.639-{x}{\cdot}(0.394-0.21{\cdot}{x}))))$

@@ -142,6 +142,7 @@ def doit( lang, outfile = None, include_main = True, include_testfcts = True ):
                 o.append(r'             When $x\le1000$ the result has an absolute error less than $10^{-%i}\cdot\min(y_\text{true},1-y_\text{true})$.'%ndigits_recipe)
                 o.append(r"             All variables must be double precision floating point types or better, as per the \texttt{binary64} format\protect\cite{IEEE754}.}")
                 o.append(r'    \begin{algorithmic}[1]')
+                o.append(r'        \small')
                 fctname = 'Y%s%s'%(ml,'Lux' if lux else '')
                 o.append(r'        \Procedure{%s}{$x, \sin\theta$}'%fctname)
                 o.append(r'            \If{$x < %s$}'%taylorthr)
