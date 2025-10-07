@@ -129,6 +129,10 @@ def _tableN_df_as_table( df ):
 def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct ):
     norm_is_min_y_1minusy = True
     modes = ['all','plot','diff','updated']
+    if not load_origptfct or not origtable_fct:
+        modes.remove('diff')
+        modes.remove('all')
+
     outdir = pathlib.Path('.')
     for a in args:
         if a.startswith('destdir='):
@@ -139,7 +143,7 @@ def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct )
     if not mode:
         raise SystemExit(f'Please provide {tablename} sub-mode, one of: %s'%(' '.join(modes)))
 
-    data = load_origptfct()
+    data = load_origptfct() if load_origptfct else None
     data_all = load_allptsfct()
 
     if mode in ('all','plot'):
@@ -147,9 +151,10 @@ def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct )
         if mode=='plot':
             return
 
-    orig_table = origtable_fct()
-    df_orig = pd.DataFrame(orig_table['x_sinth_yp_list'],
-                           columns=['x', 'sinth', 'value'])
+    orig_table = origtable_fct() if origtable_fct else None
+    df_orig = ( pd.DataFrame(orig_table['x_sinth_yp_list'],
+                             columns=['x', 'sinth', 'value'])
+                if orig_table else None )
 
     as_table = _tableN_df_as_table
     if mode in ('all','diff'):
@@ -183,7 +188,6 @@ def plot_table( args, tablename, load_origptfct, load_allptsfct, origtable_fct )
             outdir.joinpath(f'{tablename}_updated.tex'),
             tablename = tablename,
         )
-
 
 def main_bc1974tables( args ):
     assert not args
@@ -234,6 +238,16 @@ def main_table4( args ):
                 load_table4scan_origpts,
                 load_table4scan_allpts,
                 orig_table )
+
+def main_tableF( args ):
+    #Like table 1/3/4 buf for scndfresnel (which was absent in BC1974).
+    from .load import load_table4scan_allpts
+    plot_table( args,
+                'tableF',
+                None,
+                load_table4scan_allpts,
+                None )
+
 
 def main_cmprecipes( args ):
     args, outfile = parse_outfile(args)

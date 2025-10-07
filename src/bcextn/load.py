@@ -33,6 +33,7 @@ def load_thetascan( mode = 'primary' ):
         return _loadcache(f'bcdata_{mode}_thetascan.json')
 
 def _impl_load_tablescan_origpts( tablename ):
+    assert tablename!='tableF', "not fresnel table in BC1974 paper"
     assert tablename in ('table1','table3','table4')
     cachekey = f'load_{tablename}scan_origpts_cache'
     if cachekey in _cache:
@@ -89,6 +90,9 @@ def load_table3scan_allpts():
 
 def load_table4scan_allpts():
     return _loadcache('bcdata_scndlorentz_table1pts.json')
+
+def load_tableFscan_allpts():
+    return _loadcache('bcdata_scndfresnel_table1pts.json')
 
 _cache={}
 def _loadcache( fn, fn_split45 = None ):

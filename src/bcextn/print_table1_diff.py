@@ -36,10 +36,10 @@ def write_updated_table1( table1_updated,
                           *,
                           tablename,
                           do_print = False,
-                          ndigits = 4 ):
+                          ndigits = 5 ):
     t = table1_updated
     fix_table_fmt(t,out_filename)
-    #Follow style of BC1974 Table 1, multiply by 1e4 and show now decimals:
+    #Follow style of BC1974 Table 1, multiply by 1e{ndigits} and show now decimals:
     t *= 10**ndigits
     t = table1_updated.style.format("{:0%i.0f}"%ndigits)
     if do_print:
