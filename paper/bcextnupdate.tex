@@ -150,7 +150,6 @@ reference implementations are provided for \texttt{C}, \texttt{C++}, and
 \keywords{extinction; Bragg diffraction; neutron scattering; X-ray diffraction; }
 
 \section{The Becker-Coppens recipes for extinction}
-
 Extinction in the context of diffraction refers to the phenomenon where the
 intensity of a diffracted wave is reduced or diminished due to interference
 effects. The exact nature of these interference effects might be complicated,
@@ -223,7 +222,6 @@ choice of distribution used to describe the mosaic spread of coherent domains
 within the crystalline materials: Gaussian, Lorentzian, or Fresnellian.
 
 \subsection{Mathematical formulation of the models}
-
 Readers are referred to the original work \cite{BC1974} for the detailed
 description and background of the models, while the present work will focus
 exclusively on the mathematical expressions from the models which must be
@@ -326,7 +324,6 @@ $y_\text{ref}$ to itself be available in a precision much higher than the
 precision on $y$.
 
 \section{Evaluating the integrals}\labsec{refeval}
-
 TODO: Mention somewhere the target precision, e.g. that we have 1e-8 (check)
 everywhere, and mostly a lot better since a conservative approach to error
 estimation is employed everywhere.
@@ -508,7 +505,6 @@ precision in \texttt{JSON} format.
 \end{figure}
 
 \section{Original recipes}\labsec{origrecipes}
-
 In the original work, the authors provide only few details of how
 \refeqn{yintegral} has been evaluated, leaving the impression that integrands
 have been evaluated with a single application of a Gaussian quadrature algorithm
@@ -709,7 +705,6 @@ consistent with what is seen in \reffig{prec2dplot}t
 %%
 
 \section{Developing improved recipes}\labsec{newrecipes}
-
 With the availability of reliable high-precision reference datasets of
 $y_M(x,\theta)$ values discussed in \refsec{refeval}, the goal is now to provide
 a set of improved recipes tuned to this data -- in order to replace the original
@@ -827,7 +822,6 @@ standalone functions are also made available at FIXMEREF.
 \input{generated/recipe_primary.tex}
 
 \section{Conclusions}
-
 The final precision of both the new ``standard'' and ``luxury'' recipes from the
 present work, as well as the original recipes due to Becker-Coppens, are shown
 in \reffig{cmprecipes}. It is clearly seen that the new recipes provide the
@@ -933,7 +927,6 @@ simple formula for the estimation of the tail of the integral given in
 \refeqn{tailintegralP}.:
 
 \section{Reference values}\labappendix{yreftables}
-
 FIXME BLA BLA \reftabrange{yrefvals:P:first}{yrefvals:F:last}.
 
 \begin{table}[tp]
@@ -981,7 +974,6 @@ FIXME BLA BLA \reftabrange{yrefvals:P:first}{yrefvals:F:last}.
 \end{table}
 
 \section{The recipes}\labappendix{recipes}.
-
 In \refalgrange{yfct_scndgauss}{yfct_scndfresnel} are shown the
 ``standard'' precision recipes for calculating $y_G(x,\theta)$, $y_L(x,\theta)$,
 and $y_F(x,\theta)$, while the recipe for calculating $y_P(x,\theta)$ was
@@ -999,8 +991,6 @@ precision. FIXMEREF to c/c++/py code?
 \input{generated/recipe_scndfresnel_lux.tex}
 
 \section{LEFTOVERS FIXME CLEANUP}
-
-
  of a particularly challenging numerical
 integral....  Furthermore, the numerical evaluation in BC1974 is generally most
 precise and useful in regions of intermediate extinction levels, where arguably
