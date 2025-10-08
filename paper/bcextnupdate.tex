@@ -485,9 +485,6 @@ selection of such values in
 \reftabrange{yrefvals:P:first}{yrefvals:F:last}. However, it should be noted
 that the FIXMEREF also contains a larger number of such values to a much higher
 precision in \texttt{JSON} format.
-
-
-
 \begin{figure}[tp]
     \centering
     \begin{subfigure}{0.49\textwidth}
@@ -517,11 +514,13 @@ In the original work, the authors provide only few details of how
 have been evaluated with a single application of a Gaussian quadrature algorithm
 over a finite interval. In light of the work discussed in \refsec{refeval}, this
 appears to have been inadequate -- but, given the computational power available
-when the work was carried out moe than half a century ago, certainly
+when the work was carried out more than half a century ago, certainly
 understandable.
 
+The recipes for estimating $y_M(\theta,x)$ provided in the original work are
+relatively simple, all using the same general form:
 \begin{align}
-  y_{M}(\theta,x)=\frac{1}{\sqrt{1+t_Mx+\frac{A_M(\theta)}{1+x{\cdot}B_M(\theta)}x^2}}
+  y_M(\theta,x)=\frac{1}{\sqrt{1+t_Mx+\frac{A_M(\theta)}{1+x{\cdot}B_M(\theta)}x^2}}
   \labeqn{yfitfctorig}
 \end{align}
 Here $t_M$ are model dependent constants governing the small-$x$ behaviour, given by:
@@ -541,58 +540,104 @@ $A_M(\theta)$ and $B_M(\theta)$:
   B_L(\theta) &=
   \begin{cases}
     0.15-0.2\cdot(0.75-\cos(2\theta))^2\quad&\text{when }\cos(2\theta) {\ge} 0\\
-    B_L(\theta) = -0.45\cos(2\theta)\quad&\text{when }\cos(2\theta) {<} 0
+    -0.45\cos(2\theta)\quad&\text{when }\cos(2\theta) {<} 0
   \end{cases}\labeqn{yfitfct:BL}\\
   A_F(\theta) &= 0.48 + 0.6\cos(2\theta)\\
   B_F(\theta) &= 0.20-0.6\cdot(0.2-\cos(2\theta))^2
   \labeqn{yfitfct:BF:last}
 \end{align}
-These recipes are certainly very compact and easily implementable, however they
+These recipes are certainly very compact and easily implementable. However, they
 unfortunately suffer greatly from precision issues, and even completely break
-down in some cases. A few issues are even readily apparent just from inspection
-of the formulae. Firstly and most importantly, it is possible for the last term
-inside the square root in \refeqn{yfitfctorig} to become negative (e.g. at large
-$\theta$ values this clearly happens for $M=P$), meaning that the argument of
-the square root will also become negative for sufficiently large $x$ values,
-causing the formula to break down completely. Another issue which is also
-readily apparent is the behaviour at small $x$ values for $M=P$. The first order
-Taylor expansion of \refeqn{yfitfctorig} is $1-t_M/2$ which can be compared with
-the first order terms in \refeqnrange{ytaylor:P:first}{ytaylor:F:last}. Doing so
-would predict $t_M$-values of $t_L=t_F=2$, $t_G=\sqrt{9/2}\approx2.12$, and
+down in some cases where the argument of the square root in \refeqn{yfitfctorig}
+become negative. This happens for some $\theta$ values only, and primarily at
+high values of $x$. In addition to this, the recipe for $M=P$ also suffers from
+an issue at small $x$. The first order Taylor expansion of \refeqn{yfitfctorig}
+is $1-t_M/2$ which can be compared with the first order terms in
+\refeqnrange{ytaylor:P:first}{ytaylor:F:last}. Doing so determines the correct
+$t_M$-values to be $t_L=t_F=2$, $t_G=3/\sqrt{2}\approx2.12$, and
 $t_P=66/35\approx1.89$. Thus, the $t_P$ values in \refeqn{yfitfctlowxconstants}
-are incorrect, and it is easy to see that this gives a limiting precision
-(cf.~\refeqn{yprecisiondef}) at small $x$-values of $2/33\approx6.1\%$.  Yet
-another readily apparent issue is the incontinuity at $\cos(2\theta)=0$ in
-\refeqn{yfitfct:BL}: the coefficients at first glance looks like they were
-chosen to avoid this, since $0.15-2*0.75=0$, but the factor of $0.75$ actually
-enters in quadrature.
+are incorrect, and it is easy to see that this gives a limiting (im)precision at
+small $x$-values of $2/33\approx6.1\%$ (cf.~\refeqn{yprecisiondef}).  For the
+case $M=L$, there is additionally a small but noteworthy issue of an
+incontinuity at $\cos(2\theta)=0$ in \refeqn{yfitfct:BL}: the coefficients at
+first glance looks like they were chosen to avoid this, since
+$0.15-2\cdot0.75=0$, but the factor of $0.75$ actually enters in quadrature.
 
 For a more complete view of the applicability of the BC1974 recipes,
 \reffig{prec2dplot} shows the precision for the four models as a function of
 both $x$ and $\theta$. Although the exact contours of precisions have
 non-trivial shapes, it is clear that in general the recipes can only be said to
 adequately describe the reference values at moderate or low values of $x$, with
-the upper limit of applicability lying from around $x=1$ to $x=10$, with the
-exact value depending naturally on the desired precision, on the model and in
-particular also on $\theta$ values. In general, there is also a tendency for the
-recipes to work more poorly for more backwards scattering.
+the upper limit of applicability lying from around $x=1$ to $x=10$, depending on
+the desired precision, on the model and in particular also on $\theta$
+values. In general, there is also a tendency for the recipes to have worse
+performance for more backwards scattering, and as expected the small $x$ behaviour
+when $M=P$ has the worst precision of all the models, consistent with the
+predicted value of $6.1\%$.
 
-NOTE: Table 2 of orig paper shows wiggles in sinth=0.9 column!
+The origin of the limitations of the original recipes is likely
+two-fold. Firstly, the reference set of $y$ values on which the formulae were
+tuned was somewhat limited as can be seen from the dashed boxes in
+\reffig{prec2dplot}, covering only $x$ values from 0.1 to 30 and $\sin\theta$
+values from 0.05 ($\theta\approx2.9^\circ$) to 0.9 ($\theta\approx64^\circ$). In
+the case of $M=P$ the authors themselves noted the bad performance of their
+model at $\sin\theta=0.9$, so a maximum value of 0.8 ($\theta\approx53^\circ$)
+was used in this case. One can only speculate as to the reason for the limited
+range of training data, but it seems reasonable to assume that it was a result
+of most relevant experimental data analysis happening at lower angles of
+$\theta$ in combination with the limited computing resources available at the
+time. The other reason for the limitations of the recipes is, as already
+mentioned (FIXME: doublecheck), the inaccurate evaluation of \refeqn{yintegral}
+to provide reference values of $y_M$. For all models except $M=F$, these
+reference values were actually included as tables 1, 3, and 4 in the original
+work allowing a direct gauging of their accuracy. These accuracies are shown in
+\reftabrange{origtable1precision}{origtable4precision},\footnote{The original
+tables were digitized using the \texttt{Tesseract} OCR engine and manually
+verified. Any odd entries, such as for $(x,\sin\theta)$=$(4,0.2)$ in
+\reftab{origtable1precision} or $(x,\sin\theta)$=$(0.6,0.5)$ in
+\reftab{origtable3precision}, were manually double-checked and are most likely
+due to mis-typings in the tables of the original work.  (FIXME: verify once
+again? at least any suspicious values).} and clearly there are significant
+systematic deviations in particular at higher values of $x$, to some degree
+consistent with what is seen in \reffig{prec2dplot}t
 
+\begin{table}[tp]
+\caption{Precision of the $y_P$ reference values in Table 1 of
+  \protect\cite{BC1974} when compared with the reference values of the present
+  work. The precisions are defined as per \refeqn{yprecisiondef}, but including
+  the sign of $y-y_\text{ref}$. Values are shown as percentages (\%), and cell
+  colours are used to more easily visualise larger imprecisions and trends with
+  negative (positive) values shown in blue (red).}
+\smallskip
+\tiny
+\begin{center}
+\input{generated/table1_diff.tex}
+\end{center}
+\labtab{origtable1precision}
+\end{table}
 
+\begin{table}[tp]
+\caption{Precision of the $y_G$ reference values in Table 3 of
+  \protect\cite{BC1974}, shown in same manner as for
+  \reftab{origtable1precision}.}
+\smallskip
+\tiny
+\begin{center}
+\input{generated/table3_diff.tex}
+\end{center}
+\labtab{origtable3precision}
+\end{table}
 
-Original recipes and their problems:
-
-   - Start by mentioning that we can produce new high-prec integrals and
-     recipes, to be discussed in later sections. Here they will be used as
-     reference. (In section XXX we will discuss how the integral in \refeqn{yintegral}....)
-   - table 1/3/4
-   - the actual recipes
-   - the breakdown plots
-
-Make a point about it being >50 years ago, so maybe that is why they stopped at
-sinth=0.9 and the focus being on forward values and cheap computation cost.
-
+\begin{table}[tp]
+\caption{Precision of the $y_L$ reference values in Table 4 of
+  \protect\cite{BC1974}, shown in same manner as for \reftab{origtable1precision}.}
+\smallskip
+\tiny
+\begin{center}
+\input{generated/table4_diff.tex}
+\end{center}
+\labtab{origtable4precision}
+\end{table}
 
 \begin{figure}[tp]
     \centering
@@ -619,38 +664,15 @@ sinth=0.9 and the focus being on forward values and cheap computation cost.
         \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
         \caption{$M=F$}\labfig{prec2dplot:subfig:F}
     \end{subfigure}
-    \caption{Bla. precision 2d classic recipe (vs. new lux recipe)}
+    \caption{Precision as per \refeqn{yprecisiondef} of the $y_M(x,\theta)$
+      values provided by the recipes in
+      \refeqnrange{yfitfctorig}{yfitfct:BF:last} when compared with the high
+      precision ``luxury'' recipes to be presented in \refsec{newrecipes}.
+      Boxes with white and black dashes indicate the limited range of the
+      reference values used to tune the recipes in the original work.}
     \labfig{prec2dplot}
 \end{figure}
 
-tables: Mention OCR(tesseract)+human checking.
-
-\begin{table}[tp]
-\caption{Precision of original BC Table 1 compared to updated values (NB: MENTION PRECISION DEF USED).}
-\smallskip
-\tiny
-\begin{center}
-\input{generated/table1_diff.tex}
-\end{center}
-\end{table}
-
-\begin{table}[tp]
-\caption{Precision of original BC Table 3 compared to updated values (NB: MENTION PRECISION DEF USED).}
-\smallskip
-\tiny
-\begin{center}
-\input{generated/table3_diff.tex}
-\end{center}
-\end{table}
-
-\begin{table}[tp]
-\caption{Precision of original BC Table 4 compared to updated values (NB: MENTION PRECISION DEF USED).}
-\smallskip
-\tiny
-\begin{center}
-\input{generated/table4_diff.tex}
-\end{center}
-\end{table}
 
 
 %%\begin{figure}[tp] %
@@ -686,8 +708,7 @@ tables: Mention OCR(tesseract)+human checking.
 %%\end{figure}
 %%
 
-
-\section{Developing new recipes}\labsec{newrecipes}
+\section{Developing improved recipes}\labsec{newrecipes}
 
 With the availability of reliable high-precision reference datasets of
 $y_M(x,\theta)$ values discussed in \refsec{refeval}, the goal is now to provide
@@ -848,7 +869,7 @@ nonetheless the hope of the authors that analysis and modelling codes will adopt
 these new recipes when applying the Becker-Coppens models, so the research and
 discussions going forward can focus on the physics rather than the flawed
 numerical evaluations plaguing the original work, which was otherwise extremely
-detailed and impressive in the subjective oppinion of the authors..
+detailed and impressive in the subjective opinion of the authors..
 
 \appendix % if required
 
