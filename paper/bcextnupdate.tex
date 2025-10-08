@@ -317,7 +317,9 @@ $1-y$ rather than $y$ itself. To ensure that the developed recipes for
 determining $y$ are useful and trustworthy in all scenarios, the more stringent
 definition of precision will thus be used throughout this work:
 \begin{align}
-  \text{precision}(y) \equiv \frac{|y-y_\text{ref}|}{\min(y_\text{ref},1-y_\text{ref})}
+  \text{precision}(y) \equiv
+  \frac{|y-y_\text{ref}|}{\min(y_\text{ref},1-y_\text{ref})}
+  \labeqn{yprecisiondef}
 \end{align}
 Naturally, for this definition to be useful in practice, this requires
 $y_\text{ref}$ to itself be available in a precision much higher than the
@@ -338,13 +340,13 @@ the Gaussian model ($M=G$) exhibits neither of these, and is therefore
 relatively straight-forward to evaluate via numerical quadrature.
 \begin{figure}[tp]
     \centering
-    \begin{subfigure}{0.48\textwidth}
+    \begin{subfigure}{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/integrand_gPgGgLgF_of_eta_g.pdf}
         \caption{}\labfig{integrandfcts:subfig:gPGLF}
     \end{subfigure}
     \hfill
-    \begin{subfigure}{0.48\textwidth}
+    \begin{subfigure}{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/integrand_gP_of_eta_g.pdf}
         \caption{}\labfig{integrandfcts:subfig:gP}
@@ -488,13 +490,13 @@ precision in \texttt{JSON} format.
 
 \begin{figure}[tp]
     \centering
-    \begin{subfigure}{0.48\textwidth}
+    \begin{subfigure}{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/yrefeval_primary.pdf}
         \caption{}\labfig{yrefeval:subfig:primary}
     \end{subfigure}
     \hfill
-    \begin{subfigure}{0.48\textwidth}
+    \begin{subfigure}{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/yrefeval_bands.pdf}
         \caption{}\labfig{yrefeval:subfig:bands}
@@ -510,8 +512,76 @@ precision in \texttt{JSON} format.
 
 \section{Original recipes}\labsec{origrecipes}
 
-Original recipes and their problems:
+In the original work, the authors provide only few details of how
+\refeqn{yintegral} has been evaluated, leaving the impression that integrands
+have been evaluated with a single application of a Gaussian quadrature algorithm
+over a finite interval. In light of the work discussed in \refsec{refeval}, this
+appears to have been inadequate -- but, given the computational power available
+when the work was carried out moe than half a century ago, certainly
+understandable.
 
+\begin{align}
+  y_{M}(\theta,x)=\frac{1}{\sqrt{1+t_Mx+\frac{A_M(\theta)}{1+x{\cdot}B_M(\theta)}x^2}}
+  \labeqn{yfitfctorig}
+\end{align}
+Here $t_M$ are model dependent constants governing the small-$x$ behaviour, given by:
+\begin{align}
+  t_P=t_L=t_F=2,\quad{}t_G=2.12
+  \labeqn{yfitfctlowxconstants}
+\end{align}
+The $\theta$ dependency is captured in the model dependent functions
+$A_M(\theta)$ and $B_M(\theta)$:
+\begin{align}
+  \labeqn{yfitfct:AP:first}
+  A_P(\theta) &= 0.20 + 0.45\cos(2\theta) \\
+  B_P(\theta) &= 0.22 - 0.12\cdot(0.5-\cos(2\theta))^2\\
+  A_G(\theta) &= 0.58+0.48\cos(2\theta)+0.24 \cos^2(2\theta)\\
+  B_G(\theta) &= 0.02-0.025\cos(2\theta)\\
+  A_L(\theta) &= 0.025+0.285\cos(2\theta)\\
+  B_L(\theta) &=
+  \begin{cases}
+    0.15-0.2\cdot(0.75-\cos(2\theta))^2\quad&\text{when }\cos(2\theta) {\ge} 0\\
+    B_L(\theta) = -0.45\cos(2\theta)\quad&\text{when }\cos(2\theta) {<} 0
+  \end{cases}\labeqn{yfitfct:BL}\\
+  A_F(\theta) &= 0.48 + 0.6\cos(2\theta)\\
+  B_F(\theta) &= 0.20-0.6\cdot(0.2-\cos(2\theta))^2
+  \labeqn{yfitfct:BF:last}
+\end{align}
+These recipes are certainly very compact and easily implementable, however they
+unfortunately suffer greatly from precision issues, and even completely break
+down in some cases. A few issues are even readily apparent just from inspection
+of the formulae. Firstly and most importantly, it is possible for the last term
+inside the square root in \refeqn{yfitfctorig} to become negative (e.g. at large
+$\theta$ values this clearly happens for $M=P$), meaning that the argument of
+the square root will also become negative for sufficiently large $x$ values,
+causing the formula to break down completely. Another issue which is also
+readily apparent is the behaviour at small $x$ values for $M=P$. The first order
+Taylor expansion of \refeqn{yfitfctorig} is $1-t_M/2$ which can be compared with
+the first order terms in \refeqnrange{ytaylor:P:first}{ytaylor:F:last}. Doing so
+would predict $t_M$-values of $t_L=t_F=2$, $t_G=\sqrt{9/2}\approx2.12$, and
+$t_P=66/35\approx1.89$. Thus, the $t_P$ values in \refeqn{yfitfctlowxconstants}
+are incorrect, and it is easy to see that this gives a limiting precision
+(cf.~\refeqn{yprecisiondef}) at small $x$-values of $2/33\approx6.1\%$.  Yet
+another readily apparent issue is the incontinuity at $\cos(2\theta)=0$ in
+\refeqn{yfitfct:BL}: the coefficients at first glance looks like they were
+chosen to avoid this, since $0.15-2*0.75=0$, but the factor of $0.75$ actually
+enters in quadrature.
+
+For a more complete view of the applicability of the BC1974 recipes,
+\reffig{prec2dplot} shows the precision for the four models as a function of
+both $x$ and $\theta$. Although the exact contours of precisions have
+non-trivial shapes, it is clear that in general the recipes can only be said to
+adequately describe the reference values at moderate or low values of $x$, with
+the upper limit of applicability lying from around $x=1$ to $x=10$, with the
+exact value depending naturally on the desired precision, on the model and in
+particular also on $\theta$ values. In general, there is also a tendency for the
+recipes to work more poorly for more backwards scattering.
+
+NOTE: Table 2 of orig paper shows wiggles in sinth=0.9 column!
+
+
+
+Original recipes and their problems:
 
    - Start by mentioning that we can produce new high-prec integrals and
      recipes, to be discussed in later sections. Here they will be used as
@@ -520,44 +590,37 @@ Original recipes and their problems:
    - the actual recipes
    - the breakdown plots
 
-\begin{align}
-  y_{p}(\theta,x)=\left\{1+2x+\frac{A(\theta)x^2}{1+B(\theta)x}\right\}
-  \labeqn{ypfitfctorig}
-\end{align}
+Make a point about it being >50 years ago, so maybe that is why they stopped at
+sinth=0.9 and the focus being on forward values and cheap computation cost.
 
-\begin{align}
-  A(\theta) &= 0.20 + 0.45\cos(2\theta) \\
-  B(\theta) &= 0.22 - 0.12(0.5-\cos(2\theta))^2
-  \labeqn{ypfitfctparsorig}
-\end{align}
 
 \begin{figure}[tp]
     \centering
     \begin{subfigure}[t]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
-        \caption{$M=P$}\labfig{prec2dplotNEW:subfig:P}
+        \caption{$M=P$}\labfig{prec2dplot:subfig:P}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
-        \caption{$M=G$}\labfig{prec2dplotNEW:subfig:G}
+        \caption{$M=G$}\labfig{prec2dplot:subfig:G}
     \end{subfigure}
     \vspace{0.5cm}
     \begin{subfigure}[t]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
-        \caption{$M=L$}\labfig{prec2dplotNEW:subfig:L}
+        \caption{$M=L$}\labfig{prec2dplot:subfig:L}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
-        \caption{$M=F$}\labfig{prec2dplotNEW:subfig:F}
+        \caption{$M=F$}\labfig{prec2dplot:subfig:F}
     \end{subfigure}
     \caption{Bla. precision 2d classic recipe (vs. new lux recipe)}
-    \labfig{prec2dplotNEW}
+    \labfig{prec2dplot}
 \end{figure}
 
 tables: Mention OCR(tesseract)+human checking.
@@ -658,7 +721,7 @@ $\theta$ dependency via \refeqn{yintegralbyy0ydelta}. In this respect it is
 interesting to note that in most envisioned use-cases, it is $\sin\theta$ rather
 than $\theta$ which is more cheaply calculated, due to its appearance in the
 Bragg condition. This therefore fits nicely with \refeqn{yintegralbyy0ydelta},
-where only a single additional square-root must be evaluated rather than a more
+where only a single additional square root must be evaluated rather than a more
 expensive trigonometric function. Thus, our recipes will in practice be taking
 $\sin\theta$ rather than $\theta$ as argument.
 
