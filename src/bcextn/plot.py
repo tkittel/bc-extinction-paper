@@ -815,6 +815,25 @@ def plot_breakdown( mode, curve, ref, precision_norm, outfile=None,forpaper=True
         _eps = 1.0
         positions = [0,        5-_eps,       5 + _eps,         10-_eps,       10+_eps,     25, 100]
 
+    if True:
+        #colors = ["darkblue", "blue", "green", "yellow", "red", "black"]
+        #colors = [(0.,0.,0.3) "darkblue", "blue", "green", "yellow", "red", "black"]
+        #_eps = 1.0
+        #positions = [0,        3,    5,       10,     25, 100]
+        colors, positions = [], []
+        def pt( val, r, g, b ):
+            colors.append( ( float(r)/100, float(g)/100, float(b)/100 ) )
+            positions.append( float( val ) )
+        pt( 0, 0,0,60)#dark blue
+        #pt( 0, 0,20,0)#dark green
+        #pt( 5, 0,0,30)
+        pt( 4, 0,80,0)#light green
+        #pt( 5, 0,0,30)
+        #pt( 5, 0,0,30)
+        pt( 9, 90,90,00)#yellow
+        #pt( 12, 100,64.7,00)#orange
+        pt( 25, 90,0,0)#red
+        pt( 100, 0,0,0)#black
 
 
     positions = [ val_fix(e/100.0)/val_fix(100/100.0) for e in positions ]
@@ -835,13 +854,56 @@ def plot_breakdown( mode, curve, ref, precision_norm, outfile=None,forpaper=True
     plt.pcolormesh(x, th, Z,
                    cmap=cmap, vmin=0.0, vmax=map_top[-1],
                    edgecolors='none', rasterized=True,
-
+                   #zorder = 10
                    )#, shading='auto')#, cmap='binary')
+
+    #FIXME: Arguably only 0.8 for primary???!!!!
+    bc1974reach_sinth = 0.05, (0.8 if mode=='primary' else 0.9)
+    bc1974reach_x = 0.1, 30
+
+
+    def add_rect( x1, y1, x2, y2, **kw ):
+        from matplotlib import patches
+        rect = patches.Rectangle((x1, y1), (x2-x1), (y2-y1), **kw, zorder = 9999 )
+        plt.gca().add_patch(rect)
+
+    rect_x1y1x2y2 = dict( x1 = bc1974reach_x[0],
+                          y1 = math.asin(bc1974reach_sinth[0])*180/math.pi,
+                          x2 = bc1974reach_x[1],
+                          y2 = math.asin(bc1974reach_sinth[1])*180/math.pi )
+
+    if False:
+        add_rect( **rect_x1y1x2y2,
+                  #ls = (0, (1,1)),
+                  lw=4,
+                  edgecolor='black',
+                  alpha=0.3,
+                  facecolor='none' )
+    if False:
+        add_rect( **rect_x1y1x2y2,
+                  ls = ':',# (0, (1,1)),
+                  lw=3,
+                  edgecolor='white',
+                  #alpha=0.5,
+                  facecolor='none' )
+
+    kw = dict( facecolor='none', lw=3 )
+    kw.update(rect_x1y1x2y2)
+    ldash = 1
+    add_rect( **kw, ls = (0, (ldash,3*ldash) ), ec='white' )
+    add_rect( **kw, ls = (2*ldash, (ldash,3*ldash) ), ec='black' )
+
+#    add_rect( *rect_x1y1x2y2,
+#              ls = ':',
+#              lw=1.5,
+#              edgecolor='black',
+#              facecolor='none' )
     plt.semilogx()
     cbar = plt.colorbar(label='Precision (%)')
 
     assert map_top[-1]==30
-    yticks = [0,2,5,10,15, 20, 25, map_top[-1]]
+    #yticks = [0,2,5,10,15, 20, 25, map_top[-1]]
+    yticks = [0,5,10,15, 20, 25, map_top[-1]]
     cbar.ax.set_yticks(yticks)
     yticklbls = [ str(e) for e in yticks ]
     yticklbls[-1] = str(100)+'+'
