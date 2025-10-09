@@ -123,11 +123,11 @@ capabilities and improved recipes are provided for easy community adoption.
 \end{synopsis}
 
 \begin{abstract}
-We present a technical correction and update of the widely used recipes by
-Becker-Coppens (1974), for the estimation of primary and secondary extinction
-factors in perfect spherical domains or particles. In the original work, these
-extinction factors were evaluated numerically from a complicated integral, and
-simplified analytical approximations to these evaluations constituted the
+A technical correction and update of the widely used recipes by Becker-Coppens
+(1974), for the estimation of primary and secondary extinction factors in
+perfect spherical domains or particles, is presented. In the original work,
+these extinction factors were evaluated numerically from a complicated integral,
+and simplified analytical approximations to these evaluations constituted the
 provided recipes. However, these original recipes are plagued by issues of
 numerical precision in general, and even suffer from complete numerical
 break-down in case of strong primary extinction effects, especially in backwards
@@ -188,11 +188,10 @@ Sabine \cite{sabine2006flow}. Of these, the Becker-Coppens model is arguably the
 more highly referenced and utilised work, so it was naturally considered by the
 authors when working on implementing extinction models in \texttt{NCrystal}
 \cite{ncrystalmain,ncrystalelastic} in order to facilitate the modelling and
-analysis of Bragg edge transmission and diffraction data. (TODO: Cite Be
-extinction paper here?  But only if it also considered BC and not just
-Sabine?). Unfortunately, in case of stronger extinction effects, the model
-appears to suffer from an obvious breakdown at large Bragg angles, as can be
-seen in \reffig{ypbreakdownorigrecipe}.
+analysis of Bragg edge transmission and diffraction data. Unfortunately, in case
+of stronger extinction effects, the model appears to suffer from an obvious
+breakdown at large Bragg angles, as can be seen in
+\reffig{ypbreakdownorigrecipe}.
 \begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated_with_ncrystal/ncrystal_bc_yp_breakdown_be.pdf}
@@ -208,7 +207,7 @@ As will be shown in the present work, this breakdown does not constitute a
 fundamental problem with the Becker-Coppens model, but is merely a result of
 flawed numerical evaluations entering into the recipes (algorithms) provided in
 that work. It is the aim of the present work to provide updated recipes which
-does not change the underlying theory or assumptions going ito the
+does not change the underlying theory or assumptions going into the
 Becker-Coppens model, but merely ensures a consistent and precise numerical
 evaluation of it. These new recipes for evaluation of $y$ will be referred to as
 BC2025 in the present work, while the recipes from the original work will be
@@ -218,7 +217,7 @@ recipes in the regions of intermediate extinction levels, where the model
 arguably has seen most usage and validation over the years in X-ray or neutron
 diffraction. For reference the effect of using the BC2025 recipe is also shown
 in \reffig{ypbreakdownorigrecipe}, and is seen to not suffer from the same
-breakdown.
+breakdown as the original recipe.
 
 In the work by Becker-Coppens \cite{BC1974}, four specific models and recipes
 are provided for the determination of $y$: one for primary extinction, and three
@@ -250,44 +249,45 @@ The function $\varphi(\theta,s)$ is an extinction correction function given by:
 \end{align}
 Here $\varphi^0(s)$ and $\varphi^\pi(s)$ are the limiting functions for
 $\theta=0$ and $\theta=\pi/2$ respectively,\footnote{To be concise, the
-superscript $\pi$ will in general be used on variables related to complete
-back-scattering throughout the present work, even though the Bragg angle
-associated with such scatterings is strictly speaking $\pi/2$.} and are given
-as:\footnote{Note that the expression for $\varphi^\pi(s)$ in eq. 32 of
-\cite{BC1974} has a mistake, where a factor of $1/2$ should be moved from the
+superscript $\pi$ will as in the original work in general be used on variables
+related to complete back-scattering throughout the present work, even though the
+Bragg angle associated with such scatterings is strictly speaking $\pi/2$.} and
+are given as:\footnote{Note that the expression for $\varphi^\pi(s)$ in Eq. 32
+of \cite{BC1974} has a mistake, where a factor of $1/2$ should be moved from the
 second to the third term.}
 \begin{align}
   \varphi^0(s) &= \frac{3}{64s^3}\left\{8s^2+4s\exp(-4s)-(1-\exp(-4s))\right\}\\
   \varphi^\pi(s) &= \frac{3}{4s^3}\left\{s^2-s+\frac{1}{2}\log(1+2s)\right\}
   \labeqn{phizeroandphipi}
 \end{align}
-All the $\varphi$--functions are even functions of $s$, and as can be seen in
-\reffig{phiofs}, monotonically decreasing functions of $|s|$, attaining
-values $1$ at $s=0$ and $0$ at $s=\pm\infty$.
+All the $\varphi$--functions are, as illustrated in \reffig{phiofs},
+monotonically decreasing functions of $s$ for $s\ge0$, attaining values $1$ at
+$s=0$ and $0$ at $s=\infty$.
 \begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated/phi_of_s.pdf}
 \end{center}
-\caption{Bla.} % NB \protect\cite{...} is required in floating figures
+\caption{The $\varphi^0(s)$ and $\varphi^0(s)$ functions from \refeqn{phizeroandphipi}.}
 \labfig{phiofs}
 \end{figure}
 
 The $f_M(\eta)$ functions, are essentially unit-less functions capturing the
 shape of the Bragg diffraction cross section as a function of deviation from the
 nominal direction, normalised so $f_M(0)=1$. The difference in extinction levels
-predicted by the different Becker-Coppens models are essentially due to the
+predicted by the different Becker-Coppens models is essentially due to the
 difference of these $f_M(\eta)$ functions. For the secondary extinction models,
-the shape of $f_M(\eta)$ are essentially given by the mosaic distribution of coherent
-crystal domains within material particles, while for primary extinction it is
-due to the intrinsic response of a crystalline domain which is perfect but of
-finite size. Additionally, the exact final form of the $f_M(\eta)$ functions are
-given based on spherical geometries for the crystallites or particles. The exact
-form of these functions, plotted in \reffig{fofeta}, are as follows:
+the shape of $f_M(\eta)$ is essentially given by the mosaic distribution of
+coherent crystal domains within material particles, while for primary extinction
+it is due to the intrinsic response of a crystalline domain which contains a
+perfect and unbroken crystal structure, but is of finite size. Additionally, the
+exact final form of the $f_M(\eta)$ functions is based on the assumption of
+spherical geometries for the crystallites or particles. The exact form of these
+functions, plotted in \reffig{fofeta}, is as follows:
 \begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated/f_of_eta.pdf}
 \end{center}
-\caption{Bla.} % NB \protect\cite{...} is required in floating figures
+\caption{The $f_M(\eta)$ functions from \refeqnrange{fofeta:P:first}{fofeta:F:last}.}
 \labfig{fofeta}
 \end{figure}
 \begin{subequations}
@@ -304,38 +304,43 @@ is twofold. Firstly, a reference dataset must be created by
 evaluating the integral to high precision on a sufficiently large number of
 $(x,\theta)$ points. This is the subject of \refsec{refeval}.
 Secondly, a recipe must be found and tuned on this dataset in order to
-reproduce its values with suffiently high precision. As such recipes would
+reproduce its values with sufficient precision. As such recipes would
 ultimately be used in data modelling or analysis, it should be possible to
 implement them in software with a reasonably low cost of
 evaluation. Fortunately, computing hardware has evolved tremendously since the
 original recipes by Becker-Coppens were developed, and some additional degree of
-complexity in the updated recipes are therefore allowed.
+complexity in the updated recipes is therefore allowed.
 
 One important issues in all of this is the definition of precision of a given
 estimate of $y$, compared with a reference value $y_\text{ref}$. The naive
-definition $\text{precision}(y)\equiv\frac{|y-y_\text{ref}|}{y_\text{ref}}$ is
-not always useful at low levels of extinction where $y$ values are always close
-to $1$, and where the quantity distinguishing different models might arguably be
-$1-y$ rather than $y$ itself. To ensure that the developed recipes for
-determining $y$ are useful and trustworthy in all scenarios, the more stringent
-definition of precision will thus be used throughout this work:
+definition $\text{precision}(y)\equiv|y-y_\text{ref}|/y_\text{ref}$ is not
+particularly useful at low levels of extinction where $y$ values are always
+close to $1$, and where the quantity distinguishing different models might
+arguably be $1-y$ rather than $y$ itself. To ensure that the developed recipes
+for determining $y$ are useful and trustworthy in all scenarios, a more
+stringent definition of precision will thus be used throughout this work:
 \begin{align}
   \text{precision}(y) \equiv
   \frac{|y-y_\text{ref}|}{\min(y_\text{ref},1-y_\text{ref})}
   \labeqn{yprecisiondef}
 \end{align}
 Naturally, for this definition to be useful in practice, this requires
-$y_\text{ref}$ to itself be available in a precision much higher than the
-precision on $y$.
+$y_\text{ref}$ to itself be available in a precision significantly higher than
+the precision on $y$.
 
 \section{Evaluating the integrals}\labsec{refeval}
-TODO: Mention somewhere the target precision, e.g. that we have 1e-8 (check)
-everywhere, and mostly a lot better since a conservative approach to error
-estimation is employed everywhere.
+The integral in \refeqn{yintegral} was evaluated numerically, in order to
+provide a reference data set with which to develop, tune and benchmark updated
+recipes for $y_M(x,\theta)$. The most precise of the recipes developed in
+\refsec{newrecipes} guarantees a precision level according to
+\refeqn{yprecisiondef} of $10^{-6}$ or better, so consequently the numerical
+evaluation of the integral is done to a precision level of $10^{-8}$ or
+better. In most cases, it will be a lot better, due to the consistent usage of
+very conservative error estimates.
 
 The behaviour of the integrand of \refeqn{yintegral} is illustrated in
 \reffig{integrandfcts}, and is seen to carry over features from the equivalent
-$f(\eta)$ functions in \refeqnrange{fofeta:P:first}{fofeta:F:last}. In
+$f_M(\eta)$ functions in \refeqnrange{fofeta:P:first}{fofeta:F:last}. In
 particular two of these features are challenging from the point of view of
 numerical quadrature: Slow decay ($\sim1/\eta^2$) and oscillatory behaviour. Only
 the Gaussian model ($M=G$) exhibits neither of these, and is therefore
@@ -356,8 +361,8 @@ relatively straight-forward to evaluate via numerical quadrature.
     \caption{\Refsubfigfrommaincaption{integrandfcts:subfig:gPGLF} shows the
       integrand of \refeqn{yintegral} for the four different models at
       $x=1$ and $\theta=45^\circ$. \Refsubfigfrommaincaption{integrandfcts:subfig:gP}
-      shows the integrand for the primary extinction model ($M=P$) at various values of
-      $x$ and $\theta$.}
+      shows the integrand for the primary extinction model ($M=P$) at various
+      $(x,\theta)$ points.}
     \labfig{integrandfcts}
 \end{figure}
 %see \reffig{integrandfcts:subfig:gP} and \reffig{integrandfcts:subfig:gPGLF} and \reffig{integrandfcts}.
@@ -373,10 +378,10 @@ with special \texttt{mpmath} routines where appropriate (including the $\sinc$
 function for $f_F(\eta)$), and the $f_P(\eta)$, $\varphi^0(s)$, and
 $\varphi^\pi(s)$ functions are evaluated using Taylor expansions of at least 50
 orders when their arguments are small, since their direct mathematical forms are
-otherwise numerically unstable in that region. The Taylor expansions are found with the
-help of the \texttt{SageMath} \cite{sagemath} mathematics software system.
-\footnote{For reference, all the code and datasets associated with the present
-work are provided in (FIXME: ZENODO??), and can be run completely with a
+otherwise numerically unstable in that region. The Taylor expansions are found
+with the help of the \texttt{SageMath} \cite{sagemath} mathematics software
+system.\footnote{For reference, all the code and datasets associated with the
+present work are provided in (FIXME: ZENODO??), and can be run completely with a
 Conda-Forge(REF?) installation of purely Open Source tools. The main software
 used is \texttt{Python}, \texttt{mpmath}, \texttt{SageMath}, \texttt{NumPy} and
 \texttt{matplotlib} (FIXME REFS) (FIXME: Mention data as json??).}
@@ -384,23 +389,23 @@ used is \texttt{Python}, \texttt{mpmath}, \texttt{SageMath}, \texttt{NumPy} and
 The actual numerical quadrature evaluation of the integral is based on
 Gauss-Legendre quadrature, and is performed over a large number of sub-intervals
 of $\eta$ values in order to ensure the highest precision of results. This
-approach works well for reasonable $x$ values, say
-$0.001{\lesssim}x{\lesssim}1000$, with the exact limits depending on the model
-$M$. For practical reasons, we shall limit $x{\le}1000$, and simply provide a
-reasonable extrapolation to higher $x$ values in the final recipes (TODO: ref to
-highx section). This is considered adequate since $x>1000$ is associated with
-such hefty levels of extinction that almost no scattering cross section remains
-anway. Also note in this regard that the original Becker-Coppens recipes only
-provided numerical reference values for $0.1{\le}x\le30$). For low $x$ values it
-is fortunately the case that it has been possible to find Taylor series
-approximations to the exact result near $x=0$ using \texttt{SageMath}. This
-result not only provides convenient high-precision results near $x=0$, but also
-serves as a valuable verification of the numerical quadrature results in the
-overlapping region where both methods can be used. For $M=P$, $G$, $L$, and $F$
-respectively, 30, 60, 60, and 20 orders are used in the Taylor expansions. The
-sum of the absolute value of the last 3 terms in the expansions are used as a
-very conservative estimate on the error of these results. For reference, the
-first five orders of the Taylor expansions are shown here:
+approach works well for reasonable $x$ values, say $0.001<x<1000$, with the
+exact limits depending on the model $M$. For practical reasons, we shall limit
+$x{\le}1000$, and simply provide a reasonable extrapolation to higher $x$ values
+in the recipes developed in \refsec{newrecipes}. This is considered adequate
+since $x>1000$ is associated with such hefty levels of extinction that almost no
+scattering cross section remains anyway. Also note in this regard that the
+original Becker-Coppens recipes only provided numerical reference values for
+$0.1{\le}x\le30$. For low $x$ values it is fortunately the case that it has been
+possible to find Taylor series approximations to the exact result near $x=0$
+using \texttt{SageMath}. This not only provides computationally inexpensive
+high-precision results near $x=0$, but also serves as a valuable verification of
+the numerical quadrature results in the overlapping region where both methods
+can be used. For $M=P$, $G$, $L$, and $F$ respectively, 30, 60, 60, and 20
+orders are used in the Taylor expansions. The sum of the absolute value of the
+last 3 terms in the expansions are used as a very conservative estimate on the
+error of these results. For reference, the first five orders of the Taylor
+expansions are shown here:
 \begin{align}
   y_P(x,\theta)\approx&\,  1 - \tfrac{33}{35}x
 + \tfrac{2369}{5775}(\sin^{5/2}\theta + 2)x^2
@@ -427,11 +432,11 @@ first five orders of the Taylor expansions are shown here:
 The next issue is that it is obviously not practically possible to perform the
 numerical quadrature over $\eta$ all the way to infinity. For $M=G$ the
 contributions decreases so strongly with $\eta$, that there is never any
-significant contribution to the integral for $eta>1000$, and accordingly
-numerical quadrature out to $\eta=1000$ is always sufficient to ensure the
-desired precision on $y$ values. For $M=L$, the integrand is sufficiently simple
-that we are able to find a Taylor series approximation for the tail of the
-integrand, so that we get:
+significant contribution to the integral for $\eta>1000$, and accordingly
+numerical quadrature to this value is always sufficient to ensure the desired
+precision on $y$ values. For $M=L$, the integrand is sufficiently simple that it
+was possible to find a Taylor series approximation for the tail of the integral
+with \texttt{SageMath}:
 \begin{align}
 \int_{a}^{\infty} f_L(\eta)\varphi\left(\theta,xf_L(\eta)\right)d\eta \approx
 \frac{1}{a} - \frac{2k}{3a^2}
@@ -441,8 +446,8 @@ integrand, so that we get:
 \right)\frac{1}{a^3} + \ldots
 \labeqn{tailintegralL}
 \end{align}
-where we have required $a>x>0$ and $a>1$, and introduced $k=x/a$ which satisfies
-$0<k<1$. For breweity, only the first few terms are shown in
+Here $k=x/a$ was introduced, and it was required that $a>\max(x,1)$, implying
+$0{\le}k<1$. For brevity, only the first few terms are shown in
 \refeqn{tailintegralL}, but in the actual implementation, terms up to $1/a^{20}$
 are included. Again, the error bound is conservatively estimated as the sum of
 the absolute values of the last three terms (of order $1/a^{18}$, $1/a^{19}$,
@@ -454,11 +459,11 @@ that the $\eta$ ranges passed into the numerical quadrature machinery will be
 limited to always be shorter than the period of these trigonometric functions,
 with a resulting large increase in the number of times the Gauss-Legendre
 quadrature algorithm must be applied. Secondly, the increased complexity of the
-integrand means that unlike the case of $M=L$, we are not able to find a direct
-Taylor series approximation for the tail integral from $[a,\infty]$. However, as
-is shown in \refappendix{yptailintegration}, we are able to bound $f_P(\eta)$ by
-simpler functions, and accordingly obtain a useful bound on the tail
-contribution in this case as well:
+integrand means that unlike the case of $M=L$, it was not possible to find a
+direct Taylor series approximation for the tail integral from
+$[a,\infty]$. However, as is shown in \refappendix{yptailintegration}, by
+bounding $f_P(\eta)$ by by simpler functions, it was possible to find a somewhat
+looser but still useful bound on the tail contribution in this case as well:
 \begin{align}
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
 \frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
@@ -502,7 +507,7 @@ precision in \texttt{JSON} format.
     \end{subfigure}
     \caption{\Refsubfigfrommaincaption{yrefeval:subfig:primary} shows the
       $y_P(x,\theta)$ curves resulting from the high precision evaluation of
-      \refeqn{yintegral}, with each color denoting a specific value of $\theta$
+      \refeqn{yintegral}, with each colour denoting a specific value of $\theta$
       as indicated. \Refsubfigfrommaincaption{yrefeval:subfig:bands}
       shows the bands of $y_M(x,\theta)$ values covered by all four models, as
       $\theta$ is varied from $0^\circ$ to  $90^\circ$.}
@@ -511,7 +516,7 @@ precision in \texttt{JSON} format.
 
 \section{Original recipes}\labsec{origrecipes}
 In the original work, the authors provide only few details of how
-\refeqn{yintegral} has been evaluated, leaving the impression that integrands
+\refeqn{yintegral} has been evaluated, leaving the impression that integrals
 have been evaluated with a single application of a Gaussian quadrature algorithm
 over a finite interval. In light of the work discussed in \refsec{refeval}, this
 appears to have been inadequate -- but, given the computational power available
@@ -560,13 +565,13 @@ $t_P=66/35\approx1.89$. Thus, the $t_P$ values in \refeqn{yfitfctlowxconstants}
 are incorrect, and it is easy to see that this gives a limiting (im)precision at
 small $x$-values of $2/33\approx6.1\%$ (cf.~\refeqn{yprecisiondef}).  For the
 case $M=L$, there is additionally a small but noteworthy issue of an
-incontinuity at $\cos(2\theta)=0$ in \refeqn{yfitfct:BL}: the coefficients at
+in-continuity at $\cos(2\theta)=0$ in \refeqn{yfitfct:BL}: the coefficients at
 first glance looks like they were chosen to avoid this, since
 $0.15-2\cdot0.75=0$, but the factor of $0.75$ actually enters in quadrature.
 
 For a more complete view of the applicability of the BC1974 recipes,
 \reffig{prec2dplot} shows the precision for the four models as a function of
-both $x$ and $\theta$. Although the exact contours of precisions have
+both $x$ and $\theta$. Although the exact contours of precision levels have
 non-trivial shapes, it is clear that in general the recipes can only be said to
 adequately describe the reference values at moderate or low values of $x$, with
 the upper limit of applicability lying from around $x=1$ to $x=10$, depending on
@@ -593,11 +598,11 @@ to provide reference values of $y_M$. For all models except $M=F$, these
 reference values were actually included as tables 1, 3, and 4 in the original
 work allowing a direct gauging of their accuracy. These accuracies are shown in
 \reftabrange{origtable1precision}{origtable4precision},\footnote{The original
-tables were digitized using the \texttt{Tesseract} OCR engine and manually
+tables were digitised using the \texttt{Tesseract} OCR engine and manually
 verified. Any odd entries, such as for $(x,\sin\theta)$=$(4,0.2)$ in
 \reftab{origtable1precision} or $(x,\sin\theta)$=$(0.6,0.5)$ in
-\reftab{origtable3precision}, were manually double-checked and are most likely
-due to mis-typings in the tables of the original work.  (FIXME: verify once
+\reftab{origtable3precision}, were manually double-checked and are likely
+a sign of transcription errors in the tables of the original work.  (FIXME: verify once
 again? at least any suspicious values).} and clearly there are significant
 systematic deviations in particular at higher values of $x$, to some degree
 consistent with what is seen in \reffig{prec2dplot}t
@@ -605,7 +610,7 @@ consistent with what is seen in \reffig{prec2dplot}t
 \begin{table}[tp]
 \caption{Precision of the $y_P$ reference values in Table 1 of
   \protect\cite{BC1974} when compared with the reference values of the present
-  work. The precisions are defined as per \refeqn{yprecisiondef}, but including
+  work. The precision is defined as per \refeqn{yprecisiondef}, but including
   the sign of $y-y_\text{ref}$. Values are shown as percentages (\%), and cell
   colours are used to more easily visualise larger imprecisions and trends with
   negative (positive) values shown in blue (red).}
@@ -721,7 +726,7 @@ $10^{-3}\cdot\min(y_\text{ref},1-y_\text{ref})$ for all $x{\le}1000$ and
 $10^{-6}\cdot\min(y_\text{ref},1-y_\text{ref})$. For $x>1000$, no strict error
 guarantee is given, but the recipes should still be reasonable and well behaved.
 
-In order to develop these recipes, we first observe that one does not
+In order to develop these recipes, a crucial observation is that one does not
 strictly need to parameterise $y_M(x,\theta)$ as a two-dimensional function as
 was done in the original work. This is because it follows from
 \reftwoeqns{yintegral}{phi} and the usual rules of integration that:
@@ -729,7 +734,7 @@ was done in the original work. This is because it follows from
   y_M(\theta,x) = y^0_M(x) + {\sin^{3/2}\theta}\,y^\Delta_M(x\sqrt{\sin\theta})
   \labeqn{yintegralbyy0ydelta}
 \end{align}
-where we have defined
+relying on the following definitions:
 \begin{align}
 y^0_M(x)&\equiv y_M(x,0)\\
 y^\pi_M(x)&\equiv y_M(x,\pi/2)\\
@@ -790,18 +795,18 @@ better when the $y$ values are transformed:
   \labeqn{yprimetrf}
 \end{align}
 Legendre polynomials are then fitted to the resulting sets of $(x',y')$ points.
-The specific form of the $x'$ polynomium in the numerator of \refeqn{yprimetrf}
+The specific form of the $x'$ polynomial in the numerator of \refeqn{yprimetrf}
 was chosen to ensure $y'=0$ at $x'=\pm1$ without changing the slope at either of
 these points. The denominator was chosen to factor out this boundary condition,
 and again the specific powers used in the denominator was chosen to be those
 found to make the Legendre polynomials more easily align with the data
 points. Although the fits are performed using Legendre polynomials, due to their
-many advantages (such as ortogonality and having fitting procedures readily
+many advantages (such as orthogonality and having fitting procedures readily
 available in \texttt{NumPy}FIXMEREF), the final provided recipes will naturally
 first convert the fitted coefficients into coefficients of standard
 polynomials. This not only simplifies the final recipes, but also allows for
 efficient and robust evaluation of these polynomials via Horner's
-method(FIXMEREF). Additionally, the specific form of the transformation in
+method. Additionally, the specific form of the transformation in
 \refeqn{yprimetrf} has the advantage that the inverse transformation from $y'$
 values back to $y$ values involves polynomials of $x'$ which can simply be
 combined with the polynomials from the legendre fits into a single set of
@@ -857,7 +862,7 @@ recipes are mostly useful in a more limited range of intermediate $x$ values.
         \includegraphics[width=\textwidth]{generated/cmprecipes_scndfresnel.pdf}
         \caption{$M=F$}\labfig{cmprecipes:subfig:F}
     \end{subfigure}
-    \caption{Bla bla cmprecipes. Note: breakdown near 45degrees in $M=L$ plot (we have split
+    \caption{fixme Bla bla cmprecipes. Note: breakdown near 45degrees in $M=L$ plot (weFIXME have split
       that line into $\pm45^\circ$ to show it) }
     \labfig{cmprecipes}
 \end{figure}
@@ -870,6 +875,14 @@ discussions going forward can focus on the physics rather than the flawed
 numerical evaluations plaguing the original work, which was otherwise extremely
 detailed and impressive in the subjective opinion of the authors..
 
+{\tiny
+  FIXME:  BC models used a lot, but the issues is by all means not
+  settled (e.g Takagi's equations versus non-wave transfer equations). However,
+  the aim of the present work is not to settle the field once and for all, but to
+  ensure that the community has better recipes for applying one of the better
+  developed models out there.
+  }
+
 \appendix % if required
 
 \section{Tail integration for the primary extinction model}\labappendix{yptailintegration}
@@ -877,23 +890,23 @@ For $M=P$ and $f_P(\eta)$ given by \refeqn{fofeta:P:first}, it is desired to
 provide an estimate of the tail of the integral in \refeqn{yintegral}, i.e.\ the
 integral over just the $[a,\infty]$ for some finite and positive $a$.
 
-For positive $\eta$ values we have:
+For positive $\eta$ values:
 \begin{align}
   f_P(\eta) \le f_P^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}\labeqn{fplus}\\
   f_P(\eta) \ge f_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}\labeqn{fminus}
 \end{align}
-Where $f^-(\eta)$ is only strictly positive when $\eta>1$, so we will restrict
+Where $f^-(\eta)$ is only strictly positive when $\eta>1$, so weFIXME will restrict
 ourselves to $\eta>2$ (??)
 
-Since $\varphi(\theta,s)$ and $f(\eta)$ decreases monotonically for increasing
-$s$ and $\eta$ respectively for all positive arguments, we can conclude that:
+Since $\varphi(\theta,s)$ and $f_P(\eta)$ decreases monotonically for increasing
+$s$ and $\eta$ respectively for all positive arguments, weFIXME can conclude that:
 \begin{align}
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \le
 \int_{a}^{\infty} f_P^+(\eta)\varphi\left(\theta,xf^-_P(\eta)\right)d\eta \equiv T^+(\theta,x,a) \nonumber\\
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \ge
 \int_{a}^{\infty} f_P^-(\eta)\varphi\left(\theta,xf^+_P(\eta)\right)d\eta \equiv T^-(\theta,x,a)
 \end{align}
-Using $k=x/a$ and ensuring $a>\max(x,2)$ we have $k<1$.
+Using $k=x/a$ and ensuring $a>\max(x,2)$ weFIXME have $k<1$.
 
 With the help of \texttt{SageMath}, $T^\pm(\theta,x,a)$ can be evaluated
 analytically and expressed as a Taylor expansion in inverse powers of $a$:
@@ -904,17 +917,18 @@ analytically and expressed as a Taylor expansion in inverse powers of $a$:
   T^-(\theta,x,a) &= \frac{1}{a}  - \frac{1+k}{2a^2 }
   +\frac{8+4\sin^{5/2}\theta}{25}k^2\frac{1}{a^3}
   +\mathcal{O}\left(\frac{1}{a^4}\right)
+  \labeqn{tplusminus}
 \end{align}
 
 Varying both $k$ and $\sin\theta$ over values the unit interval and evaluating
 Taylor coefficients for terms up to $1/a^{20}$ numerically, it is seen that the
 maximal absolute numerical value of coefficients is always within a factor of
-$2.50$ when compared to the previous order. Thus, if we restrict ourselves to
-$a>10$, we can conservatively limit the maximal contributions of the terms of
-order $1/a^4$ or higher in REFEQNABOVE to be at most $10/a^4$. With that, we can
+$2.50$ when compared to the previous order. Thus, if weFIXME restrict ourselves to
+$a>10$, weFIXME can conservatively limit the maximal contributions of the terms of
+order $1/a^4$ or higher in \refeqn{tplusminus} to be at most $10/a^4$. With that, weFIXME can
 use $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral
 value, while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper
-bound of the error on the estimate. In other words, for $a>\max(10,x)$ we get:
+bound of the error on the estimate. In other words, for $a>\max(10,x)$ weFIXME get:
 \begin{align}
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
 \frac{1}{a}  - \frac{k}{2a^2 }
@@ -927,7 +941,7 @@ Where the term in the final parenthesis represents an upper bound on the
 error. Due to the leading factor of $1/a^2$ in the error term, there is not much
 value in keeping the higher order terms of
 \refeqn{tailintegralpenultimate}. Thus, by using $k=x/a$ and $a>10$ and a slight
-additional pessimisation of the error bound, we can arrive at the relatively
+additional pessimisation of the error bound, weFIXME can arrive at the relatively
 simple formula for the estimation of the tail of the integral given in
 \refeqn{tailintegralP}.:
 
@@ -995,72 +1009,6 @@ precision. FIXMEREF to c/c++/py code?
 \input{generated/recipe_scndlorentz_lux.tex}
 \input{generated/recipe_scndfresnel_lux.tex}
 
-\section{LEFTOVERS FIXME CLEANUP}
- of a particularly challenging numerical
-integral....  Furthermore, the numerical evaluation in BC1974 is generally most
-precise and useful in regions of intermediate extinction levels, where arguably
-most data analysis ... a feature of
-numerical precision and domain of validity of the recipes as presented in the
-... phenomenologically, the observed Bragg diffraction cross section will thus be reduced by
-a factor of $y$
-
-... Although these models describe different
-underlying physics, they are in practice mathematically similar and each require
-the evaluation of a particular non-trivial integral
-
-TODO: Mention BC highly cited, used for structure refinement, etc.
-
-TODO: Mention y is monotonically decreasing function of x, and increases for
-higher thetabragg. Mention limits y=1 at x=0, y=0 and x=inf. This is also
-important when discussing the precision definition to use.
-
-NEXT: One paragraph with a few details of the BC models, spherical particles,
-primary + secondary, for different secondary mosaic distributions, etc. Then start
-introducing equations for phi/phi0/phipi/f/y eq36/... and then introduce the
-four models PGLF. Then mention the issues, show the NCrystal plot and the 2d
-precision plots.
-
-NB: $\theta$ is the Bragg angle, defined by:
-\begin{align}
-  \sin\theta = \frac{\lambda}{2d_{hkl}}
-  \labeqn{braggequation}
-\end{align}
-
-And $x$ is defined by (fixme: is $l$ the sphere radius or tbar..., also this is
-for primary):
-
-\begin{align}
-  x = \frac{ 2l^2\lambda^2F^2}{3V^2}
-  \labeqn{xdef}
-\end{align}
-
-$N_P=\frac{3}{4\pi}$, $C_m=1$.
-(FIXME: Don't focus first om primary, just do them all from the beginning,
-meaning that the previous equation has to have index $M$ and two constants
-depending on $M$ (the normalisation factors and the factor in front of x, the
-only real difference is for the Lorentzian model I think).
-
-
-
-
-FIXME: How can we refer to these models? Both in this paper and in e.g. NCrystal
-where we use them? We can use ``BCK'' (Becker-Coppens-Kittelmann), if such
-self-reference is allowed? Or perhaps BC2025(lux|minimal|) vs. BC1974 ?
-
-For ease of reference the three updated recipes provided here, will be referred
-to as BCK-minimal, BCK, and BCKLux. The first is as the name implies a minimal,
-which only ..... Next, the BCK model aims to provide numerical evaluations at
-the $0.1\%$ level, while finally BCKLux provides an even more precise numerical
-evaluation at the $10^-8$ level of precision. (define precision!)
-
-
-NOTE: Mention that this should be evaluated using Horner's method!! (which is
-also the default in numpy's polyval and how it has always been done in
-NCrystal). (Although Motzkin's method or the Knuth-Eve algorithm is actually
-interesting as it can save additional multiplications!!)
-
-
-
 \begin{acknowledgements}
 The contributions of non-authors etc. should be given here. (DMSC cluster?
 although not used much).
@@ -1079,50 +1027,3 @@ List funding organizations, recipients, grant numbers, etc.
 \bibliography{iucr} % basename of .bib file
 
 \end{document}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-%Nice formulation: "... the coherently scattering domain size, referred to here as the crystallite size for readability."
-
-%Could we somehow use "Multiple Bragg reflection by a thick mosaic
-%crystal. II. Simplified transport equation solved on a grid, Wuttke 2020" ?
-
-%wilson pgs 41+42: 0.93, 0.94, 1.0 => O(1-6%) mistake if modelling a cubic
-%domain as spherical. ??
-
-%wilson eq 9-12, is how we can see that T = (3/4) * diameter = (3/2) * radius
-%for a sphere. The "apparent particle size" is the volume average of the path
-%length. Check also eq. 19 for how this could be used to take hkl anisotropy
-%into account.
-
-%Discuss also why we focus on Sabine + BC (because it is discussed in e.g. the
-%BC paper that CR, Zach, etc. are incorrect).
-
-%ARGH: Trying to "spherify" Sabine's El and Eb makes the result go FURTHER from
-%BC, not closer. One solution is to look at low-x, and apply a correction to x
-%in the sabine model, which makes the constant in the first order term of yp(x)
-%~= 1-const*x match up. This turns out to be a factor of 19/15 ~= 1.26666,
-%meaning that the block sizes of Sabine are essentially modified by
-%sqrt(19/15)~=1.125 (very close to 9/8). The nice thing in practice here is how
-%we would know that the two models have similar behaviour at low x.
-
-%FIXME: Lorentz breakdown plot shows a breakdown of the updated-classic recipe,
-%       which is missed in the standard cmprecipes plot, since it only occurs
-%       for 45<theta<46. Solution: Rerun with the point at 45 replaced with
-%       44.99 and 45.01 ? Or add those as extra points?
-
-
-% FIXME: NOTICE THAT theta=90 and theta=pi are inconsistent. Once case is
-% theta_bragg and one is theta_scatter=2*theta_bragg. But we are using pi as
-% index on functions etc. to indicate backscattering. There is not direct easy
-% fix, since theta in sintheta = lambda/2d is thetabragg, and theta=pi is
-% theta_scatter. Solution: Use theta_bragg everywhere, but for convenience use
-% pi as sub/super-script on functions to indicate 2*thetabragg=pi.
-
-
-%OUTLOOK/ discussion: BC models used a lot, but the issues is by all means not
-%settled (e.g Takagi's equations versus non-wave transfer equations). However,
-%the aim of the present work is not to settle the field once and for all, but to
-%ensure that the community has better recipes for applying one of the better
-%developed models out there. (NB:
