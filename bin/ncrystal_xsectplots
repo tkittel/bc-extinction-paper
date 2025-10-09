@@ -3,18 +3,37 @@
 import NCrystalDev as NC
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import math
-
+import sys
 print("""NOTE: As of Aug26 this script must be run from an environment with a
 development version of NCrystal. Once a version of NCrystal is released with
 extinction support (likely during Fall 2025), this will be possible with the
 standard NCrystal.""")
 
-do_pdf = False
-mode = 'beo'
+do_pdf = False#default (but true if paperplot)
+mode = 'paperplot'#default
+args = sys.argv[1:]
+
+assert len(args) in (0,1)
+if len(args)==1:
+    mode == args[0]
+
+while 'pdf' in args:
+    args.remove('pdf')
+    do_pdf = True
+
+if mode=='paperplot':
+    mode = 'be'
+    do_pdf = True
+
+while 'nopdf' in args:
+    args.remove('nopdf')
+    do_pdf = False
+
 if mode == 'be':
-    base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'#;dcutoffup=0.4'
-    wlmax = 5
+    base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'#;dcutoffup=0.42;dcutoff=0.415'
+    wlmax = 4.5
     domainsize_mu_list = [ 3, 5, 10, 20 ]
 elif mode == 'bi':
     base_cfgstr = 'stdlib::Bi_sg166.ncmat;comp=bragg'
@@ -28,6 +47,12 @@ elif mode == 'beo':
     base_cfgstr = 'stdlib::BeO_sg186.ncmat;comp=bragg'
     wlmax = 6
     domainsize_mu_list = [ 2, 6, 8 ]
+elif mode=='paperplot':
+    do_pdf = False
+    base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'#;dcutoffup=0.4'
+    wlmax = 5
+    domainsize_mu_list = [ 3, 5, 10, 20 ]
+
 else:
     assert False
 
@@ -71,15 +96,18 @@ cols = dict(
 )
 
 
-common = dict( lw=2 )
+
+stdlw = 2
 
 def plot_noextn():
     plt.plot( wls,
               calc_xs(domainsize_mu=None,wls=wls,mdl='none'),
               label='No extinction',
-              ls=':',color=cols['gray'],**common
+              #ls=':',
+              color='tab:gray',#cols['gray'],
+              lw = stdlw
              )
-def plot_wrapup(fn):
+def plot_wrapup(fn,legend=True):
     plt.xlabel('Neutron Wavelength ($\\AA$)')
     plt.ylabel(r'$\sigma_\text{Bragg}$ per atom (barn)')
     ymax = None
@@ -90,7 +118,8 @@ def plot_wrapup(fn):
     plt.ylim(0,ymax)
     xsect_max[0] = 0.0
     plt.xlim(0,wlmax)
-    plt.legend()
+    if legend:
+        plt.legend()
     plt.grid()
     if do_pdf:
         fnpdf = f'ncrystal_{fn}_{mode}.pdf'
@@ -103,30 +132,47 @@ def plot_wrapup(fn):
 
 new_plot()
 plot_noextn()
-for domainsize_mu, linecol in [ (2,cols['green']),
-                                (10,cols['blue']),
-                                (20,cols['orange']) ]:
+linestyle_bc2025 = (0,(1,1,1,1))
+for radius_mu, linecol in [ (2,'tab:olive'),#cols['green']),
+                            (5,'tab:orange'),#cols['blue']),
+                            (10,'tab:red'),#cols['orange']
+                           ]:
+    domainsize_mu = 4 * radius_mu /3
+    alpha=0.7
+    plt.plot( wls,
+              calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/yp:std'),
+              #label=f'Becker-Coppens 2025 update (l=${domainsize_mu}\\mu$m)',
+              lw = stdlw, color=linecol, ls=linestyle_bc2025,
+              alpha=alpha )
     plt.plot( wls,
               calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/yp:cls'),
-              label=f'Becker-Coppens 1974 (l=${domainsize_mu}\\mu$m)',
-              **common, color=linecol )
-plot_wrapup('bc_yp_breakdown')
+              label=f'BC1974 recipe (spherical, ${radius_mu}\\mu$m radius)',
+              lw = stdlw, color=linecol, alpha=alpha )
+
+dummy_line = Line2D([0], [0], color='tab:gray',
+                    ls = linestyle_bc2025,
+                    lw=stdlw, label='Dummy Line')
+handles, labels = plt.gca().get_legend_handles_labels()
+plt.legend(handles=list(handles)+[dummy_line],
+           labels=list(labels)+['Updated recipe (BC2025)'])
+plot_wrapup('bc_yp_breakdown',legend=False)
 
 mdl2pars = { 'sabine' : dict(color=cols['orange'],ls='-.'),
              'bc/yp:cls' : dict(color=cols['blue'],ls='-'),
              'bc/yp:lux' : dict(color=cols['green'],ls='-'),
-             'bc/yp:ucls' : dict(color=cols['purple'],ls='-'),
+             'bc/yp:std' : dict(color=cols['purple'],ls='-'),
             }
+
 new_plot()
 plot_noextn()
 for domainsize_mu in domainsize_mu_list:
     for mdl, mdlname in [ ('sabine','Sabine 2006'),
-                          ('bc/yp:cls','Becker-Coppens 1974'),
-                          ('bc/yp:lux','Becker-Coppens 1974 (2025 luxury update)'),
-                          ('bc/yp:ucls','Becker-Coppens 1974 (2025 minimal update)'),
+                          ('bc/yp:cls','Becker-Coppens 1974 (classic recipe)'),
+                          ('bc/yp:lux','Becker-Coppens 1974 (2025 luxury recipe)'),
+                          ('bc/yp:std','Becker-Coppens 1974 (2025 standard recipe)'),
                          ]:
         plt.plot( wls,
                   calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl=mdl),
                   label=f'{mdlname} (l=${domainsize_mu}\\mu$m)',
-                  **common, **mdl2pars[mdl] )
+                  lw = stdlw, **mdl2pars[mdl] )
 plot_wrapup('yp_cmp')
