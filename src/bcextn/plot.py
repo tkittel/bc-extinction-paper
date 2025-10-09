@@ -1280,7 +1280,7 @@ def main_feta( args ):
     if do_log:
         eta = np.geomspace(0.1,40,5000)
     elif do_std:
-        eta = np.linspace(-15,15,5000)
+        eta = np.linspace(0,20,10000)
     elif do_lin:
         eta = np.linspace(-12,12,5000)
     for mode, m, color, z in fcts:
@@ -1289,7 +1289,7 @@ def main_feta( args ):
                   np.vectorize(Fobj())(eta),
                   zorder=z,
                   color=color,
-                  label='$f_{%s}$'%m)
+                  label='$f_{%s}(\\eta)$'%m)
 
     if do_std:
         plt.ylim(1e-4,1)
@@ -1331,7 +1331,7 @@ def main_phi( args ):
                   np.vectorize(Phiobj())(abs(s)),
                   zorder=z,
                   color=color,
-                  label=r'$\varphi^{%s}$'%thpt)
+                  label=r'$\varphi^{%s}(s)$'%thpt)
 
     if do_std:
         plt.ylim(0,1)
