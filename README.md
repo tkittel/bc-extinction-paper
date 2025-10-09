@@ -15,7 +15,7 @@ The paper describing the work is currently in preparation, and reading it is mos
 
 ## Download the BC2025 recipes for C, C++ or Python
 
-In case you came here after having read the paper and now wants to download the recipes in C, C++ or Python format, they are located in the [recipes](recipes/) subdirectory:
+In case you came here after having read the paper and now wants to download the recipes in C, C++ or Python format, they are located in the `recipes/` subdirectory:
 
 * Implementation in C: [bc2025.c](recipes/bc2025.c)
 * Implementation in C++: [bc2025.cpp](recipes/bc2025.cpp)
@@ -23,11 +23,11 @@ In case you came here after having read the paper and now wants to download the 
 
 The files above also contains a small test function, which contains a number of reference y(x,theta) values. This test function could be included in the unit tests of your framework if desired.
 
-But in any case, please consult the following conditions of usage.
+But in any case, please consult the conditions of usage below.
 
 ## Download the BC2025 reference data
 
-The various bcdata_*.json files in In the [data/](data/) subdirectory contains dictionaries with high precision reference values of y(x,theta) for the various models.
+The various bcdata_*.json files in In the `data/` subdirectory contains dictionaries with high precision reference values of y(x,theta) for the various models.
 
 ## Conditions of usage:
 
