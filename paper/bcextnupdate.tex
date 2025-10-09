@@ -104,65 +104,65 @@
 % For example:
 % \author[a]{Anne Author\IUCrCemaillink{corrauthor@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}}
 
-
 \author[a]{Thomas Kittelmann\IUCrCemaillink{thomas.kittelmann@ess.eu}\IUCrOrcidlink{0000-0002-7396-4922}}%
-\author[b]{Secundus Segunda\IUCrEmaillink{coauthor@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}\IUCrAufn{Unique note.}}%
-\author[a,b]{Trinity Terzi\IUCrEmaillink{anothercoauthor1@org.org}\IUCrOrcidlink{xxxx-xxxx-xxxx-xxxx}\IUCrAufn{Shared note.}}%
-\author[a,b]{Clover Dufour\IUCrEmaillink{anothercoauthor2@org.org}\IUCrAufn[2]{}}
-
-\affil[a]{ESS DMSC, European Spallation Source ERIC, Denmark}
-\affil[b]{Different Department, Different Organization, ..., Country }
+\author[b]{Douglas D. DiJulio\IUCrEmaillink{douglas.dijulio@ess.eu}\IUCrOrcidlink{0000-0002-8025-200X}}%
+\author[b]{Shuqi T. G. Xu\IUCrEmaillink{shuqi.xu@ess.eu}\IUCrOrcidlink{0000-0002-9615-7533}}%
+\author[b]{J. I. M\'arquez Dami\'an\IUCrEmaillink{jose.marquez@ess.eu}\IUCrOrcidlink{0000-0002-9611-914X}}%
+\affil[a]{ESS DMSC, European Spallation Source ERIC, Lyngby, Denmark}
+\affil[b]{European Spallation Source ERIC, Lund, Sweden}
 
 \begin{document}
 \maketitle
 
 \begin{synopsis}
-A technical correction and enhancement of the Becker-Coppens (1974) recipe for
-estimating extinction factors in spherical crystallites is provided, addressing
-limitations in scenarios with higher Bragg angles as well as providing improved
-precision in general. The work utilises modern computing capabilities and
-improved recipes are provided for easy community adoption.
+A technical update of the Becker-Coppens (1974) recipe for estimating extinction
+factors in spherical crystallites is provided, addressing limitations in
+scenarios with higher Bragg angles or stronger extinction effects, as well as
+providing improved precision in general. The work utilises modern computing
+capabilities and improved recipes are provided for easy community adoption.
 \end{synopsis}
 
 \begin{abstract}
 We present a technical correction and update of the widely used recipes by
 Becker-Coppens (1974), for the estimation of primary and secondary extinction
-factors in perfect spherical domains or particles. In the original publication,
-these extinction factors were evaluated numerically from a complicated integral,
-and simplified analytical approximations to these numerical evaluations
-constituted the provided recipes. However, the original recipes are plagued by
-issues of numerical precision in general, and even suffer from complete
-numerical break-down in case of strong primary extinction effects in
-back-scattering scenarios ($\theta_\texttt{Bragg}\gtrsim50^\circ$). Using modern
-computing capabilities, the numerical evaluations of the integrals are
-revisited, and improved recipes are provided with precision guarantees for all
-Bragg angles and levels of extinction. The new recipes are provided both in a
-``standard'' version, believed to be of suitable precision for any actual
-analysis of diffraction or transmission data, and a ``luxury'' reference version
-with even higher precision.
+factors in perfect spherical domains or particles. In the original work, these
+extinction factors were evaluated numerically from a complicated integral, and
+simplified analytical approximations to these evaluations constituted the
+provided recipes. However, these original recipes are plagued by issues of
+numerical precision in general, and even suffer from complete numerical
+break-down in case of strong primary extinction effects, especially in backwards
+scattering. Using modern computing capabilities, the numerical evaluations of
+the integrals are revisited, and improved recipes are provided with consistent
+precision guarantees for all Bragg angles and levels of extinction. The new
+recipes are provided both in a ``standard'' version, believed to be of suitable
+precision for any actual analysis of diffraction or transmission data, and a
+``luxury'' reference version with even higher precision.
 
 The performance of the new recipes is naturally compared to those of the
 original work, and in order to facilitate easy adoption by the community,
 reference implementations are provided for \texttt{C}, \texttt{C++}, and
-\texttt{Python} language.
+\texttt{Python} languages.
 \end{abstract}
 
-\keywords{extinction; Bragg diffraction; neutron scattering; X-ray diffraction; }
+\keywords{Extinction; Bragg diffraction; Neutron scattering; X-ray diffraction; }
 
 \section{The Becker-Coppens recipes for extinction}
 Extinction in the context of diffraction refers to the phenomenon where the
-intensity of a diffracted wave is reduced or diminished due to interference
-effects. The exact nature of these interference effects might be complicated,
-but at least for the case of {{\em} secondary} extinction effects, this can
-usually be explained by the particle undergoing multiple Bragg scattering's on
-the same reflection plane. Each scattering event will alternate the neutron's
-orientation between the diffracted and undiffracted directions, with the net
-effect being that the diffracted flux is diminished compared to what one would
-expect  if multiple scattering effects were not possible. The extinction factor,
-$y$, is defined as the difference between the diffracted flux predicted by the
-kinematical model ($I_\text{kin}$) with no multiple scattering or other dynamic
-effects, and the diffracted flux which is actually observed once these effects
-are accounted for ($I_\text{obs}$):
+intensity of a diffracted flux of particles is reduced or diminished due to
+interference effects. The exact nature of these interference effects might be
+complicated, and can in particular for {{\em} primary} extinction include higher
+order interference between the incoming and scattered waves. For the case of
+{{\em} secondary} extinction effects, the relevant interference can in general
+be approximated at the particle transport level as an effect of the particle
+undergoing multiple Bragg scattering's on the same reflection plane. Each
+scattering event will alternate the neutron's orientation between the diffracted
+and undiffracted directions, with the net effect being that the diffracted flux
+is diminished compared to what one would expect if multiple scatterings
+were not possible. The extinction factor, $y$, is defined as the difference
+between the diffracted flux predicted by the kinematical model ($I_\text{kin}$)
+with no multiple scattering or other dynamic effects, and the diffracted flux
+which is actually observed once these effects are accounted for
+($I_\text{obs}$):
 \begin{align}
 y \equiv \frac{I_\text{obs}}{I_\text{kin}}
 \end{align}
@@ -170,16 +170,16 @@ The extinction factor $y$, is a real number in the unit interval which in
 general will depend on both the state of the particle undergoing diffraction as
 well as of the details of the material in which the process takes place.  In all
 cases, $y$ is expressed as a function of both the Bragg angle $\theta$ as well
-as a parameter $x$ which capture the general strength of extinction effects in
-the material. The exact definition of $x$ depends to some degree on the specific
+as a parameter $x$ which capture the general strength of the extinction
+effect. The exact definition of $x$ depends to some degree on the specific
 model, but in general it will be proportional to $(Fl\lambda/V)^2$ where $F$ is
-the structure factor of the crystal reflection in question, $V$ the volume of
-the crystal unit cell, $\lambda$ the wavelength of the particle being scattered,
-and $l$ some relevant length scale representing the path length of the probe
-through the coherent domains, crystallites, or grains in which the diffraction
-is taking place. In the case where the extinction is governed by a mosaic
-distribution, the definition of $x$ will usually also depend on parameters of
-this mosaic distribution, such as in particular its width.
+the crystalline structure factor of the reflection in question, $V$ the volume
+of the crystal unit cell, $\lambda$ the wavelength of the particle being
+scattered, and $l$ some relevant length scale representing the path length of
+the probe through the coherent domains, crystallites, or grains in which the
+diffraction is taking place. In the case where the extinction is governed by a
+mosaic distribution, the definition of $x$ will usually also depend on
+parameters of this mosaic distribution, such as in particular its width.
 
 Several models for $y$ has been proposed over the years, with early work by
 Zachariasen \cite{zachariasen1967} improved upon by other authors like
@@ -193,27 +193,32 @@ extinction paper here?  But only if it also considered BC and not just
 Sabine?). Unfortunately, in case of stronger extinction effects, the model
 appears to suffer from an obvious breakdown at large Bragg angles, as can be
 seen in \reffig{ypbreakdownorigrecipe}.
-
 \begin{figure}[tp] %
 \begin{center}
-\includegraphics[width=0.6\textwidth]{../data/ncrystal_bc_yp_breakdown_be.pdf}
+\includegraphics[width=0.6\textwidth]{generated_with_ncrystal/ncrystal_bc_yp_breakdown_be.pdf}
 \end{center}
-\caption{Bla. Beryllium.} % NB \protect\cite{...} is required in floating figures
+\caption{Bragg diffraction cross sections in a beryllium powder as calculated by
+  \texttt{NCrystal}, including primary extinction effects for idealised spherical
+  crystallites of various radii as predicted by the Becker-Coppens model using
+  both the recipes from this (BC2025) and the original work (BC1974).}
 \labfig{ypbreakdownorigrecipe}
 \end{figure}
 
 As will be shown in the present work, this breakdown does not constitute a
 fundamental problem with the Becker-Coppens model, but is merely a result of
 flawed numerical evaluations entering into the recipes (algorithms) provided in
-that work. It is the intent of the present work to provide updated recipes which
-does not change the underlying theory or assumptions going ito the Becker-Coppens
-model, but merely ensures a consistent and precise numerical evaluation of
-it. These new recipes for evaluation of $y$ will be referred to as BC2025 in the
-present work, while the recipes from the original work will be referred to as
-BC1974. It will be seen that the $y$ values provided by the BC2025 recipes do
-not drastically disagree agree with those of the BC1974 recipes in the regions
-of intermediate extinction levels, where the model has arguably seen most usage
-and validation over the years in X-ray or neutron diffraction.
+that work. It is the aim of the present work to provide updated recipes which
+does not change the underlying theory or assumptions going ito the
+Becker-Coppens model, but merely ensures a consistent and precise numerical
+evaluation of it. These new recipes for evaluation of $y$ will be referred to as
+BC2025 in the present work, while the recipes from the original work will be
+referred to as BC1974. It will be seen that the $y$ values provided by the
+BC2025 recipes do not drastically disagree agree with those of the BC1974
+recipes in the regions of intermediate extinction levels, where the model
+arguably has seen most usage and validation over the years in X-ray or neutron
+diffraction. For reference the effect of using the BC2025 recipe is also shown
+in \reffig{ypbreakdownorigrecipe}, and is seen to not suffer from the same
+breakdown.
 
 In the work by Becker-Coppens \cite{BC1974}, four specific models and recipes
 are provided for the determination of $y$: one for primary extinction, and three
@@ -225,32 +230,32 @@ within the crystalline materials: Gaussian, Lorentzian, or Fresnellian.
 Readers are referred to the original work \cite{BC1974} for the detailed
 description and background of the models, while the present work will focus
 exclusively on the mathematical expressions from the models which must be
-evaluated. To determine the extinction parameter $y$ as a function of $x$ and
-$\theta$, the following integral must be evaluated:
+evaluated. More specifically, the Becker-Coppens models all require evaluation
+of the following integral, in order to determine the extinction parameter $y$ as
+a function of $x$ and $\theta$:
 \begin{align}
   y_M(\theta,x) = \frac{6c_M}{4\pi}\int_{0}^{\infty} f_M(\eta)\varphi\left(\theta,c_Mxf_M(\eta)\right)d\eta
   \labeqn{yintegral}
 \end{align}
-Here, the subscript $M$ indicates the model, and can either be $P$
-(primary), $G$ (secondary Gaussian), $L$ (secondary Lorentzian), or $F$
-(secondary Fresnellian). The variable $c_M$ is a constant, with model dependent
-values of $c_P=c_G=c_F=1$ and $c_L=4/3$.
-
-TODO?: Note that the definition of $x$ itself also depends on the model, but we will
-drop the index on $x$ for clarity.
-TODO? (note we have used that $f(\eta)$ is an even function to change the integration
-domain to $[0,\infty)$).
-
+Here, the subscript $M$ indicates the model, and can either be $P$ (primary),
+$G$ (secondary Gaussian), $L$ (secondary Lorentzian), or $F$ (secondary
+Fresnellian). The variable $c_M$ is a constant, with model dependent values of
+$c_P=c_G=c_F=1$ and $c_L=4/3$. It should be noted that the exact definition of
+$x$ is given in the original work, and also depends on the model.
 
 The function $\varphi(\theta,s)$ is an extinction correction function given by:
 \begin{align}
   \varphi(\theta,s) = \varphi^0(s) + \sin^{3/2}\theta\left\{\varphi^\pi\left(s\sqrt{\sin\theta}\right)-\varphi^0\left(s\sqrt{\sin\theta}\right)\right\}
   \labeqn{phi}
 \end{align}
-Here $\varphi^0(s)$ and $\varphi^\pi(s)$ are the limiting functions for $\theta=0$
-and $\theta=\pi/2$ respectively, and are given as:\footnote{Note that the expression for
-$\varphi^\pi(s)$ in eq. 32 of \cite{BC1974} has a mistake, where a factor of $1/2$
-should be moved from the second to the third term.}
+Here $\varphi^0(s)$ and $\varphi^\pi(s)$ are the limiting functions for
+$\theta=0$ and $\theta=\pi/2$ respectively,\footnote{To be concise, the
+superscript $\pi$ will in general be used on variables related to complete
+back-scattering throughout the present work, even though the Bragg angle
+associated with such scatterings is strictly speaking $\pi/2$.} and are given
+as:\footnote{Note that the expression for $\varphi^\pi(s)$ in eq. 32 of
+\cite{BC1974} has a mistake, where a factor of $1/2$ should be moved from the
+second to the third term.}
 \begin{align}
   \varphi^0(s) &= \frac{3}{64s^3}\left\{8s^2+4s\exp(-4s)-(1-\exp(-4s))\right\}\\
   \varphi^\pi(s) &= \frac{3}{4s^3}\left\{s^2-s+\frac{1}{2}\log(1+2s)\right\}
@@ -500,7 +505,7 @@ precision in \texttt{JSON} format.
       \refeqn{yintegral}, with each color denoting a specific value of $\theta$
       as indicated. \Refsubfigfrommaincaption{yrefeval:subfig:bands}
       shows the bands of $y_M(x,\theta)$ values covered by all four models, as
-      $\theta$ is varied from $0^\circ$ to  $90^\circ$..}
+      $\theta$ is varied from $0^\circ$ to  $90^\circ$.}
     \labfig{yrefeval}
 \end{figure}
 
@@ -1010,7 +1015,7 @@ higher thetabragg. Mention limits y=1 at x=0, y=0 and x=inf. This is also
 important when discussing the precision definition to use.
 
 NEXT: One paragraph with a few details of the BC models, spherical particles,
-primary+secondary, for different secondary mosaic distributions, etc. Then start
+primary + secondary, for different secondary mosaic distributions, etc. Then start
 introducing equations for phi/phi0/phipi/f/y eq36/... and then introduce the
 four models PGLF. Then mention the issues, show the NCrystal plot and the 2d
 precision plots.
