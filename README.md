@@ -7,7 +7,7 @@ P. J. Becker and P. Coppens
 Acta Cryst. (1974). A30, 129-147
 https://doi.org/10.1107/S0567739474000337
 
-## How to reference this work:
+## How to reference this work
 
 The paper describing the work is currently in preparation, and reading it is most likely a prerequisite before anything in this repository makes sense. For the time being you can reference the work as:
 
@@ -29,12 +29,11 @@ But in any case, please consult the conditions of usage below.
 
 The various bcdata_*.json files in In the `data/` subdirectory contains dictionaries with high precision reference values of y(x,theta) for the various models.
 
-## Conditions of usage:
+## Conditions of usage
 
 You can use these files freely under the APACHE-2.0 license, but we naturally assume good scientific conducts on behalf of any users beyond mere software license issues.
 
 That means that you should remember cite the paper (currently in preparation) if you use them directly or indirectly in your scientific work. And if you are integrating them into a piece of software on behalf of end-users, please make sure to properly reference the origin of them in a way that your users will notice (using the paper above as the reference) and reference themselves..
-
 
 ## Internal notes for how to use analysis code in this repository
 
