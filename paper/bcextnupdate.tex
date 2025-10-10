@@ -17,27 +17,18 @@
 
 \documentclass{iucrjournals}
 
-% Add extra packages here, e.g.
-% \usepackage{myfavouritepackage}
 \usepackage{amssymb}
 \usepackage[fleqn]{amsmath}
-
 \usepackage{booktabs}
 \usepackage[table]{xcolor}
-%\usepackage[table]{xcolor}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{subcaption}
 \usepackage{caption}
-
 \usepackage[section]{placeins}
-
 
 \DeclareMathOperator{\sinc}{sinc}
 \newcommand{\order}{\mathcal{O}}
-
-
-%internal refs with macros, for consistency:
 \newcommand{\labsec}[1]{\label{sec:#1}}
 \newcommand{\refsecnumonly}[1]{\ref{sec:#1}}
 \newcommand{\refsec}[1]{Section~\refsecnumonly{#1}}
@@ -45,15 +36,12 @@
 \newcommand{\reftwosections}[2]{Sections~\refsecnumonly{#1} and \refsecnumonly{#2}}
 \newcommand{\refthreesections}[3]{Sections~\refsecnumonly{#1}, \refsecnumonly{#2}, and \refsecnumonly{#3}}
 \newcommand{\refsectionrange}[2]{Sections~\refsecnumonly{#1}--\refsecnumonly{#2}}
-
 \newcommand{\labappendix}[1]{\label{app:#1}}
 \newcommand{\refappendixnumonly}[1]{\ref{app:#1}}
 \newcommand{\refappendix}[1]{Appendix~\refappendixnumonly{#1}}
-
 \newcommand{\refalgnumonly}[1]{\ref{alg:#1}}
 \newcommand{\refalg}[1]{Algorithm~\refalgnumonly{#1}}
 \newcommand{\refalgrange}[2]{Algorithms~\refalgnumonly{#1}--\refalgnumonly{#2}}
-
 \newcommand{\labfig}[1]{\label{fig:#1}}
 \newcommand{\reffignumonly}[1]{\ref{fig:#1}}
 \newcommand{\reffig}[1]{Figure~\reffignumonly{#1}}
@@ -64,25 +52,17 @@
 \newcommand{\refsubfigfrommaincaption}[1]{Figure~\protect\subref{fig:#1}}
 \newcommand{\Refsubfigfrommaincaption}[1]{Figure~\protect\subref{fig:#1}}%same, but always capitalized!
 \newcommand{\reftwosubfigsfrommaincaption}[2]{Figures~\protect\subref{fig:#1} and ~\protect\subref{fig:#2}}
-% \protect\subref{fig:lcbragg_singlenormal_thetan60_decomposed_noanti}
-
 \newcommand{\labtab}[1]{\label{tab:#1}}
 \newcommand{\reftabnumonly}[1]{\ref{tab:#1}}
 \newcommand{\reftab}[1]{Table~\reftabnumonly{#1}}
 \newcommand{\Reftab}[1]{Table~\reftabnumonly{#1}}%same as \reftab, but always capitalised!
 \newcommand{\reftabrange}[2]{Tables~\reftabnumonly{#1}--\reftabnumonly{#2}}
-%%%%\newcommand{\lablisting}[1]{\label{lst:#1}}
-%%%%\newcommand{\reflistingnumonly}[1]{\ref{lst:#1}}
-%%%%\newcommand{\reflisting}[1]{Listing~\reflistingnumonly{#1}}
-%%%%\newcommand{\Reflisting}[1]{Listing~\reflistingnumonly{#1}}%same as \reflisting, but always capitalised!
 \newcommand{\labeqn}[1]{\label{eqn:#1}}
 \newcommand{\refeqnnumonly}[1]{\ref{eqn:#1}}
 \newcommand{\refeqn}[1]{Eq.~\refeqnnumonly{#1}}
 \newcommand{\refeqnrange}[2]{Eqs.~\refeqnnumonly{#1}--\refeqnnumonly{#2}}
 \newcommand{\Refeqn}[1]{Eq.~\refeqnnumonly{#1}}%same as \refeqn, but always capitalised!
 \newcommand{\reftwoeqns}[2]{Eqs.~\refeqnnumonly{#1} and \refeqnnumonly{#2}}
-\def\LRA{\Leftrightarrow}
-\def\RA{\Rightarrow}
 
 \title{Revisiting Becker-Coppens (1974): Updated Recipes for Estimating Extinction Factors in Spherical Crystallites}
 
@@ -106,9 +86,9 @@
 
 \author[a]{Thomas Kittelmann\IUCrCemaillink{thomas.kittelmann@ess.eu}\IUCrOrcidlink{0000-0002-7396-4922}}%
 \author[b]{Douglas D. DiJulio\IUCrEmaillink{douglas.dijulio@ess.eu}\IUCrOrcidlink{0000-0002-8025-200X}}%
-\author[b]{Shuqi T. G. Xu\IUCrEmaillink{shuqi.xu@ess.eu}\IUCrOrcidlink{0000-0002-9615-7533}}%
+\author[b]{Shuqi Xu\IUCrEmaillink{shuqi.xu@ess.eu}\IUCrOrcidlink{0000-0002-9615-7533}}%
 \author[b]{J. I. M\'arquez Dami\'an\IUCrEmaillink{jose.marquez@ess.eu}\IUCrOrcidlink{0000-0002-9611-914X}}%
-\affil[a]{ESS DMSC, European Spallation Source ERIC, Lyngby, Denmark}
+\affil[a]{ESS Data Management and Scientific Computing Division, Lyngby, Denmark}
 \affil[b]{European Spallation Source ERIC, Lund, Sweden}
 
 \begin{document}
@@ -365,7 +345,6 @@ relatively straight-forward to evaluate via numerical quadrature.
       $(x,\theta)$ points.}
     \labfig{integrandfcts}
 \end{figure}
-%see \reffig{integrandfcts:subfig:gP} and \reffig{integrandfcts:subfig:gPGLF} and \reffig{integrandfcts}.
 
 In order to reduce the concern of floating point precision, all work described
 in this section is carried out in \texttt{Python} using the arbitrary-precision
@@ -381,10 +360,10 @@ orders when their arguments are small, since their direct mathematical forms are
 otherwise numerically unstable in that region. The Taylor expansions are found
 with the help of the \texttt{SageMath} \cite{sagemath} mathematics software
 system.\footnote{For reference, all the code and datasets associated with the
-present work are provided in (FIXME: ZENODO??), and can be run completely with a
-Conda-Forge(REF?) installation of purely Open Source tools. The main software
-used is \texttt{Python}, \texttt{mpmath}, \texttt{SageMath}, \texttt{NumPy} and
-\texttt{matplotlib} (FIXME REFS) (FIXME: Mention data as json??).}
+present work are provided in \cite{bc2025materials}, and can be run completely
+with an installation of purely Open Source tools. The main software used is
+\texttt{mpmath}, \texttt{SageMath}, \texttt{NumPy} \cite{numpy}, and
+\texttt{matplotlib} \cite{matplotlib}.}
 
 The actual numerical quadrature evaluation of the integral is based on
 Gauss-Legendre quadrature, and is performed over a large number of sub-intervals
@@ -488,10 +467,7 @@ to $n=\infty$.
 
 The resulting curves of $y_M(x,\theta)$ reference values are shown in
 \reffig{yrefeval}, and for future reference \refappendix{yreftables} contains a
-selection of such values in
-\reftabrange{yrefvals:P:first}{yrefvals:F:last}. However, it should be noted
-that the FIXMEREF also contains a larger number of such values to a much higher
-precision in \texttt{JSON} format.
+selection of such values in \reftabrange{yrefvals:P:first}{yrefvals:F:last}.
 \begin{figure}[tp]
     \centering
     \begin{subfigure}{0.49\textwidth}
@@ -601,8 +577,8 @@ work allowing a direct gauging of their accuracy. These accuracies are shown in
 tables were digitised using the \texttt{Tesseract} OCR engine and manually
 verified. Any odd entries, such as for $(x,\sin\theta)$=$(4,0.2)$ in
 \reftab{origtable1precision} or $(x,\sin\theta)$=$(0.6,0.5)$ in
-\reftab{origtable3precision}, were manually double-checked and are likely
-a sign of transcription errors in the tables of the original work.  (FIXME: verify once
+\reftab{origtable3precision}, were manually double-checked and are likely a sign
+of transcription errors in the tables of the original work.  (FIXME: verify once
 again? at least any suspicious values).} and clearly there are significant
 systematic deviations in particular at higher values of $x$, to some degree
 consistent with what is seen in \reffig{prec2dplot}t
@@ -673,46 +649,11 @@ consistent with what is seen in \reffig{prec2dplot}t
     \caption{Precision as per \refeqn{yprecisiondef} of the $y_M(x,\theta)$
       values provided by the recipes in
       \refeqnrange{yfitfctorig}{yfitfct:BF:last} when compared with the high
-      precision ``luxury'' recipes to be presented in \refsec{newrecipes}.
+      precision luxury recipes to be presented in \refsec{newrecipes}.
       Boxes with white and black dashes indicate the limited range of the
       reference values used to tune the recipes in the original work.}
     \labfig{prec2dplot}
 \end{figure}
-
-
-
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_primary.pdf}
-%%\end{center}
-%%\caption{precision 2d classic recipe (vs. new lux recipe). This is primary.}
-%%\labfig{prec2dplot:primary}
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndgauss.pdf}
-%%\end{center}
-%%\caption{precision 2d classic recipe (vs. new lux recipe). This is scndgauss.}
-%%\labfig{prec2dplot:scndgauss}
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndlorentz.pdf}
-%%\end{center}
-%%\caption{precision 2d classic recipe (vs. new lux recipe). This is scndlorentz.}
-%%\labfig{prec2dplot:scndlorentz}
-%%\end{figure}
-%%
-%%\begin{figure}[tp] %
-%%\begin{center}
-%%\includegraphics[width=0.6\textwidth]{generated/prec_classicrecipe_2d_scndfresnel.pdf}
-%%\end{center}
-%%\caption{precision 2d classic recipe (vs. new lux recipe). This is scndfresnel.}
-%%\labfig{prec2dplot:scndfresnel}
-%%\end{figure}
-%%
 
 \section{Developing improved recipes}\labsec{newrecipes}
 With the availability of reliable high-precision reference datasets of
@@ -802,7 +743,7 @@ and again the specific powers used in the denominator was chosen to be those
 found to make the Legendre polynomials more easily align with the data
 points. Although the fits are performed using Legendre polynomials, due to their
 many advantages (such as orthogonality and having fitting procedures readily
-available in \texttt{NumPy}FIXMEREF), the final provided recipes will naturally
+available in \texttt{NumPy}), the final provided recipes will naturally
 first convert the fitted coefficients into coefficients of standard
 polynomials. This not only simplifies the final recipes, but also allows for
 efficient and robust evaluation of these polynomials via Horner's
@@ -828,15 +769,17 @@ recipes follow the same general form, with the main difference being the
 specific coefficients used, and for reference the other 7 algorithms are
 included in \refappendix{recipes}. Additionally, to further adoption,
 \texttt{C}, \texttt{C++}, and \texttt{Python} code implementing the recipes as
-standalone functions are also made available at FIXMEREF.
+standalone functions are also made available at \cite{bc2025materials}.
 \input{generated/recipe_primary.tex}
 
 \section{Conclusions}
-The final precision of both the new ``standard'' and ``luxury'' recipes from the
+The final precision of both the new standard and luxury recipes from the
 present work, as well as the original recipes due to Becker-Coppens, are shown
-in \reffig{cmprecipes}. It is clearly seen that the new recipes provide the
-guaranteed error bounds of respectively $10^{-3}$ and $10^{-6}$, while the older
-recipes are mostly useful in a more limited range of intermediate $x$ values.
+in \reffig{cmprecipes}. It is clearly seen that while the older recipes are
+mostly useful in a more limited range of intermediate $x$ values, the new
+recipes provide the guaranteed error bounds of respectively $10^{-3}$ and
+$10^{-6}$. For low $x$ values, the precision is actually even better, which is
+not surprising given the usage of Taylor series approximations here.
 \begin{figure}[tp]
     \centering
     \begin{subfigure}[t]{0.49\textwidth}
@@ -862,9 +805,12 @@ recipes are mostly useful in a more limited range of intermediate $x$ values.
         \includegraphics[width=\textwidth]{generated/cmprecipes_scndfresnel.pdf}
         \caption{$M=F$}\labfig{cmprecipes:subfig:F}
     \end{subfigure}
-    \caption{fixme Bla bla cmprecipes. Note: breakdown near 45degrees in $M=L$ plot (weFIXME have split
-      that line into $\pm45^\circ$ to show it) }
-    \labfig{cmprecipes}
+    \caption{Precisions of the $y_M(x,\theta)$ values produced by both the
+      original BC1974 recipe and the new BC2025 recipes from this work, in both
+      standard and luxury versions. The precision is defined as per
+      \refeqn{yprecisiondef}, and each recipe contains curves for multiple
+      $\theta$ values, with $\theta=0$ and $\theta=\pi/2$ shown with thicker
+      lines.}  \labfig{cmprecipes}
 \end{figure}
 
 Although a precise description of extinction phenomenons are vastly complicated
@@ -888,26 +834,23 @@ detailed and impressive in the subjective opinion of the authors..
 \section{Tail integration for the primary extinction model}\labappendix{yptailintegration}
 For $M=P$ and $f_P(\eta)$ given by \refeqn{fofeta:P:first}, it is desired to
 provide an estimate of the tail of the integral in \refeqn{yintegral}, i.e.\ the
-integral over just the $[a,\infty]$ for some finite and positive $a$.
-
-For positive $\eta$ values:
+integral over $[a,\infty]$ for some finite and positive $a$. This is achieved by
+bounding $f_P(\eta)$ by simpler functions:
 \begin{align}
-  f_P(\eta) \le f_P^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}\labeqn{fplus}\\
-  f_P(\eta) \ge f_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}\labeqn{fminus}
+  f_P(\eta) \le f_P^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}
+  \quad\text{and}\quad
+  f_P(\eta) \ge f_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}
 \end{align}
-Where $f^-(\eta)$ is only strictly positive when $\eta>1$, so weFIXME will restrict
-ourselves to $\eta>2$ (??)
-
-Since $\varphi(\theta,s)$ and $f_P(\eta)$ decreases monotonically for increasing
-$s$ and $\eta$ respectively for all positive arguments, weFIXME can conclude that:
+The function $f^-(\eta)$ is only strictly positive when $\eta>1$, but for
+simplicity it can be required that $a>2$.  Since $\varphi(\theta,s)$ and
+$f_P(\eta)$ decrease monotonically for increasing $s$ and $\eta$ respectively,
+for positive arguments, it follows that:
 \begin{align}
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \le
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta &\le
 \int_{a}^{\infty} f_P^+(\eta)\varphi\left(\theta,xf^-_P(\eta)\right)d\eta \equiv T^+(\theta,x,a) \nonumber\\
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \ge
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta &\ge
 \int_{a}^{\infty} f_P^-(\eta)\varphi\left(\theta,xf^+_P(\eta)\right)d\eta \equiv T^-(\theta,x,a)
 \end{align}
-Using $k=x/a$ and ensuring $a>\max(x,2)$ weFIXME have $k<1$.
-
 With the help of \texttt{SageMath}, $T^\pm(\theta,x,a)$ can be evaluated
 analytically and expressed as a Taylor expansion in inverse powers of $a$:
 \begin{align}
@@ -919,16 +862,17 @@ analytically and expressed as a Taylor expansion in inverse powers of $a$:
   +\mathcal{O}\left(\frac{1}{a^4}\right)
   \labeqn{tplusminus}
 \end{align}
-
-Varying both $k$ and $\sin\theta$ over values the unit interval and evaluating
-Taylor coefficients for terms up to $1/a^{20}$ numerically, it is seen that the
-maximal absolute numerical value of coefficients is always within a factor of
-$2.50$ when compared to the previous order. Thus, if weFIXME restrict ourselves to
-$a>10$, weFIXME can conservatively limit the maximal contributions of the terms of
-order $1/a^4$ or higher in \refeqn{tplusminus} to be at most $10/a^4$. With that, weFIXME can
-use $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral
-value, while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper
-bound of the error on the estimate. In other words, for $a>\max(10,x)$ weFIXME get:
+Here $k{\equiv}x/a$ and the requirement on $a$ has been tightened to
+$a>\max(x,2)$, in order to ensure $k<1$. Varying both $k$ and $\sin\theta$ over
+values in the unit interval and evaluating Taylor coefficients for terms up to
+$1/a^{20}$ numerically, it is seen that the maximal absolute numerical value of
+coefficients is always within a factor of $2.50$ when compared to the previous
+order. Thus, by further restriction to $a>10$, it is possible to conservatively
+limit the maximal contributions of the terms of order $1/a^4$ or higher in
+\refeqn{tplusminus} to be at most $10/a^4$. With that, one can then use
+$(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral value,
+while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper bound
+of the error on the estimate. In other words, for $a>\max(10,x)$:
 \begin{align}
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
 \frac{1}{a}  - \frac{k}{2a^2 }
@@ -940,13 +884,17 @@ bound of the error on the estimate. In other words, for $a>\max(10,x)$ weFIXME g
 Where the term in the final parenthesis represents an upper bound on the
 error. Due to the leading factor of $1/a^2$ in the error term, there is not much
 value in keeping the higher order terms of
-\refeqn{tailintegralpenultimate}. Thus, by using $k=x/a$ and $a>10$ and a slight
-additional pessimisation of the error bound, weFIXME can arrive at the relatively
-simple formula for the estimation of the tail of the integral given in
-\refeqn{tailintegralP}.:
+\refeqn{tailintegralpenultimate}. Thus, by a slight additional pessimisation of
+the error bound, one arrives at the relatively simple formula for the estimation
+of the tail of the integral given in \refeqn{tailintegralP}.
 
 \section{Reference values}\labappendix{yreftables}
-FIXME BLA BLA \reftabrange{yrefvals:P:first}{yrefvals:F:last}.
+For reference, select values of $y_M(x,\theta)$ based on the work described in
+\refsec{refeval} are provided in
+\reftabrange{yrefvals:P:first}{yrefvals:F:last}.  If more reference values are
+needed, the $10^{-6}$ precision of the luxury recipe of \refsec{newrecipes}
+should hopefully be adequate for most work. Additionally, a larger set of
+reference values are provided in \texttt{JSON} format in \cite{bc2025materials}.
 
 \begin{table}[tp]
 \caption{Select reference values of $y_P(x,\theta)$. For compactness, values are
@@ -992,15 +940,16 @@ FIXME BLA BLA \reftabrange{yrefvals:P:first}{yrefvals:F:last}.
 \labtab{yrefvals:F:last}
 \end{table}
 
-\section{The recipes}\labappendix{recipes}.
+\section{The recipes}\labappendix{recipes}
 In \refalgrange{yfct_scndgauss}{yfct_scndfresnel} are shown the
-``standard'' precision recipes for calculating $y_G(x,\theta)$, $y_L(x,\theta)$,
+standard precision recipes for calculating $y_G(x,\theta)$, $y_L(x,\theta)$,
 and $y_F(x,\theta)$, while the recipe for calculating $y_P(x,\theta)$ was
 already shown in \refalg{yfct_primary}. Additionally, intended for
 high-precision reference work,
-\refalgrange{yfct_primary_lux}{yfct_scndfresnel_lux} show the ``luxury''
+\refalgrange{yfct_primary_lux}{yfct_scndfresnel_lux} show the luxury
 recipes for calculating the same four functions, but at an increased level of
-precision. FIXMEREF to c/c++/py code?
+precision. Note that reference implementations of all the recipes are available
+for \texttt{C}, \texttt{C++}, and \texttt{Python} at \cite{bc2025materials}.
 \input{generated/recipe_scndgauss.tex}
 \input{generated/recipe_scndlorentz.tex}
 \input{generated/recipe_scndfresnel.tex}
@@ -1010,19 +959,19 @@ precision. FIXMEREF to c/c++/py code?
 \input{generated/recipe_scndfresnel_lux.tex}
 
 \begin{acknowledgements}
-The contributions of non-authors etc. should be given here. (DMSC cluster?
-although not used much).
+  The authors gratefully acknowledge the use of the ESS DMSC computing cluster
+  for the numerical evaluations discussed in \refsec{refeval}.
 \end{acknowledgements}
 
 \begin{funding}
-List funding organizations, recipients, grant numbers, etc.
+  This work was supported by the European Spallation Source ERIC.
 \end{funding}
 
-\ConflictsOfInterest{Please declare any conflicts of interest, or declare  that there are no conflicts of interest.
-}
+\ConflictsOfInterest{The authors declare that there are no conflicts of interest
+  related to this publication.}
 
-\DataAvailability{Please state how the data supporting the results reported in your article can be accessed, e.g. within the article, as published supporting material, in repositories, upon request...
-}
+\DataAvailability{All data, analysis code, and reference implementation of
+  recipes of the present work are available at \cite{bc2025materials}.}
 
 \bibliography{iucr} % basename of .bib file
 
