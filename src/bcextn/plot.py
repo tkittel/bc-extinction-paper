@@ -396,7 +396,7 @@ def do_cmprecipes( *,
                       **common,
                       color=color,
                       #ls = '-.',
-                      label = lbltrf('BC1974',split_th) )
+                      label = lbltrf('BC1974 recipe',split_th) )
         #color='green'
         color = 'red'#th2color(th*0.3,'Greens')
         if do_vs_old and th > split_th:
