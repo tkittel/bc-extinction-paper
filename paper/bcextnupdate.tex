@@ -442,8 +442,9 @@ quadrature algorithm must be applied. Secondly, the increased complexity of the
 integrand means that unlike the case of $M=L$, it was not possible to find a
 direct Taylor series approximation for the tail integral from
 $[a,\infty]$. However, as is shown in \refappendix{yptailintegration}, by
-bounding $f_P(\eta)$ by simpler functions, it was possible to find a somewhat
-looser but still useful bound on the tail contribution in this case as well:
+bounding $f_P(\eta)$ by simpler non-oscillatory functions, it was possible to
+find a somewhat looser but still useful bound on the tail contribution in this
+case as well:
 \begin{align}
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)\deta \approx
 \frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
@@ -452,19 +453,19 @@ looser but still useful bound on the tail contribution in this case as well:
 Here the indicated error is a conservative upper bound on the error, and
 unfortunately the slower convergence of just $\order(1/a^2)$ implies that actual
 numerical quadrature is required over $[0,a]$ for rather significant values of
-$a$ -- but fortunately not impossible on modern hardware.
+$a$, but fortunately not impossible on modern hardware.
 
-Finally, $M=L$ poses a somewhat different challenge, due to the fact that it was
-not possible to find a sufficiently simple functions bounding $f_L(\eta)$ tight
-enough to provide a useful estimate of the contribution of the tail of the
-integral. Since the integrand additionally decays only as $1/\eta^2$ and suffers
-from the same oscillations as $f_P(\eta)$, it is impractical to simply integrate
-over $[0,a]$ for a sufficiently large $a$. Thus, a different approach was used
-in this case, instead defining the $n$th contribution as the integral over the
-interval $[(4\pi/3)n,(4\pi/3)(n+1)]$, find the contributions up to at least
-$n=1000$ and then use Richardson's extrapolation \cite{richardson1911ix} via
-\texttt{mpmath}'s \texttt{nsum} function to include the contributions up
-to $n=\infty$.
+Finally, the case of $M=F$ poses a somewhat different challenge, due to the fact
+that it was not possible to find sufficiently simple functions bounding
+$f_F(\eta)$ tight enough to provide a useful estimate of the contribution of the
+tail of the integral. Since the integrand additionally decays only as $1/\eta^2$
+and suffers from the same oscillations as $f_P(\eta)$, it is impractical to
+simply integrate over $[0,a]$ for a sufficiently large $a$. Thus, a different
+approach was used in this case, instead defining the $n$th contribution as the
+integral over the interval $[(4\pi/3)n,(4\pi/3)(n+1)]$, finding the
+contributions up to at least $n=1000$ and then use Richardson's extrapolation
+\cite{richardson1911ix} via \texttt{mpmath}'s \texttt{nsum} function to include
+the contributions up to $n=\infty$.
 
 The resulting curves of $y_M(x,\theta)$ reference values are shown in
 \reffig{yrefeval}, and for future reference \refappendix{yreftables} contains a
@@ -542,8 +543,8 @@ $t_P=66/35\approx1.89$. Thus, the $t_P$ values in \refeqn{yfitfctlowxconstants}
 are incorrect, and it is easy to see that this gives a limiting (im)precision at
 small $x$-values of $2/33\approx6.1\%$ (cf.~\refeqn{yprecisiondef}).  For the
 case $M=L$, there is additionally a small but noteworthy issue of an
-in-continuity at $\cos(2\theta)=0$ in \refeqn{yfitfct:BL}: the coefficients at
-first glance looks like they were chosen to avoid this, since
+incontinuity at $\cos(2\theta)=0$ in \refeqn{yfitfct:BL}. The coefficients at
+first glance looks like they were deliberately chosen to avoid this, since
 $0.15-2\cdot0.75=0$, but the factor of $0.75$ actually enters in quadrature.
 
 For a more complete view of the applicability of the BC1974 recipes,
@@ -570,10 +571,10 @@ range of training data, but it seems reasonable to assume that it was a result
 of most relevant experimental data analysis happening at lower angles of
 $\theta$ in combination with the limited computing resources available at the
 time. The other reason for the limitations of the recipes is, as already
-mentioned (FIXME: doublecheck), the inaccurate evaluation of \refeqn{yintegral}
-to provide reference values of $y_M$. For all models except $M=F$, these
-reference values were actually included as tables 1, 3, and 4 in the original
-work allowing a direct gauging of their accuracy. These accuracies are shown in
+mentioned, the inaccurate evaluation of \refeqn{yintegral} to provide reference
+values of $y_M$. For all models except $M=F$, these reference values were
+actually included as tables 1, 3, and 4 in the original work allowing a direct
+gauging of their accuracy. These accuracies are shown in
 \reftabrange{origtable1precision}{origtable4precision},\footnote{The original
 tables were digitised using the \texttt{Tesseract} OCR engine and manually
 verified. Any odd entries, such as for $(x,\sin\theta)$=$(4,0.2)$ in
@@ -582,7 +583,7 @@ verified. Any odd entries, such as for $(x,\sin\theta)$=$(4,0.2)$ in
 of transcription errors in the tables of the original work.  (FIXME: verify once
 again? at least any suspicious values).} and clearly there are significant
 systematic deviations in particular at higher values of $x$, to some degree
-consistent with what is seen in \reffig{prec2dplot}t
+consistent with what is seen in \reffig{prec2dplot}.
 
 \begin{table}[tp]
 \caption{Precision of the $y_P$ reference values in Table 1 of
@@ -650,33 +651,34 @@ consistent with what is seen in \reffig{prec2dplot}t
     \caption{Precision as per \refeqn{yprecisiondef} of the $y_M(x,\theta)$
       values provided by the recipes in
       \refeqnrange{yfitfctorig}{yfitfct:BF:last} when compared with the high
-      precision luxury recipes to be presented in \refsec{newrecipes}.
-      Boxes with white and black dashes indicate the limited range of the
-      reference values used to tune the recipes in the original work.}
-    \labfig{prec2dplot}
+      precision ``luxury'' recipes of the present work to be presented in
+      \refsec{newrecipes}.  Boxes with white and black dashes indicate the
+      limited range of the reference values used to tune the recipes in the
+      original work.}  \labfig{prec2dplot}
 \end{figure}
 
 \section{Developing improved recipes}\labsec{newrecipes}
 With the availability of reliable high-precision reference datasets of
-$y_M(x,\theta)$ values discussed in \refsec{refeval}, the goal is now to provide
-a set of improved recipes tuned to this data -- in order to replace the original
-ones by Becker-Coppens discussed in \refsec{origrecipes}. For the benefit of
-future reference work, two version of the recipes will be provided: ``standard''
-versions, providing $y$ estimates with errors guaranteed to be less than
+$y_M(x,\theta)$ values from the work discussed in \refsec{refeval}, the next
+step is then to provide a set of improved recipes tuned to this data -- in order
+to replace the original ones by Becker-Coppens discussed in
+\refsec{origrecipes}. For the benefit of future reference work, two version of
+the recipes will be provided: ``standard'' versions, providing $y$ estimates
+with errors guaranteed to be less than
 $10^{-3}\cdot\min(y_\text{ref},1-y_\text{ref})$ for all $x\le1000$ and
 ``luxury'' versions where the error guarantee is tightened to be less than
 $10^{-6}\cdot\min(y_\text{ref},1-y_\text{ref})$. For $x>1000$, no strict error
 guarantee is given, but the recipes should still be reasonable and well behaved.
 
 In order to develop these recipes, a crucial observation is that one does not
-strictly need to parameterise $y_M(x,\theta)$ as a two-dimensional function as
+strictly need to parameterise $y_M(x,\theta)$ as a two-dimensional function like
 was done in the original work. This is because it follows from
 \reftwoeqns{yintegral}{phi} and the usual rules of integration that:
 \begin{align}
   y_M(\theta,x) = y^0_M(x) + {\sin^{3/2}\theta}\,y^\Delta_M(x\sqrt{\sin\theta})
   \labeqn{yintegralbyy0ydelta}
 \end{align}
-relying on the following definitions:
+with the following definitions:
 \begin{align}
 y^0_M(x)&\equiv y_M(x,0)\\
 y^\pi_M(x)&\equiv y_M(x,\pi/2)\\
@@ -688,10 +690,10 @@ one-dimensional functions $y^0_M(x)$ and $y^\Delta_M(x)$, and then implement the
 $\theta$ dependency via \refeqn{yintegralbyy0ydelta}. In this respect it is
 interesting to note that in most envisioned use-cases, it is $\sin\theta$ rather
 than $\theta$ which is more cheaply calculated, due to its appearance in the
-Bragg condition. This therefore fits nicely with \refeqn{yintegralbyy0ydelta},
-where only a single additional square root must be evaluated rather than a more
-expensive trigonometric function. Thus, our recipes will in practice be taking
-$\sin\theta$ rather than $\theta$ as argument.
+formula for the Bragg condition. This therefore fits nicely with
+\refeqn{yintegralbyy0ydelta}, where only a single additional square root must be
+evaluated rather than a more expensive trigonometric function. Thus, our recipes
+will in practice be taking $\sin\theta$ rather than $\theta$ as argument.
 
 In terms of the $x$-dependency of $y^0_M(x)$ and $y^\Delta_M(x)$, three
 different regimes shall be considered. Firstly, the regime at very low
@@ -755,22 +757,22 @@ combined with the polynomials from the legendre fits into a single set of
 coefficients.
 
 The fits for $y^\Delta_M(x)$ curves are also performed after a transformation of
-$x$ values according to \refeqn{yprimetrf}, but do not, however, require a
+$x$ values according to \refeqn{xprimetrf}, but do not, however, require a
 transformation of $y$ values akin to \refeqn{yprimetrf}. Otherwise the procedure
-is similar to the $y^\Delta_M(x)$ case.
+is similar to the $y^0_M(x)$ case.
 
 That leaves only the choice of order of Legendre polynomial fit to perform, as
 well as the number of digits of the coefficients to include in the final
-recipes. In summary, these values were carefully investigated and chosen
+recipes. In short, these choices were carefully investigated and chosen
 independently for each particular $y^0_M(x)$ or $y^\Delta_M(x)$ curve, in order
 to live up to the provided error guarantees of the particular recipe, while
 naturally keeping the recipe as simple as possible. Putting it all together, the
-recipe for $y_P(x,\theta)$ is shown in \refalg{yfct_primary}. All other
-recipes follow the same general form, with the main difference being the
-specific coefficients used, and for reference the other 7 algorithms are
-included in \refappendix{recipes}. Additionally, to further adoption,
-\texttt{C}, \texttt{C++}, and \texttt{Python} code implementing the recipes as
-standalone functions are also made available at \cite{bc2025materials}.
+recipe for $y_P(x,\theta)$ is shown in \refalg{yfct_primary}. All other recipes
+follow the same general form, with the main difference being the specific
+coefficients used, and for reference the other 7 algorithms are included in
+\refappendix{recipes}. Additionally, to ease adoption, \texttt{C}, \texttt{C++},
+and \texttt{Python} code implementing the recipes as standalone functions are
+also made available at \cite{bc2025materials}.
 \input{generated/recipe_primary.tex}
 
 \section{Conclusions}
@@ -778,7 +780,7 @@ The final precision of both the new standard and luxury recipes from the
 present work, as well as the original recipes due to Becker-Coppens, are shown
 in \reffig{cmprecipes}. It is clearly seen that while the older recipes are
 mostly useful in a more limited range of intermediate $x$ values, the new
-recipes provide the guaranteed error bounds of respectively $10^{-3}$ and
+recipes live up to the guaranteed error bounds of respectively $10^{-3}$ and
 $10^{-6}$. For low $x$ values, the precision is actually even better, which is
 not surprising given the usage of Taylor series approximations here.
 \begin{figure}[tp]
@@ -814,22 +816,22 @@ not surprising given the usage of Taylor series approximations here.
       lines.}  \labfig{cmprecipes}
 \end{figure}
 
-Although a precise description of extinction phenomenons are vastly complicated
-and by no means will be a solved subject due to the present work, it is
-nonetheless the hope of the authors that analysis and modelling codes will adopt
-these new recipes when applying the Becker-Coppens models, so the research and
-discussions going forward can focus on the physics rather than the flawed
-numerical evaluations plaguing the original work, which was otherwise extremely
-detailed and impressive in the subjective opinion of the authors. In the near
-future, these updated recipes will be adopted into \texttt{NCrystal}, and it is
-the hope and recommendation of the authors that other refinement or modelling
-codes supporting Becker-Coppens extinction will also be able to benefit from the
-provided updated recipes.
+The precise modelling of extinction phenomena in general is an inherently
+complex matter, and will by no means be a solved subject as a result of the
+present work. But it is nonetheless the hope of the authors that analysis and
+modelling codes will adopt these new recipes when applying the Becker-Coppens
+models. That way, the research and discussions going forward can focus on the
+physics rather than the flawed numerical evaluations plaguing the original work,
+which was otherwise extremely detailed and impressive in the subjective opinion
+of the authors. In the near future, these updated recipes will be adopted into
+\texttt{NCrystal}, and it is the hope and recommendation of the authors that
+other refinement or modelling codes supporting Becker-Coppens extinction will
+also be able to benefit from the provided updated recipes.
 
 \appendix % if required
 
 \section{Tail integration for the primary extinction model}\labappendix{yptailintegration}
-For $M=P$ and $f_P(\eta)$ given by \refeqn{fofeta:P:first}, it is desired to
+For $M=P$ and $f_P(\eta)$ given by \refeqn{fofeta:P:first}, it is possible to
 provide an estimate of the tail of the integral in \refeqn{yintegral}, i.e.\ the
 integral over $[a,\infty]$ for some finite and positive $a$. This is achieved by
 bounding $f_P(\eta)$ by simpler functions:
@@ -838,8 +840,8 @@ bounding $f_P(\eta)$ by simpler functions:
   \quad\text{and}\quad
   f_P(\eta) \ge {f}_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}
 \end{align}
-The function $f^-(\eta)$ is only strictly positive when $\eta>1$, but for
-simplicity it can be required that $a>2$.  Since $\varphi(\theta,s)$ and
+The function $f^-(\eta)$ is only strictly positive when $\eta>1$, but it is
+trivial to impose the restriction $a>2$.  Since $\varphi(\theta,s)$ and
 $f_P(\eta)$ decrease monotonically for increasing $s$ and $\eta$ respectively,
 for positive arguments, it follows that:
 \begin{align}
@@ -859,17 +861,18 @@ analytically and expressed as a Taylor expansion in inverse powers of $a$:
   +\mathcal{O}\left(\frac{1}{a^4}\right)
   \labeqn{tplusminus}
 \end{align}
-Here $k{\equiv}x/a$ and the requirement on $a$ has been tightened to
+Here $k{\equiv}x/a$ and the requirement on $a$ is therefore tightened again to
 $a>\max(x,2)$, in order to ensure $k<1$. Varying both $k$ and $\sin\theta$ over
 values in the unit interval and evaluating Taylor coefficients for terms up to
 $1/a^{20}$ numerically, it is seen that the maximal absolute numerical value of
-coefficients is always within a factor of $2.50$ when compared to the previous
-order. Thus, by further restriction to $a>10$, it is possible to conservatively
-limit the maximal contributions of the terms of order $1/a^4$ or higher in
-\refeqn{tplusminus} to be at most $10/a^4$. With that, one can then use
-$(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral value,
-while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper bound
-of the error on the estimate. In other words, for $a>\max(10,x)$:
+coefficients is always within a factor of $2.50$ when compared to the
+coefficient of the previous order. Thus, by further restriction to $a>10$, it is
+possible to conservatively limit the maximal contributions of the terms of order
+$1/a^4$ or higher in \refeqn{tplusminus} to be at most $10/a^4$. With that, one
+can then use $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail
+integral value, while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a
+conservative upper bound of the error on the estimate. In other words, for
+$a>\max(10,x)$:
 \begin{align}
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)\deta \approx
 \frac{1}{a}  - \frac{k}{2a^2 }
@@ -880,8 +883,7 @@ of the error on the estimate. In other words, for $a>\max(10,x)$:
 \end{align}
 Where the term in the final parenthesis represents an upper bound on the
 error. Due to the leading factor of $1/a^2$ in the error term, there is not much
-value in keeping the higher order terms of
-\refeqn{tailintegralpenultimate}. Thus, by a slight additional pessimisation of
+value in keeping the higher order terms. Thus, by a slight additional pessimisation of
 the error bound, one arrives at the relatively simple formula for the estimation
 of the tail of the integral given in \refeqn{tailintegralP}.
 
