@@ -371,19 +371,19 @@ Gauss-Legendre quadrature, and is performed over a large number of sub-intervals
 of $\eta$ values in order to ensure the highest precision of results. This
 approach works well for reasonable $x$ values, say $0.001<x<1000$, with the
 exact limits depending on the model $M$. For practical reasons, we shall limit
-$x{\le}1000$, and simply provide a reasonable extrapolation to higher $x$ values
+$x\le1000$, and simply provide a reasonable extrapolation to higher $x$ values
 in the recipes developed in \refsec{newrecipes}. This is considered adequate
 since $x>1000$ is associated with such hefty levels of extinction that almost no
 scattering cross section remains anyway. Also note in this regard that the
 original Becker-Coppens recipes only provided numerical reference values for
-$0.1{\le}x\le30$. For low $x$ values it is fortunately the case that it has been
+$0.1\le{x}\le30$. For low $x$ values it is fortunately the case that it has been
 possible to find Taylor series approximations to the exact result near $x=0$
 using \texttt{SageMath}. This not only provides computationally inexpensive
 high-precision results near $x=0$, but also serves as a valuable verification of
 the numerical quadrature results in the overlapping region where both methods
 can be used. For $M=P$, $G$, $L$, and $F$ respectively, 30, 60, 60, and 20
 orders are used in the Taylor expansions. The sum of the absolute value of the
-last 3 terms in the expansions are used as a very conservative estimate on the
+last three terms in the expansions are used as a very conservative estimate on the
 error of these results. For reference, the first five orders of the Taylor
 expansions are shown here:
 \begin{align}
@@ -427,7 +427,7 @@ with \texttt{SageMath}:
 \labeqn{tailintegralL}
 \end{align}
 Here $k=x/a$ was introduced, and it was required that $a>\max(x,1)$, implying
-$0{\le}k<1$. For brevity, only the first few terms are shown in
+$0\le{k}<1$. For brevity, only the first few terms are shown in
 \refeqn{tailintegralL}, but in the actual implementation, terms up to $1/a^{20}$
 are included. Again, the error bound is conservatively estimated as the sum of
 the absolute values of the last three terms (of order $1/a^{18}$, $1/a^{19}$,
@@ -442,7 +442,7 @@ quadrature algorithm must be applied. Secondly, the increased complexity of the
 integrand means that unlike the case of $M=L$, it was not possible to find a
 direct Taylor series approximation for the tail integral from
 $[a,\infty]$. However, as is shown in \refappendix{yptailintegration}, by
-bounding $f_P(\eta)$ by by simpler functions, it was possible to find a somewhat
+bounding $f_P(\eta)$ by simpler functions, it was possible to find a somewhat
 looser but still useful bound on the tail contribution in this case as well:
 \begin{align}
 \int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)\deta \approx
@@ -522,7 +522,7 @@ $A_M(\theta)$ and $B_M(\theta)$:
   A_L(\theta) &= 0.025+0.285\cos(2\theta)\\
   B_L(\theta) &=
   \begin{cases}
-    0.15-0.2\cdot(0.75-\cos(2\theta))^2\quad&\text{when }\cos(2\theta) {\ge} 0\\
+    0.15-0.2\cdot(0.75-\cos(2\theta))^2\quad&\text{when }\cos(2\theta) \ge 0\\
     -0.45\cos(2\theta)\quad&\text{when }\cos(2\theta) {<} 0
   \end{cases}\labeqn{yfitfct:BL}\\
   A_F(\theta) &= 0.48 + 0.6\cos(2\theta)\\
@@ -663,7 +663,7 @@ a set of improved recipes tuned to this data -- in order to replace the original
 ones by Becker-Coppens discussed in \refsec{origrecipes}. For the benefit of
 future reference work, two version of the recipes will be provided: ``standard''
 versions, providing $y$ estimates with errors guaranteed to be less than
-$10^{-3}\cdot\min(y_\text{ref},1-y_\text{ref})$ for all $x{\le}1000$ and
+$10^{-3}\cdot\min(y_\text{ref},1-y_\text{ref})$ for all $x\le1000$ and
 ``luxury'' versions where the error guarantee is tightened to be less than
 $10^{-6}\cdot\min(y_\text{ref},1-y_\text{ref})$. For $x>1000$, no strict error
 guarantee is given, but the recipes should still be reasonable and well behaved.
@@ -836,7 +836,7 @@ bounding $f_P(\eta)$ by simpler functions:
 \begin{align}
   f_P(\eta) \le f_P^+(\eta) \equiv \frac{\eta^2+\eta+1}{\eta^4}
   \quad\text{and}\quad
-  f_P(\eta) \ge f_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}
+  f_P(\eta) \ge {f}_P^-(\eta) \equiv \frac{\eta^2-\eta}{\eta^4}
 \end{align}
 The function $f^-(\eta)$ is only strictly positive when $\eta>1$, but for
 simplicity it can be required that $a>2$.  Since $\varphi(\theta,s)$ and
