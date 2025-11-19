@@ -27,8 +27,6 @@
 \usepackage{caption}
 \usepackage[section]{placeins}
 
-\newcommand{\todo}[1]{{\tiny [todo: #1]}}
-
 \DeclareMathOperator{\sinc}{sinc}
 \newcommand{\deta}{{\mathrm{d}\eta}}
 \newcommand{\order}{\mathcal{O}}
@@ -99,8 +97,8 @@
 
 \begin{synopsis}
 A technical update of the Becker-Coppens (1974) recipe for estimating extinction
-factors in spherical crystallites is provided, addressing limitations in
-scenarios with higher Bragg angles or stronger extinction effects, as well as
+factors in spherical crystallites or grains is provided, addressing limitations
+in scenarios with higher Bragg angles or stronger extinction effects, as well as
 providing improved precision in general. The work utilises modern computing
 capabilities and improved recipes are provided for easy community adoption.
 \end{synopsis}
@@ -108,12 +106,12 @@ capabilities and improved recipes are provided for easy community adoption.
 \begin{abstract}
 A technical correction and update of the widely used recipes by Becker-Coppens
 (1974), for the estimation of primary and secondary extinction factors in
-perfect spherical domains or particles, is presented. In the original work,
+perfect spherical crystallites or grains, is presented. In the original work,
 these extinction factors were evaluated numerically from a complicated integral,
 and simplified analytical approximations to these evaluations constituted the
 provided recipes. However, these original recipes are plagued by issues of
 numerical precision in general, and even suffer from complete numerical
-break-down in case of strong primary extinction effects, especially in backwards
+break-down in case of strong extinction effects, especially in backwards
 scattering. Using modern computing capabilities, the numerical evaluations of
 the integrals are revisited, and improved recipes are provided with consistent
 precision guarantees for all Bragg angles and levels of extinction. The new
@@ -130,26 +128,19 @@ reference implementations are provided for \texttt{C}, \texttt{C++}, and
 \keywords{Extinction; Bragg diffraction; Neutron scattering; X-ray diffraction; }
 
 \section{The Becker-Coppens recipes for extinction}
-Extinction in the context of diffraction refers to the phenomenon where the
-intensity of a diffracted flux of particles is reduced or diminished due to
-interference effects. The exact nature of these interference effects might be
-complicated, and can in particular for {{\em} primary} extinction include higher
-order interference between the incoming and scattered waves. For the case of
-{{\em} secondary} extinction effects, the relevant interference can in general
-be approximated at the particle transport level as an effect of the particle
-undergoing multiple Bragg scattering's on the same reflection plane. Each
-scattering event will alternate the neutron's path between the diffracted
-and undiffracted directions, with the net effect being that the diffracted flux
-is diminished compared to what one would expect if multiple scatterings
-were not possible. The extinction factor, $y$, is defined as the ratio
-between the diffracted flux predicted by the kinematical model ($I_\text{kin}$)
-with no multiple scattering or other dynamic effects, and the diffracted flux
-which is actually observed once these effects are accounted for
-($I_\text{obs}$):
+
+Extinction in diffraction refers to the phenomenon where the intensity of a
+diffracted flux is effectively reduced due to various effects like multiple
+scatterings or wave interference between incoming and scattered waves. More
+specifically, the magnitude of this effect is characterized by the extinction
+factor, $y$, which is defined as the ratio between the diffracted flux predicted
+by the kinematical model ($I_\text{kin}$) with no multiple scattering or other
+dynamic effects, and the diffracted flux which is actually observed once these
+effects are accounted for ($I_\text{obs}$):
 \begin{align}
 y \equiv \frac{I_\text{obs}}{I_\text{kin}}
 \end{align}
-The extinction factor $y$, is a real number in the unit interval which in
+The extinction factor $y$ is a real number in the unit interval, which in
 general will depend on both the state of the particle undergoing diffraction as
 well as of the details of the material in which the process takes place.  In all
 cases, $y$ is expressed as a function of both the Bragg angle $\theta$ as well
@@ -158,23 +149,28 @@ effect. The exact definition of $x$ depends to some degree on the specific
 model, but in general it will be proportional to $|Fa\lambda/V|^2$ where $F$ is
 the crystalline structure factor of the reflection in question, $V$ the volume
 of the crystal unit cell, $\lambda$ the wavelength of the particle being
-scattered, and $a$ some relevant length scale representing the path length of
+scattered, and $a$ some relevant length scale connected to the path length of
 the probe through the coherent domains, crystallites, or grains in which the
 diffraction is taking place. In the case where the extinction is governed by a
 mosaic distribution, the definition of $x$ will usually also depend on
 parameters of this mosaic distribution, such as in particular its width.
 
-Several models for $y$ has been proposed over the years, with early work by
-Zachariasen \citeyear{zachariasen1967} improved upon by other authors like
+Several models for $y$ has been proposed over the years. Early work by
+Zachariasen \citeyear{zachariasen1967} was improved upon by other authors like
 Cooper-Rouse \citeyear{cooper1970extinction}, Becker-Coppens \citeyear{BC1974},
-and Sabine \citeyear{sabine2006flow}. Of these, the Becker-Coppens model is
-arguably the more highly referenced and utilised work\todo{Shuqi: and the model
-  was confirmed in the authors’ prior work on extinction effects in
-  CITE}, so it was naturally considered by the authors
-when working on implementing extinction models in \texttt{NCrystal}
-\cite{ncrystalmain,ncrystalelastic} in order to facilitate the modelling and
+and Sabine \citeyear{sabine2006flow}. These models have been primarily developed
+under the context of x-ray and neutron diffraction measurements. More recently,
+however, advancements in neutron transmission applications, particularly for
+Bragg-edge imaging and nuclear data evaluation, have renewed interest in
+extinction
+effects~\cite{sato2011,dessieux2018single2poly,dijulio2020berylrefl,Xu2025extnbetransm}.
+Given this renewed intereset and advances in modern computing capalities,
+revisiting these models is warrented. As the Becker-Coppens model is arguably
+the more highly referenced and utilised work, it was naturally considered by the
+authors when working on implementing extinction models in \texttt{NCrystal}
+\cite{ncrystalmain,ncrystalelastic}, in order to facilitate the modelling and
 analysis of Bragg edge transmission and diffraction data. Unfortunately, in case
-of stronger extinction effects, the model appears to suffer from an obvious
+of stronger extinction effects, this model appears to suffer from an obvious
 breakdown at large Bragg angles, as can be seen in
 \reffig{ypbreakdownorigrecipe}.
 \begin{figure}[tp] %
@@ -189,9 +185,9 @@ breakdown at large Bragg angles, as can be seen in
 \end{figure}
 
 As will be shown in the present work, this breakdown does not constitute a
-fundamental problem with the Becker-Coppens model, but is merely a result of
-flawed numerical evaluations entering into the recipes (algorithms) provided in
-that work. It is the aim of the present work to provide updated recipes which
+fundamental problem with the Becker-Coppens model, but is merely a result
+of flawed numerical evaluations entering into the recipes (algorithms) provided
+in that work. It is the aim of the present work to provide updated recipes which
 does not change the underlying theory or assumptions going into the
 Becker-Coppens model, but merely ensures a consistent and precise numerical
 evaluation of it. These new recipes for evaluation of $y$ will be referred to as
@@ -208,7 +204,7 @@ In the work by Becker-Coppens \cite{BC1974}, four specific models and recipes
 are provided for the determination of $y$: one for primary extinction, and three
 for secondary extinction, where the three latter models only differ in the
 choice of distribution used to describe the mosaic spread of coherent domains
-within the crystalline materials: Gaussian, Lorentzian, or Fresnellian.
+within the grains: Gaussian, Lorentzian, or Fresnellian.
 
 \subsection{Mathematical formulation of the models}
 Readers are referred to the original work \cite{BC1974} for the detailed
@@ -246,8 +242,8 @@ second to the third term.}
   \labeqn{phizeroandphipi}
 \end{align}
 All the $\varphi$--functions are, as illustrated in \reffig{phiofs},
-monotonically decreasing functions of $s$ for $s\ge0$, attaining values $1$ at
-$s=0$ and $0$ at $s=\infty$.
+monotonically decreasing functions of $s$ for $s\ge0$, attaining a value of $1$
+at $s=0$ and a limiting value of $0$ as $s\to\infty$.
 \begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated/phi_of_s.pdf}
@@ -266,7 +262,7 @@ of coherent crystalline domains within larger grains, while for primary
 extinction it is due to the intrinsic response of a crystalline domain which
 contains a perfect and unbroken crystal structure, but is of finite
 size. Additionally, the exact final form of the $f_M(\eta)$ functions is based
-on the assumption of spherical geometries for the crystallites or particles. The
+on the assumption of spherical geometries for the crystallites or grains. The
 exact form of these functions, plotted in \reffig{fofeta}, is as follows:
 \begin{figure}[tp] %
 \begin{center}
@@ -285,16 +281,16 @@ exact form of these functions, plotted in \reffig{fofeta}, is as follows:
 \end{subequations}
 
 The task of providing updated recipes for the evaluation of \refeqn{yintegral}
-is twofold. Firstly, a reference dataset must be created by
+is twofold. Firstly, a reference dataset must be created by numerically
 evaluating the integral to high precision on a sufficiently large number of
-$(x,\theta)$ points. This is the subject of \refsec{refeval}.
-Secondly, a recipe must be found and tuned on this dataset in order to
-reproduce its values with sufficient precision. As such recipes would
-ultimately be used in data modelling or analysis, it should be possible to
-implement them in software with a reasonably low cost of
-evaluation. Fortunately, computing hardware has evolved tremendously since the
-original recipes by Becker-Coppens were developed, and some additional degree of
-complexity in the updated recipes is therefore allowed.
+$(x,\theta)$ points. This is the subject of \refsec{refeval}.  Secondly, a
+recipe must be found and tuned on this dataset in order to reproduce its values
+with sufficient precision. As such recipes would ultimately be used in data
+modelling or analysis, it should be possible to implement them in software with
+a reasonably low cost of evaluation. Fortunately, computing hardware has evolved
+tremendously since the original recipes by Becker-Coppens were developed, and
+some additional degree of complexity in the updated recipes is therefore
+allowed.
 
 One important issues in all of this is the definition of precision of a given
 estimate of $y$, compared with a reference value $y_\text{ref}$. The naive
@@ -310,7 +306,7 @@ stringent definition of precision will thus be used throughout this work:
   \labeqn{yprecisiondef}
 \end{align}
 Naturally, for this definition to be useful in practice, this requires
-$y_\text{ref}$ to itself be available in a precision significantly higher than
+$y_\text{ref}$ itself to be available in a precision significantly higher than
 the precision on $y$.
 
 \section{Evaluating the integrals}\labsec{refeval}
@@ -415,7 +411,7 @@ expansions are shown here:
 
 The next issue is that it is obviously not practically possible to perform the
 numerical quadrature over $\eta$ all the way to infinity. For $M=G$ the
-contributions decreases so strongly with $\eta$, that there is never any
+contributions decrease so strongly with $\eta$, that there is never any
 significant contribution to the integral for $\eta>1000$, and accordingly
 numerical quadrature to this value is always sufficient to ensure the desired
 precision on $y$ values. For $M=L$, the integrand is sufficiently simple that it
