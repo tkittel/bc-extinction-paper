@@ -27,7 +27,10 @@
 \usepackage{caption}
 \usepackage[section]{placeins}
 
+\newcommand{\todo}[1]{{\tiny [todo: #1]}}
+
 \DeclareMathOperator{\sinc}{sinc}
+\newcommand{\deta}{{\mathrm{d}\eta}}
 \newcommand{\order}{\mathcal{O}}
 \newcommand{\labsec}[1]{\label{sec:#1}}
 \newcommand{\refsecnumonly}[1]{\ref{sec:#1}}
@@ -135,10 +138,10 @@ order interference between the incoming and scattered waves. For the case of
 {{\em} secondary} extinction effects, the relevant interference can in general
 be approximated at the particle transport level as an effect of the particle
 undergoing multiple Bragg scattering's on the same reflection plane. Each
-scattering event will alternate the neutron's orientation between the diffracted
+scattering event will alternate the neutron's path between the diffracted
 and undiffracted directions, with the net effect being that the diffracted flux
 is diminished compared to what one would expect if multiple scatterings
-were not possible. The extinction factor, $y$, is defined as the difference
+were not possible. The extinction factor, $y$, is defined as the ratio
 between the diffracted flux predicted by the kinematical model ($I_\text{kin}$)
 with no multiple scattering or other dynamic effects, and the diffracted flux
 which is actually observed once these effects are accounted for
@@ -162,11 +165,13 @@ mosaic distribution, the definition of $x$ will usually also depend on
 parameters of this mosaic distribution, such as in particular its width.
 
 Several models for $y$ has been proposed over the years, with early work by
-Zachariasen \cite{zachariasen1967} improved upon by other authors like
-Cooper-Rouse \cite{cooper1970extinction}, Becker-Coppens \cite{BC1974}, and
-Sabine \cite{sabine2006flow}. Of these, the Becker-Coppens model is arguably the
-more highly referenced and utilised work, so it was naturally considered by the
-authors when working on implementing extinction models in \texttt{NCrystal}
+Zachariasen \citeyear{zachariasen1967} improved upon by other authors like
+Cooper-Rouse \citeyear{cooper1970extinction}, Becker-Coppens \citeyear{BC1974},
+and Sabine \citeyear{sabine2006flow}. Of these, the Becker-Coppens model is
+arguably the more highly referenced and utilised work\todo{Shuqi: and the model
+  was confirmed in the authors’ prior work on extinction effects in
+  CITE}, so it was naturally considered by the authors
+when working on implementing extinction models in \texttt{NCrystal}
 \cite{ncrystalmain,ncrystalelastic} in order to facilitate the modelling and
 analysis of Bragg edge transmission and diffraction data. Unfortunately, in case
 of stronger extinction effects, the model appears to suffer from an obvious
@@ -213,7 +218,7 @@ evaluated. More specifically, the Becker-Coppens models all require evaluation
 of the following integral, in order to determine the extinction parameter $y$ as
 a function of $x$ and $\theta$:
 \begin{align}
-  y_M(\theta,x) = \frac{6c_M}{4\pi}\int_{0}^{\infty} f_M(\eta)\varphi\left(\theta,c_Mxf_M(\eta)\right)d\eta
+  y_M(\theta,x) = \frac{6c_M}{4\pi}\int_{0}^{\infty} f_M(\eta)\varphi\left(\theta,c_Mxf_M(\eta)\right)\deta
   \labeqn{yintegral}
 \end{align}
 Here, the subscript $M$ indicates the model, and can either be $P$ (primary),
@@ -255,14 +260,14 @@ The $f_M(\eta)$ functions, are essentially unit-less functions capturing the
 shape of the Bragg diffraction cross section as a function of deviation from the
 nominal direction, normalised so $f_M(0)=1$. The difference in extinction levels
 predicted by the different Becker-Coppens models is essentially due to the
-difference of these $f_M(\eta)$ functions. For the secondary extinction models,
-the shape of $f_M(\eta)$ is essentially given by the mosaic distribution of
-coherent crystal domains within material particles, while for primary extinction
-it is due to the intrinsic response of a crystalline domain which contains a
-perfect and unbroken crystal structure, but is of finite size. Additionally, the
-exact final form of the $f_M(\eta)$ functions is based on the assumption of
-spherical geometries for the crystallites or particles. The exact form of these
-functions, plotted in \reffig{fofeta}, is as follows:
+different shapes of these $f_M(\eta)$ functions. For the secondary extinction
+models, the shape of $f_M(\eta)$ is essentially given by the mosaic distribution
+of coherent crystalline domains within larger grains, while for primary
+extinction it is due to the intrinsic response of a crystalline domain which
+contains a perfect and unbroken crystal structure, but is of finite
+size. Additionally, the exact final form of the $f_M(\eta)$ functions is based
+on the assumption of spherical geometries for the crystallites or particles. The
+exact form of these functions, plotted in \reffig{fofeta}, is as follows:
 \begin{figure}[tp] %
 \begin{center}
 \includegraphics[width=0.6\textwidth]{generated/f_of_eta.pdf}
@@ -417,7 +422,7 @@ precision on $y$ values. For $M=L$, the integrand is sufficiently simple that it
 was possible to find a Taylor series approximation for the tail of the integral
 with \texttt{SageMath}:
 \begin{align}
-\int_{a}^{\infty} f_L(\eta)\varphi\left(\theta,xf_L(\eta)\right)d\eta \approx
+\int_{a}^{\infty} f_L(\eta)\varphi\left(\theta,xf_L(\eta)\right)\deta \approx
 \frac{1}{a} - \frac{2k}{3a^2}
 +\left(
 \frac{128 + 64{\sin^{5/2}\theta}}{225}k^2
@@ -444,7 +449,7 @@ $[a,\infty]$. However, as is shown in \refappendix{yptailintegration}, by
 bounding $f_P(\eta)$ by by simpler functions, it was possible to find a somewhat
 looser but still useful bound on the tail contribution in this case as well:
 \begin{align}
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)\deta \approx
 \frac{1}{a}  - \frac{x}{2a^3 } \pm\left(\frac{1}{2a^2 }+\frac{2}{a^3}\right),\quad{}a>10,\,a>x>0
 \labeqn{tailintegralP}
 \end{align}
@@ -846,10 +851,10 @@ simplicity it can be required that $a>2$.  Since $\varphi(\theta,s)$ and
 $f_P(\eta)$ decrease monotonically for increasing $s$ and $\eta$ respectively,
 for positive arguments, it follows that:
 \begin{align}
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta &\le
-\int_{a}^{\infty} f_P^+(\eta)\varphi\left(\theta,xf^-_P(\eta)\right)d\eta \equiv T^+(\theta,x,a) \nonumber\\
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta &\ge
-\int_{a}^{\infty} f_P^-(\eta)\varphi\left(\theta,xf^+_P(\eta)\right)d\eta \equiv T^-(\theta,x,a)
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)\deta &\le
+\int_{a}^{\infty} f_P^+(\eta)\varphi\left(\theta,xf^-_P(\eta)\right)\deta \equiv T^+(\theta,x,a) \nonumber\\
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)\deta &\ge
+\int_{a}^{\infty} f_P^-(\eta)\varphi\left(\theta,xf^+_P(\eta)\right)\deta \equiv T^-(\theta,x,a)
 \end{align}
 With the help of \texttt{SageMath}, $T^\pm(\theta,x,a)$ can be evaluated
 analytically and expressed as a Taylor expansion in inverse powers of $a$:
@@ -874,7 +879,7 @@ $(T^+(\theta,x,a)+T^-(\theta,x,a))/2$ as an estimate of the tail integral value,
 while $(T^+(\theta,x,a)-T^-(\theta,x,a))/2$ will be a conservative upper bound
 of the error on the estimate. In other words, for $a>\max(10,x)$:
 \begin{align}
-\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)d\eta \approx
+\int_{a}^{\infty} f_P(\eta)\varphi\left(\theta,xf_P(\eta)\right)\deta \approx
 \frac{1}{a}  - \frac{k}{2a^2 }
   +\left[\frac{1}{6} + \frac{8+4\sin^{5/2}\theta}{25}k^2  \right]\frac{1}{a^3}
   \pm
