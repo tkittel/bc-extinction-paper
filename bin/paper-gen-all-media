@@ -44,7 +44,7 @@ plot integrand outfile=<DESTDIR>/integrand_gPgGgLgF_of_eta_g.pdf
 def parse_cmds( skip_heavy ):
     bindir = pathlib.Path(__file__).parent.absolute()
     destdir = bindir.parent.joinpath('paper','generated').absolute()
-    assert destdir.is_dir()
+    destdir.mkdir(parents=True,exist_ok=True)
     for c in cmds.splitlines():
         c = c.strip()
         if not c or c.startswith('#'):
