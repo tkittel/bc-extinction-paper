@@ -131,7 +131,7 @@ reference implementations are provided for \texttt{C}, \texttt{C++}, and
 
 Extinction in diffraction refers to the phenomenon where the intensity of a
 diffracted flux is effectively reduced due to various effects like multiple
-scatterings or wave interference between incoming and scattered waves. More
+scattering or wave interference between incoming and scattered waves. More
 specifically, the magnitude of this effect is characterized by the extinction
 factor, $y$, which is defined as the ratio between the diffracted flux predicted
 by the kinematical model ($I_\text{kin}$) with no multiple scattering or other
@@ -146,10 +146,10 @@ well as of the details of the material in which the process takes place.  In all
 cases, $y$ is expressed as a function of both the Bragg angle $\theta$ as well
 as a parameter $x$ which captures the general strength of the extinction
 effect. The exact definition of $x$ depends to some degree on the specific
-model, but in general it will be proportional to $|Fa\lambda/V|^2$ where $F$ is
+model, but in general it will be proportional to $|DF\lambda/V|^2$ where $F$ is
 the crystalline structure factor of the reflection in question, $V$ the volume
 of the crystal unit cell, $\lambda$ the wavelength of the particle being
-scattered, and $a$ some relevant length scale connected to the path length of
+scattered, and $D$ some relevant length scale connected to the path length of
 the probe through the coherent domains, crystallites, or grains in which the
 diffraction is taking place. In the case where the extinction is governed by a
 mosaic distribution, the definition of $x$ will usually also depend on
@@ -252,7 +252,7 @@ at $s=0$ and a limiting value of $0$ as $s\to\infty$.
 \labfig{phiofs}
 \end{figure}
 
-The $f_M(\eta)$ functions, are essentially unit-less functions capturing the
+The $f_M(\eta)$ functions are essentially unit-less functions capturing the
 shape of the Bragg diffraction cross section as a function of deviation from the
 nominal direction, normalised so $f_M(0)=1$. The difference in extinction levels
 predicted by the different Becker-Coppens models is essentially due to the
@@ -292,7 +292,7 @@ tremendously since the original recipes by Becker-Coppens were developed, and
 some additional degree of complexity in the updated recipes is therefore
 allowed.
 
-One important issues in all of this is the definition of precision of a given
+One important issue in all of this is the definition of precision of a given
 estimate of $y$, compared with a reference value $y_\text{ref}$. The naive
 definition $\text{precision}(y)\equiv|y-y_\text{ref}|/y_\text{ref}$ is not
 particularly useful at low levels of extinction where $y$ values are always
