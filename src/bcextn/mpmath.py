@@ -8,3 +8,11 @@ mpf = mp.mpf
 #mp.dps = 105
 #Update: Increase even more for added safety:
 mp.dps = 150
+
+
+def mpf_pack_to_str( v ):
+    return repr(mpf(v))
+def mpf_unpack_from_str( v ):
+    assert v.startswith("mpf('")
+    assert v.endswith("')")
+    return mpf(v[5:-2])
