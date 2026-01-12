@@ -241,11 +241,11 @@ def main_table4( args ):
 
 def main_tableF( args ):
     #Like table 1/3/4 buf for scndfresnel (which was absent in BC1974).
-    from .load import load_table4scan_allpts
+    from .load import load_tableFscan_allpts
     plot_table( args,
                 'tableF',
                 None,
-                load_table4scan_allpts,
+                load_tableFscan_allpts,
                 None )
 
 
@@ -1518,7 +1518,7 @@ def main_xscanbands( args):
                      y90 = data['theta_2_ypvals']['90.0'] )
     #data = [ load(mode) for mode in modes ]
     custom_leg = []
-    from matplotlib.lines import Line2D
+    from matplotlib.lines import Line2D # noqa F401
     from matplotlib.patches import Rectangle
     import matplotlib.colors
     for imode,mode in enumerate(modes):
