@@ -44,7 +44,7 @@ def main():
     while '--quick' in args:
         quick = True
         args.remove('--quick')
-    assert len(args)==2, "please specify x and theta value"
+    assert len(args)==4, "please specify args: x theta jobidx njobs [--quick]"
 
     xval = float(args[0])
     xval_str = '%.6g'%xval
@@ -56,18 +56,30 @@ def main():
     thval_str = '%i'%thval
     assert thval == int(thval_str)
 
+    job_idx = int(args[2])
+    njobs = int(args[3])
+
+    assert 0 <= job_idx < njobs
+    assert 1 <= njobs < 1000
     assert 1e-4 <= xval <= 1000.0
     assert 0 <= thval <= 90
-    contribn_step = int(1000) #contrib n vals per job
+    contribn_step = int(1e3) #contrib n vals per job
     contribn_max = int(1e9)
 
     if quick:
-        contribn_max //= 100
+        contribn_step = int(1e2)
+        contribn_max = int(1e5)
 
-    outfile =  pathlib.Path('.').joinpath( 'fresnel_contribn_sum_x%s_th%i%s.json'
+    assert njobs+1 < contribn_max
+
+    mergekey = '_mergeablesubjob%iof%i'%(job_idx+1,njobs) if njobs>1 else ''
+    outfile =  pathlib.Path('.').joinpath( 'fresnel_contribn_sum_x%s_th%i%s%s.json'
                                            %( xval_str.replace('.','d'),
                                               thval,
-                                              ('_quick' if quick else '')) )
+                                              ('_quick' if quick else ''),
+                                              mergekey
+                                             )
+                                          )
     print(f"Target file: {outfile}")
 
     if outfile.exists():
@@ -88,6 +100,10 @@ def main():
         nmax_used = nmax
         nmin += contribn_step
         nmax += contribn_step
+
+    if njobs > 1:
+        worklist = worklist[ job_idx::njobs ]#start at job_idx, take strides of size njobs
+
     print("NWORKERS:",len(worklist))
     worklist_print = worklist[:]
     if len(worklist_print)<30:
@@ -100,16 +116,19 @@ def main():
         for e in worklist_print[-14:]:
             print('    ',e)
     tot_time, tot_val, tot_err = multiproc_run_worklist( worklist )
-    resultjson = dict( time = tot_time,
-                       sum_contribn_val = mpf_pack_to_str(tot_val),
-                       sum_contribn_err = mpf_pack_to_str(tot_err),
-                       nmin = nmin_used,
-                       nmax = nmax_used,
-                       xval_str = xval_str,
-                       thval_str = thval_str,
-                      )
 
-
+    data = dict( setup = dict( nmin = nmin_used,
+                               nmax = nmax_used,
+                               xval_str = xval_str,
+                               thval_str = thval_str ),
+                 results = dict( time = tot_time,
+                                 sum_contribn_val = mpf_pack_to_str(tot_val),
+                                 sum_contribn_err = mpf_pack_to_str(tot_err) ) )
     from .json import save_json
-    save_json( outfile, resultjson )
-
+    if njobs==1:
+        save_json( outfile, data )
+    else:
+        d = dict( data = data,
+                  subjobinfo = dict( jobidx = job_idx,
+                                     njobs = njobs ) )
+        save_json( outfile, d )
