@@ -60,7 +60,7 @@ def main():
     njobs = int(args[3])
 
     assert 0 <= job_idx < njobs
-    assert 1 <= njobs < 1000
+    assert 1 <= njobs < 10000
     assert 1e-4 <= xval <= 1000.0
     assert 0 <= thval <= 90
     contribn_step = int(1e3) #contrib n vals per job
