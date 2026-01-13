@@ -38,9 +38,9 @@ cd {wd}
 def genalljobs(basedir,quick=False):
     assert not basedir.exists()
     slurmfiles=[]
-    nsplit = 10
-    for x in ['1']:
-        for th in ['0']:
+    nsplit = 1000
+    for x in ['1':
+        for th in ['0','90']:
             for i in range(nsplit):
                 jobno = i+1
                 jobname=f'extn_x{x}_th{th}_{jobno}of{nsplit}'
