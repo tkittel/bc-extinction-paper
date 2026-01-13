@@ -16,6 +16,8 @@ def setup_job( workdir, cmd, jobname ):
     assert wd.is_dir()
     assert not any(wd.iterdir()), f"dir not empty: {wd}"
     slurmfile = wd.joinpath('slurm.sh')
+    cmdstr = ' '.join( shlex.quote(str(e)) for e in cmd)
+
     txt=f"""#!/bin/bash
 #SBATCH -J {jobname}
 #SBATCH -o {wd.joinpath("stdout.txt")}
@@ -28,7 +30,7 @@ def setup_job( workdir, cmd, jobname ):
 eval "$(/users/thki/miniforge3/bin/conda shell.bash hook 2> /dev/null)"
 conda activate bcextn
 cd {wd}
-{shlex.join(str(e) for e in cmd)}
+{cmdstr}
 """
     slurmfile.write_text(txt)
     return slurmfile
