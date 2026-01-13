@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+
+import pathlib
+import shlex
+import sys
+
+def setup_job( workdir, cmd, jobname ):
+    bindir = pathlib.Path(__file__).parent.absolute()
+    assert bindir.is_dir()
+    assert len(cmd)>=1
+    cmdscript = bindir.joinpath(cmd[0])
+    assert cmdscript.is_file()
+    cmd = [sys.executable,cmdscript]+cmd[1:]
+    wd = workdir.absolute()
+    wd.mkdir(exist_ok = True, parents=True)
+    assert wd.is_dir()
+    assert not any(wd.iterdir()), f"dir not empty: {wd}"
+    slurmfile = wd.joinpath('slurm.sh')
+    txt=f"""#!/bin/bash
+#SBATCH -J {jobname}
+#SBATCH -o {wd.joinpath("stdout.txt")}
+#SBATCH -e {wd.joinpath("stderr.txt")}
+#SBATCH -t 7-00:00:00
+#SBATCH --exclusive
+#SBATCH --nodes=1
+#SBATCH -n 1
+#SBATCH -p strange
+eval "$(/users/thki/miniforge3/bin/conda shell.bash hook 2> /dev/null)"
+conda activate bcextn
+cd {wd}
+{shlex.join(str(e) for e in cmd)}
+"""
+    slurmfile.write_text(txt)
+    return slurmfile
+
+def genalljobs(basedir,quick=False):
+    assert not basedir.exists()
+    slurmfiles=[]
+    nsplit = 10
+    for x in ['1']:
+        for th in ['0']:
+            for i in range(nsplit):
+                jobno = i+1
+                jobname=f'extn_x{x}_th{th}_{jobno}of{nsplit}'
+                cmd = ['createfresnelrefdata',x,th,str(i),str(nsplit)]
+                if quick:
+                    cmd.append('--quick')
+                wd=basedir.joinpath(jobname)
+                slurmfile = setup_job( wd, cmd, jobname )
+                slurmfiles.append(slurmfile)
+    return slurmfiles
+
+def main():
+    args=sys.argv[1:]
+
+    quick=False
+    while '--quick' in args:
+        args.remove('--quick')
+        quick=True
+
+    submit=False
+    while '--submit' in args:
+        args.remove('--submit')
+        submit=True
+
+    assert len(args)==1, "usage: baseoutdir [--quick] [--submit]"
+
+    basedir=pathlib.Path(args[0])
+    sf = genalljobs(basedir,quick=quick)
+    print(f"Created {len(sf)} slurm files to submit in {basedir}")
+    if not submit:
+        print("WARNING: Not submitting to sbatch. Provide --submit to do so")
+
+    if submit:
+        import time
+        import subprocess
+        for i,f in enumerate(sf):
+            print(f"Submitting {i}/{len(sf)}: {f.parent.name}")
+            subprocess.run(['sbatch',f],check=True)
+            time.sleep(0.1)
+    print("Done")
+
+if __name__=='__main__':
+    main()
