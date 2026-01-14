@@ -210,3 +210,7 @@ def load_highx( mode ):
         _cache_highx['<raw>'] = load_json_data('bcdata_special_highx.json')
     _cache_highx[mode] = _cache_highx['<raw>'][mode]
     return _cache_highx[mode]
+
+def load_fresnelref():
+    from .fresnelref import load
+    return load()
