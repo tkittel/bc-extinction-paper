@@ -45,6 +45,10 @@ def main():
     if args and args[0] == '--merge':
         return main_merge(args[1:])
 
+    if args and args[0] == '--updatestepdata':
+        assert len(args)==1
+        return main_updatestepdata()
+
     quick = False
     while '--quick' in args:
         quick = True
@@ -201,3 +205,32 @@ def main_merge( args ):
     if not infiles:
         return badusage()
     merge(infiles,outfile)
+
+def main_updatestepdata():
+    nmax = 500
+
+    from .fresnelref import load as refload
+    from .data import data_file
+    outfile = data_file( 'fresnelref_stepdata.json', must_exist = False )
+    refdata = refload()
+    xth_pts = sorted([ key for key in refdata.keys()])
+    print(xth_pts)
+    print(f"Creating stepdata up to n={nmax}")
+    data = []
+    for key in xth_pts:
+        x_str,th_str = key
+        print(f"...treating (x,th)=({x_str}, {th_str})")
+        pts = evalref( theta_degree = float(th_str),
+                       x=float(x_str),
+                       nmin=0, nmax=nmax,
+                       eps=1e-10, maxdegree0 = 4 )
+
+        pts = [ (n, mpf_pack_to_str( val ), mpf_pack_to_str( err ) )
+                for n, val, err in pts ]
+        data.append( dict( x_str = x_str,
+                           th_str = th_str,
+                           pts = pts ) )
+
+    save_json( outfile, data, force = True )
+    import pprint
+    pprint.pprint(data)

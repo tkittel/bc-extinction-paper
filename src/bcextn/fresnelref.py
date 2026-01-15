@@ -56,3 +56,12 @@ def load():
     import copy
     return copy.deepcopy( res )
 
+_cache_sd = [None]
+def load_stepdata():
+    res = _cache_sd[0]
+    if res is None:
+        from .data import load_json_data
+        res = load_json_data('fresnelref_stepdata.json')
+        _cache_sd[0] = res
+    import copy
+    return copy.deepcopy( res )
