@@ -39,6 +39,8 @@ plot phi outfile=<DESTDIR>/phi_of_s.pdf
 
 plot integrand primary outfile=<DESTDIR>/integrand_gP_of_eta_g.pdf
 plot integrand outfile=<DESTDIR>/integrand_gPgGgLgF_of_eta_g.pdf
+
+plot fresnelrichardson
 """
 
 def parse_cmds( skip_heavy ):

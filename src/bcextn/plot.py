@@ -1562,3 +1562,60 @@ def main_xscanbands( args):
     plt.grid()
     plt.xlabel('$x$')
     plt_savefig_pdf_or_show(plt,outfile)
+
+def main_fresnelrichardson( args ):
+    args, outfile = parse_outfile(args)
+    assert len(args)==0
+    from .fresnelref import load_refpts, load_stepdata
+    from .mpmath import mp, mpf
+    data_refpts = load_refpts()
+    data_steps = load_stepdata()
+    if set(data_refpts.keys()) != set(data_steps.keys()):
+        raise SystemExit('step data out of sync. Please update with:'
+                         ' ./bin/createfresnelrefdata --updatestepdata')
+
+    x_str_2_col = {'0.01':'tab:orange',
+                   '1':'tab:blue',
+                   '100':'tab:red',
+                   '1000':'tab:green'}
+    th_str_2_ls = {'0' : '-',
+                   '45' : '-.',
+                   '90' : ':'}
+
+    for key in data_refpts.keys():
+        x_str, th_str = key
+        print('Dealing with (x,theta) = (%s, %s degree)'%key)
+        col = x_str_2_col[x_str]
+        ls = th_str_2_ls[th_str]
+        dref = data_refpts[key]
+        dsteps = data_steps[key]
+        yref = dref['results']['val']
+        pts = dsteps['pts']
+        sum_n = [mpf(0)]
+        for e in pts:
+            sum_n.append( sum_n[-1] + e[1] )
+        sum_n = sum_n[1:]#remove leading 0 again
+
+        nvals = []
+        precvals = []
+        for n in range(3,len(sum_n)):
+            if n>80:
+                break
+            r = mp.richardson( sum_n[0:n] )[0] #fixme [1] gives error???
+            nvals.append(n)
+            precvals.append(float(abs(r-yref)/min(1-yref,yref)))
+        plt.plot( nvals,
+                  precvals,
+                  color=col,
+                  ls=ls,
+                  label=r'$x=%s$, $\theta=%s$'%(x_str, th_str)
+                 )
+    plt.semilogy()
+    plt.grid()
+    plt.legend()
+
+    plt.ylabel('Relative deviation of $y_F$ estimate')
+    plt.xlabel('Richardson $n$')
+    #plt.xlabel('Number of Richardson integration intervals')
+    plt.ylim(1e-28,1.0)
+    plt_savefig_pdf_or_show(plt,outfile)
