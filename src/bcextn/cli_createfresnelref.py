@@ -207,9 +207,9 @@ def main_merge( args ):
     merge(infiles,outfile)
 
 def main_updatestepdata():
-    nmax = 500
+    nmax = 100
 
-    from .fresnelref import load as refload
+    from .fresnelref import load_refpts as refload
     from .data import data_file
     outfile = data_file( 'fresnelref_stepdata.json', must_exist = False )
     refdata = refload()
@@ -220,10 +220,11 @@ def main_updatestepdata():
     for key in xth_pts:
         x_str,th_str = key
         print(f"...treating (x,th)=({x_str}, {th_str})")
+        #Mimic settings of eps and maxdegree actually used in eval_eq36_scnd.py:
         pts = evalref( theta_degree = float(th_str),
                        x=float(x_str),
                        nmin=0, nmax=nmax,
-                       eps=1e-10, maxdegree0 = 4 )
+                       eps=1e-37, maxdegree0 = 8 )
 
         pts = [ (n, mpf_pack_to_str( val ), mpf_pack_to_str( err ) )
                 for n, val, err in pts ]
