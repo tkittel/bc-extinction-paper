@@ -1568,6 +1568,9 @@ def main_fresnelrichardson( args ):
     assert len(args)==0
     from .fresnelref import load_refpts, load_stepdata
     from .mpmath import mp, mpf
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Rectangle
+
     data_refpts = load_refpts()
     data_steps = load_stepdata()
     if set(data_refpts.keys()) != set(data_steps.keys()):
@@ -1581,6 +1584,8 @@ def main_fresnelrichardson( args ):
     th_str_2_ls = {'0' : '-',
                    '45' : '-.',
                    '90' : ':'}
+
+    custom_leg_handles = []
 
     for key in data_refpts.keys():
         x_str, th_str = key
@@ -1608,11 +1613,30 @@ def main_fresnelrichardson( args ):
                   precvals,
                   color=col,
                   ls=ls,
-                  label=r'$x=%s$, $\theta=%s$'%(x_str, th_str)
+                  #label=r'$x=%s$, $\theta=%s\degree$'%(x_str, th_str)
+                  label=r'$x=%s$'%x_str#, $\theta=%s\degree$'%(x_str, th_str)
                  )
+        #if th_str=='0':
+        #    custom_leg_handles.append(obj[0])
+
+    for x,col in sorted(x_str_2_col.items(),key=lambda kv : float(kv[0])):
+        custom_leg_handles.append(
+            Rectangle( (0,0),1,1, facecolor=col, ls=ls, label=r'$x=%s$'%x,
+                       edgecolor='none' )
+        )
+    for th,ls in sorted(th_str_2_ls.items(),key=lambda kv : float(kv[0])):
+        custom_leg_handles.append(
+            Line2D( [0], [0], color='black', ls=ls,
+                    label=r'$\theta=%s\degree$'%th )
+        )
+
     plt.semilogy()
     plt.grid()
-    plt.legend()
+    plt.legend(handles = custom_leg_handles)
+
+    #plt.legend(handles=[o for o,lbl in custom_leg],
+    #           labels=[lbl for o,lbl in custom_leg])
+
 
     plt.ylabel('Relative deviation of $y_F$ estimate')
     plt.xlabel('Richardson $n$')
