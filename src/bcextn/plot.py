@@ -1570,6 +1570,7 @@ def main_fresnelrichardson( args ):
     from .mpmath import mp, mpf
     from matplotlib.lines import Line2D
     from matplotlib.patches import Rectangle
+    from .eq36_lowx_taylor import taylor_lowx_eq36_scnd_fresnel as taylor
 
     data_refpts = load_refpts()
     data_steps = load_stepdata()
@@ -1587,6 +1588,7 @@ def main_fresnelrichardson( args ):
 
     custom_leg_handles = []
 
+    ntermscutoff = 80
     for key in data_refpts.keys():
         x_str, th_str = key
         print('Dealing with (x,theta) = (%s, %s degree)'%key)
@@ -1598,18 +1600,32 @@ def main_fresnelrichardson( args ):
         pts = dsteps['pts']
         sum_n = [mpf(0)]
         for e in pts:
+            #print(e)
             sum_n.append( sum_n[-1] + e[1] )
         sum_n = sum_n[1:]#remove leading 0 again
 
-        nvals = []
+        reftaylor = taylor( theta_degree = float(th_str), x=float(x_str),
+                            eps=1e-30 )
+        if reftaylor is not None:
+            print(f"   yref: {float(yref):g}")
+            print(f"   yref(taylor): {float(reftaylor[0]):g}")
+            _rdnorm = min(reftaylor[0],1-reftaylor[0])
+            print(f"   taylor rel dev: {float(reftaylor[1]/_rdnorm):g}")
+            print(f"   yref vs taylor rel dev: {float(abs(yref - reftaylor[0])/_rdnorm):g}")
+
+        #nvals = []
+        ntermsvals = []
         precvals = []
-        for n in range(3,len(sum_n)):
-            if n>80:
+        for nterms in range(3,len(sum_n)):
+            if nterms>ntermscutoff:
                 break
-            r = mp.richardson( sum_n[0:n] )[0] #fixme [1] gives error???
-            nvals.append(n)
+            #print(f"USING NTERMS={nterms}",sum_n[0:nterms])
+            r = mp.richardson( sum_n[0:nterms] )[0] #fixme [1] gives error???
+            ntermsvals.append(nterms)
+            #nvals.append(nterms-1)#note n=[0,1,2] would be three terms!
+            #                      #therefore n=nterms-1
             precvals.append(float(abs(r-yref)/min(1-yref,yref)))
-        plt.plot( nvals,
+        plt.plot( ntermsvals,
                   precvals,
                   color=col,
                   ls=ls,
@@ -1633,13 +1649,14 @@ def main_fresnelrichardson( args ):
     plt.semilogy()
     plt.grid()
     plt.legend(handles = custom_leg_handles)
+    plt.xlim(0,ntermscutoff)
 
     #plt.legend(handles=[o for o,lbl in custom_leg],
     #           labels=[lbl for o,lbl in custom_leg])
 
 
     plt.ylabel('Relative deviation of $y_F$ estimate')
-    plt.xlabel('Richardson $n$')
+    plt.xlabel('Number of terms used for Richardson extrapolation ($n+1$)')
     #plt.xlabel('Number of Richardson integration intervals')
     plt.ylim(1e-28,1.0)
     plt_savefig_pdf_or_show(plt,outfile)

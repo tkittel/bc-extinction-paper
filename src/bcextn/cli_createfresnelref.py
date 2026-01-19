@@ -213,6 +213,10 @@ def main_updatestepdata():
     from .data import data_file
     outfile = data_file( 'fresnelref_stepdata.json', must_exist = False )
     refdata = refload()
+    time_tot = sum(v['results']['time'] for v in refdata.values())
+    time_tot_days = time_tot/(3600*24)
+    print("Total time usage: %g days (%g years)"%(time_tot_days,time_tot_days/365.2422))
+    print("Total time usage per point: %g"%(time_tot_days/len(refdata)))
     xth_pts = sorted([ key for key in refdata.keys()])
     print(xth_pts)
     print(f"Creating stepdata up to n={nmax}")
