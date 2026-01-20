@@ -598,7 +598,7 @@ def main_taylororders( args ):
                     rd_worst = np.maximum(rd_worst,rd)
         plt.plot( xvals, rd_worst, label=f'Taylor order {order}', lw=3, alpha=1.0 )
 
-    plt.ylabel('Worst relative precision of 1-y(x) for any model and theta_bragg')
+    plt.ylabel('Worst relative error of 1-y(x) for any model and theta_bragg')
     plt.semilogx()
     plt.semilogy()
     plt.ylim(min_eps,1.0)
@@ -899,7 +899,7 @@ def plot_breakdown( mode, curve, ref, precision_norm, outfile=None,forpaper=True
 #              edgecolor='black',
 #              facecolor='none' )
     plt.semilogx()
-    cbar = plt.colorbar(label='Precision (%)')
+    cbar = plt.colorbar(label='Relative error (%)')
 
     assert map_top[-1]==30
     #yticks = [0,2,5,10,15, 20, 25, map_top[-1]]
@@ -1655,7 +1655,7 @@ def main_fresnelrichardson( args ):
     #           labels=[lbl for o,lbl in custom_leg])
 
 
-    plt.ylabel('Relative deviation of $y_F$ estimate')
+    plt.ylabel('Relative error of $y_F$ estimate')
     plt.xlabel('Number of terms used for Richardson extrapolation ($n+1$)')
     #plt.xlabel('Number of Richardson integration intervals')
     plt.ylim(1e-28,1.0)
