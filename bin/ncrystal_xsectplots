@@ -22,6 +22,7 @@ while 'nopdf' in args:
     do_pdf = False
 
 mode = 'paperplot'#default
+dsp_zoom_plot = None
 
 assert len(args) in (0,1)
 if len(args)==1:
@@ -37,6 +38,7 @@ if mode == 'be':
     base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'#;dcutoffup=0.42;dcutoff=0.415'
     wlmax = 4.5
     domainsize_mu_list = [ 3, 5, 10, 20 ]
+    dsp_zoom_plot = (1,0,1)
 elif mode == 'bi':
     base_cfgstr = 'stdlib::Bi_sg166.ncmat;comp=bragg'
     wlmax = 9
@@ -63,7 +65,7 @@ xsect_max = [0.0]
 def new_plot():
     xsect_max[0] = 0.0
 
-def calc_xs( domainsize_mu, mdl, wls ):
+def calc_xs( domainsize_mu, mdl, wls, focus_dsp = None ):
     if '/' not in mdl:
         mdlpars = None
     else:
@@ -77,6 +79,9 @@ def calc_xs( domainsize_mu, mdl, wls ):
         cfgstr += f';extn={domainsize_mu}mu/mdl:{mdl}'
         if mdlpars:
             cfgstr += f'/{mdlpars}'
+    if focus_dsp is not None:
+        cfgstr += f';dcutoff={repr(focus_dsp*(1-1e-14))}'
+        cfgstr += f';dcutoffup={repr(focus_dsp*(1+1e-14))}'
     print(cfgstr)
     sc = NC.createScatter(cfgstr)
     xs = sc.xsect(wl=wls)
@@ -96,18 +101,33 @@ cols = dict(
     gray = "#4D4D4D"
 )
 
+def _prep_plotx( focus_dsp=None):
+    if focus_dsp is None:
+        _wls = wls
+        _x = _wls
+    else:
+        _sinth = np.linspace(0.0,1.0,2000)
+        _wls = _sinth * focus_dsp * 2.0
+        _x = _sinth
+    return _x, _wls
+
 stdlw = 2
 
-def plot_noextn():
-    plt.plot( wls,
-              calc_xs(domainsize_mu=None,wls=wls,mdl='none'),
+def plot_noextn(focus_dsp=None):
+    _x,_wls = _prep_plotx(focus_dsp)
+    plt.plot( _x,
+              calc_xs(domainsize_mu=None,wls=_wls,mdl='none',
+                      focus_dsp=focus_dsp),
               label='No extinction',
               #ls=':',
               color='tab:gray',#cols['gray'],
               lw = stdlw
              )
-def plot_wrapup(fn,legend=True):
-    plt.xlabel('Neutron Wavelength ($\\AA$)')
+def plot_wrapup(fn,legend=True,focus_dsp=None):
+    if focus_dsp is None:
+        plt.xlabel('Neutron Wavelength ($\\AA$)')
+    else:
+        plt.xlabel('$\\sin(\\theta)$')
     plt.ylabel(r'$\sigma_\text{Bragg}$ per atom (barn)')
     ymax = None
     if xsect_max[0] > 1:
@@ -116,45 +136,72 @@ def plot_wrapup(fn,legend=True):
             ymax += 1
     plt.ylim(0,ymax)
     xsect_max[0] = 0.0
-    plt.xlim(0,wlmax)
+    if focus_dsp is None:
+        plt.xlim(0,wlmax)
+    else:
+        plt.xlim(0,1)
     if legend:
         plt.legend()
     plt.grid()
     if do_pdf:
-        fnpdf = f'ncrystal_{fn}_{mode}.pdf'
+        fnpdf = f'ncrystal_{fn}_{mode}'
+        if focus_dsp is not None:
+            fnpdf+='_sglplanesinth'
+        fnpdf += '.pdf'
         plt.savefig( fnpdf, format='pdf' )
         print(f"Wrote: {fnpdf}")
         plt.cla()
     else:
         plt.show()
 
+def do_std_plot( sinth_mode_hkl = None ):
+    linestyle_bc2025 = (0,(1,1,1,1))
+    tgt_d = None
+    if sinth_mode_hkl:
+        info = NC.createInfo(base_cfgstr)
+        for hkl in info.hklObjects():
+            assert hkl.is_symequiv
+            if any( pt==sinth_mode_hkl
+                    for pt in zip(hkl.h,hkl.k,hkl.l) ):
+                print(f"Zooming on {hkl}")
+                tgt_d = float(hkl.d)
+                print(f"  dsp={hkl.d:.14g}")
+                print(f"  F2 ={hkl.f2:.14g}")
+                print(f"  mult ={hkl.mult}")
+        assert tgt_d is not None, f"could not find hkl={sinth_mode_hkl}"
 
-new_plot()
-plot_noextn()
-linestyle_bc2025 = (0,(1,1,1,1))
-for radius_mu, linecol in [ (2,'tab:olive'),#cols['green']),
-                            (5,'tab:orange'),#cols['blue']),
-                            (10,'tab:red'),#cols['orange']
-                           ]:
-    domainsize_mu = 4 * radius_mu /3
-    alpha=0.7
-    plt.plot( wls,
-              calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/rec:std'),
-              #label=f'Becker-Coppens 2025 update (l=${domainsize_mu}\\mu$m)',
-              lw = stdlw, color=linecol, ls=linestyle_bc2025,
-              alpha=alpha )
-    plt.plot( wls,
-              calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/rec:cls'),
-              label=f'BC1974 recipe (spherical, ${radius_mu}\\mu$m radius)',
-              lw = stdlw, color=linecol, alpha=alpha )
+    new_plot()
+    plot_noextn(focus_dsp = tgt_d)
+    _x,_wls = _prep_plotx(focus_dsp=tgt_d)
 
-dummy_line = Line2D([0], [0], color='tab:gray',
-                    ls = linestyle_bc2025,
-                    lw=stdlw, label='Dummy Line')
-handles, labels = plt.gca().get_legend_handles_labels()
-plt.legend(handles=list(handles)+[dummy_line],
-           labels=list(labels)+['Updated recipe (BC2025)'])
-plot_wrapup('bc_yp_breakdown',legend=False)
+
+    for radius_mu, linecol in [ (2,'tab:olive'),#cols['green']),
+                                (5,'tab:orange'),#cols['blue']),
+                                (10,'tab:red'),#cols['orange']
+                               ]:
+        domainsize_mu = 4 * radius_mu /3
+        lbl=f'BC1974 recipe (spherical, ${radius_mu}\\mu$m radius)'
+        plotcommon = dict(lw = stdlw, color=linecol, alpha=0.7)
+        #lbl2025=f'Becker-Coppens 2025 update (l=${domainsize_mu}\\mu$m)',
+        def fxs(mdl):
+            return calc_xs(domainsize_mu=domainsize_mu,wls=_wls,mdl=mdl,
+                           focus_dsp = tgt_d)
+        plt.plot( _x,fxs('bc/rec:std'),**plotcommon,ls=linestyle_bc2025 )
+        plt.plot( _x,fxs('bc/rec:cls'),**plotcommon,label=lbl)
+
+    dummy_line = Line2D([0], [0], color='tab:gray',
+                        ls = linestyle_bc2025,
+                        lw=stdlw, label='Dummy Line')
+    handles, labels = plt.gca().get_legend_handles_labels()
+    plt.legend(handles=list(handles)+[dummy_line],
+               labels=list(labels)+['Updated recipe (BC2025)'])
+    plot_wrapup('bc_yp_breakdown',legend=False,focus_dsp=tgt_d)
+
+do_std_plot()
+
+if dsp_zoom_plot is not None:
+    do_std_plot( sinth_mode_hkl = dsp_zoom_plot )
+
 
 mdl2pars = { 'sabine' : dict(color=cols['orange'],ls='-.'),
              'bc/rec:cls' : dict(color=cols['blue'],ls='-'),
