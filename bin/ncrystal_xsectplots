@@ -6,30 +6,32 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import math
 import sys
-print("""NOTE: As of Aug26 this script must be run from an environment with a
+print("""NOTE: As of Jan26 this script must be run from an environment with a
 development version of NCrystal. Once a version of NCrystal is released with
-extinction support (likely during Fall 2025), this will be possible with the
+extinction support (likely during Spring 2026), this will be possible with the
 standard NCrystal.""")
 
-do_pdf = False#default (but true if paperplot)
-mode = 'paperplot'#default
 args = sys.argv[1:]
 
-assert len(args) in (0,1)
-if len(args)==1:
-    mode == args[0]
-
+do_pdf = False#default (but later set to True if paperplot)
 while 'pdf' in args:
     args.remove('pdf')
     do_pdf = True
+while 'nopdf' in args:
+    args.remove('nopdf')
+    do_pdf = False
+
+mode = 'paperplot'#default
+
+assert len(args) in (0,1)
+if len(args)==1:
+    mode = args[0]
 
 if mode=='paperplot':
     mode = 'be'
     do_pdf = True
 
-while 'nopdf' in args:
-    args.remove('nopdf')
-    do_pdf = False
+print(f"do_pdf: {do_pdf}")
 
 if mode == 'be':
     base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'#;dcutoffup=0.42;dcutoff=0.415'
@@ -47,12 +49,11 @@ elif mode == 'beo':
     base_cfgstr = 'stdlib::BeO_sg186.ncmat;comp=bragg'
     wlmax = 6
     domainsize_mu_list = [ 2, 6, 8 ]
-elif mode=='paperplot':
-    do_pdf = False
-    base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'#;dcutoffup=0.4'
-    wlmax = 5
-    domainsize_mu_list = [ 3, 5, 10, 20 ]
-
+#elif mode=='paperplot':
+#    do_pdf = False
+#    base_cfgstr = 'stdlib::Be_sg194.ncmat;comp=bragg'#;dcutoffup=0.4'
+#    wlmax = 5
+#    domainsize_mu_list = [ 3, 5, 10, 20 ]
 else:
     assert False
 
@@ -94,8 +95,6 @@ cols = dict(
     pink = "#F17CB0",
     gray = "#4D4D4D"
 )
-
-
 
 stdlw = 2
 
@@ -140,12 +139,12 @@ for radius_mu, linecol in [ (2,'tab:olive'),#cols['green']),
     domainsize_mu = 4 * radius_mu /3
     alpha=0.7
     plt.plot( wls,
-              calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/yp:std'),
+              calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/rec:std'),
               #label=f'Becker-Coppens 2025 update (l=${domainsize_mu}\\mu$m)',
               lw = stdlw, color=linecol, ls=linestyle_bc2025,
               alpha=alpha )
     plt.plot( wls,
-              calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/yp:cls'),
+              calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl='bc/rec:cls'),
               label=f'BC1974 recipe (spherical, ${radius_mu}\\mu$m radius)',
               lw = stdlw, color=linecol, alpha=alpha )
 
@@ -158,18 +157,18 @@ plt.legend(handles=list(handles)+[dummy_line],
 plot_wrapup('bc_yp_breakdown',legend=False)
 
 mdl2pars = { 'sabine' : dict(color=cols['orange'],ls='-.'),
-             'bc/yp:cls' : dict(color=cols['blue'],ls='-'),
-             'bc/yp:lux' : dict(color=cols['green'],ls='-'),
-             'bc/yp:std' : dict(color=cols['purple'],ls='-'),
+             'bc/rec:cls' : dict(color=cols['blue'],ls='-'),
+             'bc/rec:lux' : dict(color=cols['green'],ls='-'),
+             'bc/rec:std' : dict(color=cols['purple'],ls='-'),
             }
 
 new_plot()
 plot_noextn()
 for domainsize_mu in domainsize_mu_list:
     for mdl, mdlname in [ ('sabine','Sabine 2006'),
-                          ('bc/yp:cls','Becker-Coppens 1974 (classic recipe)'),
-                          ('bc/yp:lux','Becker-Coppens 1974 (2025 luxury recipe)'),
-                          ('bc/yp:std','Becker-Coppens 1974 (2025 standard recipe)'),
+                          ('bc/rec:cls','Becker-Coppens 1974 (classic recipe)'),
+                          ('bc/rec:lux','Becker-Coppens 1974 (2025 luxury recipe)'),
+                          ('bc/rec:std','Becker-Coppens 1974 (2025 standard recipe)'),
                          ]:
         plt.plot( wls,
                   calc_xs(domainsize_mu=domainsize_mu,wls=wls,mdl=mdl),
