@@ -59,7 +59,8 @@ elif mode == 'beo':
 else:
     assert False
 
-wls = np.linspace(0.0,wlmax,2000)
+npts = 2000
+wls = np.linspace(0.0,wlmax,npts)
 
 xsect_max = [0.0]
 def new_plot():
@@ -106,7 +107,7 @@ def _prep_plotx( focus_dsp=None):
         _wls = wls
         _x = _wls
     else:
-        _sinth = np.linspace(0.0,1.0,2000)
+        _sinth = np.linspace(0.0,1.0,npts)
         _wls = _sinth * focus_dsp * 2.0
         _x = _sinth
     return _x, _wls
@@ -143,6 +144,7 @@ def plot_wrapup(fn,legend=True,focus_dsp=None):
     if legend:
         plt.legend()
     plt.grid()
+    plt.tight_layout()
     if do_pdf:
         fnpdf = f'ncrystal_{fn}_{mode}'
         if focus_dsp is not None:

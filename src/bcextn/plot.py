@@ -442,7 +442,7 @@ def do_cmprecipes( *,
     else:
         plt.ylim(0.0,1.0)
         plt.ylabel('y')
-    plt.title(mode)
+    #plt.title(mode)
     plt.xlim(xvals[0],xvals[-1])
     plt.grid()
     plt.semilogx()
