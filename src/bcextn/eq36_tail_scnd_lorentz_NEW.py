@@ -68,7 +68,7 @@ class TailIntegral:
         assert order >= 4
         norm = mpf(2) / mp.pi #= factor of 6*c_M/4pi from eq. 2 in paper
         self.__val = norm * sum(terms)
-        self.__err = norm * sum(abs(e) for e in terms[-3:])#FIXME: Too conservative!
+        self.__err = norm * sum(abs(e) for e in terms[-3:])#FIXME: Too conservative?
 
     @property
     def value( self ):
@@ -85,7 +85,7 @@ class TailIntegral:
 def tailint_auto( theta_degree, x ):
     a = TailIntegral.estimate_lowest_a(x)
     #a = 40
-    order = 30#fixme increase!
+    order = 50
     eps=1e-30#at least 1e-8, but with lots of safety
     while True:
         assert a<1000
@@ -97,7 +97,7 @@ def tailint_auto( theta_degree, x ):
              or not (0.0<tf.value-tf.error<1.0)
              or tf.error > eps*min(tf.value,1.0-tf.value) ):
             #print("WARNING: Increasing a")
-            a *= 2
+            a *= 1.1
             continue
         return dict( theta_degree = theta_degree,
                      x=x,
