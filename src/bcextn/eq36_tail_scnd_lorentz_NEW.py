@@ -85,11 +85,10 @@ class TailIntegral:
 def tailint_auto( theta_degree, x ):
     a = TailIntegral.estimate_lowest_a(x)
     #a = 40
-    order = 20#fixme increase!
-    eps=1e-20#at least 1e-8, but with lots of safety
+    order = 30#fixme increase!
+    eps=1e-30#at least 1e-8, but with lots of safety
     while True:
         assert a<1000
-        print('a=',a)
         tf=TailIntegral( theta_degree=theta_degree,
                          x=x, a=a, order=order )
         if ( not (0.0<tf.value<1.0)
@@ -97,7 +96,7 @@ def tailint_auto( theta_degree, x ):
              or not (0.0<tf.value+tf.error<1.0)
              or not (0.0<tf.value-tf.error<1.0)
              or tf.error > eps*min(tf.value,1.0-tf.value) ):
-            print("WARNING: Increasing a")
+            #print("WARNING: Increasing a")
             a *= 2
             continue
         return dict( theta_degree = theta_degree,
