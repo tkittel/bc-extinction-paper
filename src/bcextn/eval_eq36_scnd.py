@@ -135,7 +135,7 @@ def numint_eq36_scnd_lorentz( theta_degree, x, eps ):
     val_quad, err_quad = do_quad( bounds )
 
     val, err = val_quad  + ti['tailint_val'], err_quad + ti['tailint_err']
-    if not (err < val * eps):
+    def dbgpt():
         print("Issues detected at: th=%.16g x=%.16g eps=%.16g"%(theta_degree,x,eps))
         print("                    val = %g"%val)
         print("                    err = %g"%err)
@@ -143,12 +143,12 @@ def numint_eq36_scnd_lorentz( theta_degree, x, eps ):
         print("                    err_quad = %g"%err_quad)
         print("                    val_tail = %g"%ti['tailint_val'])
         print("                    err_tail = %g"%ti['tailint_err'])
-    assert err < val * eps
-    assert err < eps * abs(val)
-    assert err < eps * (1.0-abs(val))
-    assert err < eps * (1.0-val)
-    assert val-err > 0.0
-    assert val+err < 1.0
+    assert err < val * eps or dbgpt()
+    assert err < eps * abs(val) or dbgpt()
+    assert err < eps * (1.0-abs(val)) or dbgpt()
+    assert err < eps * (1.0-val) or dbgpt()
+    assert val-err > 0.0 or dbgpt()
+    assert val+err < 1.0 or dbgpt()
     return val, err
 
 def numint_eq36_scnd_gauss( theta_degree, x, eps ):
