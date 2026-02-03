@@ -8,9 +8,9 @@ class TailIntegral:
         self.__val = norm * v
         self.__err = norm * e
 
-    @property
-    def a( self ):
-        return mpf( self.__a )
+#    @property
+#    def a( self ):
+#        return mpf( self.__a )
 
     @property
     def value( self ):

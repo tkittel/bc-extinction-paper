@@ -24,7 +24,7 @@ def eval_eq36_scnd_fresnel( theta_degree, x ):
         return t
     return numint_eq36_scnd_fresnel( theta_degree, x, eps=eps_val )
 
-def numint_eq36_scnd_lorentz( theta_degree, x, eps ):
+def numint_eq36_scnd_lorentz_old( theta_degree, x, eps ):
 
     from .eq36_tail_scnd_lorentz import TailIntegral
     from .eval_fofeta_scnd_lorentz import F_of_Eta
@@ -84,6 +84,64 @@ def numint_eq36_scnd_lorentz( theta_degree, x, eps ):
         val_quad += val2_quad
         err_quad += err2_quad
         del new_bounds, val2_quad, err2_quad
+
+def numint_eq36_scnd_lorentz( theta_degree, x, eps ):
+
+    from .eq36_tail_scnd_lorentz_NEW import tailint_auto
+    from .eval_fofeta_scnd_lorentz import F_of_Eta
+
+    eps = mpf(eps) * 0.1 #safety
+    assert x > 0
+    g = create_integrand_fct_eq36( f_of_eta_fct = F_of_Eta(),
+                                   theta_degree = theta_degree,
+                                   x = x,
+                                   xscale = mpf('4/3') )
+
+    #Very careful bounds (this is most likely overkill):
+    def step_to_at_least( boundslist, aa, nn ):
+        step = aa / nn
+        while boundslist[-1]<aa:
+            boundslist.append( boundslist[-1] + step )
+
+    bounds = [0]
+    n=1
+    step_to_at_least( bounds, 0.001, 5*n )
+    step_to_at_least( bounds, 0.01, 5*n )
+    step_to_at_least( bounds, 0.1, 5*n )
+    step_to_at_least( bounds, 1, 10*n )
+    step_to_at_least( bounds, 10, 10*n )
+    step_to_at_least( bounds, 2*max(x,10), 10*n )
+    k_norm = mpf(2)/mp.pi
+    def do_quad( thebounds, maxdegree = 8 ):
+        #print("do_quad ( nbounds = %i, maxdegree=%i)"%(len(thebounds),maxdegree))
+        assert thebounds[-1] < 1e6
+        assert maxdegree < 15
+        res, err = mp.quad( g,
+                            thebounds,
+                            method='gauss-legendre',
+                            maxdegree=maxdegree,
+                            error=True )
+        res *= k_norm
+        err *= k_norm
+        if err < res * eps:
+            return res, err
+        return do_quad( thebounds, maxdegree + 1 )
+
+    ti = tailint_auto( theta_degree=theta_degree, x=x )
+    while ti['a']<bounds[-1]:
+        bounds = bounds[:-1]
+    bounds.append(ti['a'])
+
+    val_quad, err_quad = do_quad( bounds )
+
+    val, err = val_quad  + ti['tailint_val'], err_quad + ti['tailint_err']
+    assert err < val * eps
+    assert err < eps * abs(val)
+    assert err < eps * (1.0-abs(val))
+    assert err < eps * (1.0-val)
+    assert val-err > 0.0
+    assert val+err < 1.0
+    return val, err
 
 def numint_eq36_scnd_gauss( theta_degree, x, eps ):
     from .eval_fofeta_scnd_gauss import F_of_Eta

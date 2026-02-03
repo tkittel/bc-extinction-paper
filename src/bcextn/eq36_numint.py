@@ -49,9 +49,9 @@ class FiniteIntegralEq36:
     def value( self ):
         return mpf( self.__val )
 
-    @property
-    def relerror( self ):
-        return mpf( self.__err / self.__val )
+    #@property
+    #def relerror( self ):
+    #    return mpf( self.__err / self.__val )
 
     @property
     def error( self ):
@@ -120,9 +120,9 @@ class TailIntegral:
     def value( self ):
         return mpf( self.__val )
 
-    @property
-    def relerror( self ):
-        return mpf( self.__err / self.__val )
+    #@property
+    #def relerror( self ):
+    #    return mpf( self.__err / self.__val )
 
     @property
     def error( self ):

@@ -1660,3 +1660,76 @@ def main_fresnelrichardson( args ):
     #plt.xlabel('Number of Richardson integration intervals')
     plt.ylim(1e-28,1.0)
     plt_savefig_pdf_or_show(plt,outfile)
+
+def main_lorentztail_oldvnewcheck(args):
+    assert len(args)==0
+    from .eq36_tail_scnd_lorentz_NEW import tailint_auto as tailint_auto_new
+    from .eq36_tail_scnd_lorentz import TailIntegral as TIold
+    import random
+    random.seed(12345)
+    def sanity_check_valerr(val,err):
+        assert 0 < err < 1.0
+        assert 0 < val < 1.0
+        assert val-err > 0
+        assert val+err < 1
+
+    def unpack(tailintobj):
+        return tailintobj.value, tailintobj.error
+    while True:
+        x = 10.0**(random.uniform(-3,3))
+        if random.uniform(0.0,1.0) < 0.10:
+            th = 0.0 if random.uniform(0.0,1.0)<0.5 else 90.0
+        else:
+            th = random.uniform(0.0,90.0)
+        if True:
+            print(f"Testing (x,th)=({x:g},{th:g})")
+
+        #a = TInew.estimate_lowest_a( x )
+        #if random.uniform(0.0,1.0)>0.5:
+        #    a *= 10.0**random.uniform(0.0,4.0)
+
+        tinew = tailint_auto_new(theta_degree=th, x=x)
+        a=tinew['a']
+        vnew=tinew['tailint_val']
+        errnew=tinew['tailint_err']
+        print(f"   -> a={a:g}, result={float(vnew):g}+-{float(errnew):g}")
+        sanity_check_valerr(vnew,errnew)
+        vold, errold = unpack(TIold(theta_degree=th, x=x, a=a))
+        sanity_check_valerr(vold,errold)
+        error = errnew + errold
+        assert 0 < error < 1.0
+
+        assert abs(vnew-vold) <= error
+        #cl=abs(vnew-vold)/min(vnew,1.0-vnew,vold,1.0-vold)
+        cl=abs(vnew-vold)/min(vnew,1.0-vnew)#,vold,1.0-vold)
+        print("    -> compat level: %g"%cl)
+        assert cl<1e-10
+
+def main_lorentztail_oldvnew(args):
+    assert len(args)==0
+
+    from .eq36_tail_scnd_lorentz_NEW import TailIntegral as TInew
+    from .eq36_tail_scnd_lorentz import TailIntegral as TIold
+    #xvals = [0.001,0.1, 1.0,100.0,1000.0]
+    xvals = np.geomspace(1e-3,1000,20)
+    xvals_highres = np.geomspace(1e-3,1000,1000)
+    plt.plot( xvals_highres,
+              np.vectorize(TInew.estimate_lowest_a)(xvals_highres) )
+    plt.xlabel('x')
+    plt.ylabel('amin')
+    plt.semilogx()
+    plt_savefig_pdf_or_show(plt,outfile=None)
+
+    for th in [0, 45, 90]:
+        vals_new = []
+        vals_old = []
+        for x in xvals:
+            a = max(1.0,x)*5
+            vals_new.append( TInew(theta_degree=th, x=x, a=a, order=20).value )
+            vals_old.append( TIold(theta_degree=th, x=x, a=a).value )
+        #plt.plot(xvals,vals_new,label=f'theta={th}deg (new)')
+        #plt.plot(xvals,vals_old,label=f'theta={th}deg (old)')
+        plt.plot(xvals,[abs(o-n)/(max(abs(o),abs(n))) for o,n in zip(vals_old,vals_new)],label=f'theta={th}deg (old-new)')
+    plt.legend()
+    plt.grid()
+    plt_savefig_pdf_or_show(plt,outfile=None)
