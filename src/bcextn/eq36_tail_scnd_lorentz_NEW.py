@@ -27,9 +27,9 @@ class TailIntegral:
 
     @staticmethod
     def estimate_lowest_a( x ):
-        return 2.0*max(2.0,float(mp.sqrt(max(8.0*x/3.0-1,0))))
+        return 2.0+4.0*float(x)
 
-    def __init__(self,theta_degree, x, a, order = 20):
+    def __init__(self,theta_degree, x, a, order):
         if not a >= TailIntegral.estimate_lowest_a(x):
             raise RuntimeError('%g not at least %g (x=%g)'%(a,TailIntegral.estimate_lowest_a(x),x))
         assert isinstance(order,int)
@@ -84,11 +84,13 @@ class TailIntegral:
 
 def tailint_auto( theta_degree, x ):
     a = TailIntegral.estimate_lowest_a(x)
+    #print("INITIAL a=%g"%a)
     #a = 40
-    order = 50
-    eps=1e-30#at least 1e-8, but with lots of safety
+    #NOTE: order=40 implies terms up to (1/a)**(2*40+1)=(1/a)**(2*40+1)
+    order = 30
+    eps=1e-20#at least 1e-8, but with loooots of safety
     while True:
-        assert a<1000
+        assert 2<a<5000
         tf=TailIntegral( theta_degree=theta_degree,
                          x=x, a=a, order=order )
         if ( not (0.0<tf.value<1.0)
@@ -96,8 +98,9 @@ def tailint_auto( theta_degree, x ):
              or not (0.0<tf.value+tf.error<1.0)
              or not (0.0<tf.value-tf.error<1.0)
              or tf.error > eps*min(tf.value,1.0-tf.value) ):
-            #print("WARNING: Increasing a")
-            a *= 1.1
+            a *= 2
+            print("WARNING: Increasing a to a=%g"%a)
+            raise RuntimeError("Had to increase a!!!")
             continue
         return dict( theta_degree = theta_degree,
                      x=x,

@@ -133,7 +133,7 @@ def numint_eq36_scnd_lorentz( theta_degree, x, eps ):
     bounds.append(ti['a'])
     bounds[-2] = (bounds[-3]+bounds[-1])/2#avoid very narrow ranges
     assert len(bounds)>5
-    print('USING a=%g'%float(ti['a']))
+    #print('USING a=%g'%float(ti['a']))
     val_quad, err_quad = do_quad( bounds )
 
     val, err = val_quad  + ti['tailint_val'], err_quad + ti['tailint_err']
